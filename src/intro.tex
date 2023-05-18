@@ -1,0 +1,141 @@
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}[fragile,t]
+    \frametitle{A motivating example}
+    \begin{onlyenv}<1>
+        \begin{block}{Initial}
+            \begin{minipage}{\textwidth}
+                \begin{lstlisting}[language=rust]
+fn assign(target: &mut u64, source: &u64) {
+   let val = *source;
+   opaque();
+   *target = val;
+}
+                \end{lstlisting}
+            \end{minipage}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{block}{Optimized}
+            \begin{minipage}{\textwidth}
+                \begin{lstlisting}[language=rust, escapechar=!]
+fn assign(target: &mut u64, source: &u64) {
+   opaque();
+   let val = *source;
+   *target = val;
+}
+                \end{lstlisting}
+            \end{minipage}
+        \end{block}
+        \begin{block}{Assumptions}
+            \texttt{opaque} does not write to \texttt{*source}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        \begin{block}{Optimized}
+            \begin{minipage}{\textwidth}
+                \begin{lstlisting}[language=rust, escapechar=!]
+fn assign(target: &mut u64, source: &u64) {
+   let val = *source;
+   *target = val;
+   opaque();
+}
+                \end{lstlisting}
+            \end{minipage}
+        \end{block}
+        \begin{block}<3>{Assumptions}
+            \texttt{opaque} does not read from \texttt{*target}
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Aliasing assumptions are easy to break}
+    \begin{block}{}
+        \begin{lstlisting}[language=rust]
+static mut PTR: Option<*mut u64> = None;
+fn opaque() { unsafe {
+    if let Some(ptr) = PTR {
+        *ptr += 1;
+    }
+} }
+
+fn main() {
+   let x = &mut 42u64;
+   let y = &mut 666u64;
+   unsafe { PTR = Some(y as *mut u64); }
+   assign(&mut *x, &*y);
+   assert_eq!(*x, 666);
+}
+        \end{lstlisting}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Is my optimization unsound ?\\No, it's the client that is UB.}
+    In this case: pointer aliasing UB.
+
+
+    \begin{itemize}
+        \item ``miscompiling'' some weird code is worth the gain for the majority of codebases
+            (as long as we have a tool to detect it);
+        \item there's already UB elsewhere anyway (LLVM, uninit, invalid values, data races);
+        \item there is overlap: Tree Borrows UB encompasses some LLVM (\texttt{noalias}) and
+            data race UB.
+    \end{itemize}
+    \begin{block}{Later}
+        Tree Borrows brings pointer aliasing UB more in line with the other kinds:
+        see \texttt{crates.io}-wide measurements.
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{(Tree|Stacked) Borrows}
+    \begin{itemize}
+        \item SB predates TB: design of TB inspired by shortcomings of SB
+        \item similar enough interface for them to coexist in \texttt{miri}\\
+            (switch: \texttt{MIRIFLAGS+=" -Zmiri-tree-borrows"})
+            \begin{minipage}{0.9\textwidth}
+            \begin{block}{}
+                \begin{lstlisting}[language=rust, basicstyle=\ttfamily\fontsize{7}{8}\selectfont]
+fn new_alloc(Size, MemoryKind) -> Self;
+fn dealloc(&mut self, AllocRange, Provenance) -> Result<()>;
+
+fn read(&mut self, AllocRange, Provenance) -> Result<()>;
+fn write(&mut self, AllocRange, Provenance) -> Result<()>;
+
+fn retag_ptr(&mut self, Provenance, RetagKind, Type) -> Result<Provenance>;
+                \end{lstlisting}
+            \end{block}
+            \end{minipage}
+        \item different enough internal workings that even the shared
+        concepts (permissions, protectors) are not exactly mapped 1-1
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{What Tree Borrows thinks of the previous example}
+    \texttt{\$ MIRIFLAGS=-Zmiri-tree-borrows cargo +miri miri run}
+        \begin{lstlisting}
+error: Undefined Behavior:
+  --> src/example.rs
+   |
+   |         *ptr += 1;
+   |         ^^^^^^^^^ write access is forbidden
+   |
+   [...]
+
+  --> src/example.rs
+   |
+   | fn assign(target: &mut u64, source: &u64) {
+   |                                 ^^^^^^
+   |
+   [...]
+        \end{lstlisting}
+\end{frame}

@@ -1,0 +1,92 @@
+% Ce fichier contient toutes les macros que vous pouvez avoir envie de définir
+% si vous les utilisez plusieurs fois dans le document.
+
+\PassOptionsToPackage{svgnames}{color}
+
+% Un environnement pour bien présenter le code informatique
+\newenvironment{code}{%
+\begin{mdframed}[linecolor=green,innerrightmargin=30pt,innerleftmargin=30pt,
+backgroundcolor=black!5,
+skipabove=10pt,skipbelow=10pt,roundcorner=5pt,
+splitbottomskip=6pt,splittopskip=12pt]
+}{%
+\end{mdframed}
+}
+
+\newcommand{\bijective}{%
+  \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+\newcommand{\surjective}{\twoheadrightarrow}
+\newcommand{\injective}{\hookrightarrow}
+\newcommand{\implication}{\Longrightarrow}
+\newcommand{\impl}{\Rightarrow}
+\newcommand{\reciprocal}{\Longleftarrow}
+\newcommand{\equivalent}{\Longleftrightarrow}
+\newcommand{\NN}{\ensuremath{\mathbb{N}}}
+\newcommand{\RR}{\ensuremath{\mathbb{R}}}
+\newcommand{\QQ}{\ensuremath{\mathbb{Q}}}
+\newcommand{\ZZ}{\ensuremath{\mathbb{Z}}}
+\newcommand{\CC}{\ensuremath{\mathbb{C}}}
+\newcommand{\EE}{\ensuremath{\mathbb{E}}}
+\newcommand{\PP}{\ensuremath{\mathbb{P}}}
+\renewcommand{\epsilon}{\varepsilon}
+\renewcommand{\phi}{\varphi}
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+
+\newcommand{\bbrack}[1]{\left\llbracket#1\right\rrbracket}
+
+\newcommand{\inv}[1]{#1^{-1}}
+
+\newcommand{\tsf}[1]{\textsf{#1}}
+\newcommand{\ttt}[1]{\texttt{#1}}
+\newcommand{\tbf}[1]{\textbf{#1}}
+\newcommand{\tsc}[1]{\textsc{#1}}
+\newcommand{\tq}{\ |\ }
+\newcommand{\abs}[1]{\ensuremath{\left|#1\right|}}
+\newcommand{\set}[1]{\ensuremath{\left\{#1\right\}}}
+\newcommand{\paren}[1]{\ensuremath{\left(#1\right)}}
+
+\newcommand\semantics{%
+    \mathrel{\rightsquigarrow}}
+
+
+\newlength{\mirageWidth}\newlength{\mirageHeight}
+\newcommand{\mirage}[1]{% The opposite of a \phantom: it is visible but it takes no space
+    #1%
+    \settowidth{\mirageWidth}{#1}%
+    \settoheight{\mirageHeight}{#1}%
+    \hspace{-\mirageWidth}%
+    \vspace{-\mirageHeight}%
+}
+
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\expn}{exp}
+\DeclareMathOperator{\minvolume}{\exists\textup{\tsf{MVol}}}
+\DeclareMathOperator{\avgvolume}{\textup{\tsf{EMVol}}}
+\DeclareMathOperator{\maxvolume}{\textup{\tsf{DMVol}}}
+\DeclareMathOperator{\radius}{\textup{\tsf{MRad}}}
+\newcommand{\neigh}{\mathcal{N}}
+
+\newenvironment{stacked}{%
+    \begin{tikzpicture}%
+        \node (ref) {};%
+}{%
+    \end{tikzpicture}%
+}
+
+\newcommand{\stackitem}[2]{%
+    \node at (ref) {{%
+        \visible<#1>{%
+            \begin{minipage}{\textwidth}
+                #2%
+            \end{minipage}
+        }%
+    }};%
+}
+
+\newcommand{\runnable}[2]{%
+    \begin{block}{Demo}%
+        \href{run:run/#1.sh}{\texttt{#2}}%
+    \end{block}%
+}
