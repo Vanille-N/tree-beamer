@@ -1,4 +1,4 @@
-\documentclass[dvipsnames]{beamer}
+\documentclass[dvipsnames, compress]{beamer}
 
 \usepackage{currfile}
 \usepackage{pgfpages}
@@ -20,16 +20,16 @@
 \renewcommand{\familydefault}{\sfdefault}
 \begin{document}
 
-\input{intro}
 
 % What structure do we want for the presentation ?
 % In no particular order:
 %[ ] - SB basics
-%[ ]   - quick word on 2-phase borrows
+%[X]   - quick word on 2-phase borrows
 %[X]   - same interface
 %[X]   - stack structure and comparison of dimensions
 %[ ] - comparison with SB
 %[ ]   - are the lost optimizations important ?
+%[ ]     - spurious writes: can't assume termination
 %[ ]   - what more code can we write ?
 %[ ]     - copy_nonoverlapping is a good selling point
 %[X] - derivation of the tree structure
@@ -43,23 +43,27 @@
 %[X]   - some freedom in when we create a new pointer:
 %        it's easy to define "equivalence classes" of "this reference
 %        and all its raw copies"
-%[ ] - necessary rules
-%[ ]   - noalias requirements
-%[ ]   - unique path of Active
+%[X] - necessary rules
+%[X]   - noalias requirements
+%[X]   - unique path of Active
 %[ ] - chosen rules
-%[ ]   - Active -> Frozen
-%[ ]   - everything starts Reserved
-%[ ]   - not writing on function entry
+%[X]   - Active -> Frozen
+%[X]   - everything starts Reserved
+%[X]   - not writing on function entry
 %[ ]   for each of these show what we would lose/gain in terms of patterns/optimizations
 %      if we changed them.
-%[ ] - how to use / a working example
+%[X] - how to use / a working example
 %[X]   - MIRIFLAGS
-%[ ]   - interpretation of errors
+%[X]   - interpretation of errors
 
-\input{structure}
+%\input{intro}
 
-\input{rules}
+%\input{structure}
 
-\input{evaluation}
+%\input{rules}
+
+\input{opts}
+
+%\input{evaluation}
 
 \end{document}

@@ -1,44 +1,19 @@
 \section{Evaluation}
 
 \begin{frame}
-    \frametitle{Counting crates with UB (1/3)}
-    Data obtained using \href{https://github.com/saethlin/miri-tools}{\texttt{github:saethlin/miri-tools}}\\~\\
-
-    Caveats:
-    \begin{itemize}
-        \item really counting \textit{crates with at least one test that is UB}
-        \item shows only the first instance of UB for each test
-        \item crates with several different kinds of UB appear multiple times
-        \item SB and TB versions not run exactly at the same time
-            \begin{itemize}
-                \item crate version differences resolved by exclusion from the dataset
-                    \begin{itemize}
-                        \item TB run on 110~833 crates
-                        \item SB run on 106~402 crates
-                        \item 97~851 of them with identical versions
-                    \end{itemize}
-                \item miri version differences ignored
-            \end{itemize}
-    \end{itemize}
+    \frametitle{Counting crates with UB (1/2)}
+    {\footnotesize
+    Data obtained using \href{https://github.com/saethlin/miri-tools}{\texttt{github:saethlin/miri-tools}}\\
+    }
+    \begin{figure}
+        \includegraphics[width=0.8\textwidth]{../img/ub-count.png}
+    \end{figure}
+    {\footnotesize Number of crates on \texttt{crates.io} with at least one test
+    that contains UB, for each kind of UB detected by Miri.}\\~\\
 \end{frame}
 
 \begin{frame}
-    \frametitle{Counting crates with UB (2/3)}
-    \begin{minipage}{0.55\textwidth}
-        \begin{figure}
-            \includegraphics[width=\textwidth]{../img/sb-count.png}
-            \includegraphics[width=\textwidth]{../img/tb-count.png}
-        \end{figure}
-    \end{minipage}
-    \begin{minipage}{0.42\textwidth}
-        {\footnotesize Number of crates on \texttt{crates.io} with at least one test
-        that contains UB, for each kind of UB detected by Miri.}\\~\\
-        {\tiny Bottom: \\\texttt{MIRIFLAGS+=" -Zmiri-tree-borrows"}}
-    \end{minipage}
-\end{frame}
-
-\begin{frame}
-    \frametitle{Counting crates with UB (3/3)}
+    \frametitle{Counting crates with UB (2/2)}
     \begin{tabular}{|l|c|c|l|}
         \hline
         Kind                         &  SB &  TB & Notes\\

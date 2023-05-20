@@ -1,5 +1,240 @@
 \section{Deriving rules}
 
+% first Active, Frozen, Disabled
+% then Reserved
+% then protectors
+% then interiormut
+
+\begin{frame}[t]
+    \frametitle{Active, Frozen, Disabled}
+    At the very least we need permissions to represent
+    \begin{itemize}
+        \item unique mutable references: \texttt{Active},
+        \item shared immutable references: \texttt{Frozen},
+        \item no longer usable: \texttt{Disabled}.
+    \end{itemize}
+
+    \begin{onlyenv}<1>
+        \begin{minipage}{0.3\textwidth}
+            \begin{block}{\texttt{Active}}
+                \begin{itemize}
+                    \item child read OK
+                    \item child write OK
+                \end{itemize}
+            \end{block}
+        \end{minipage}
+        ~
+        \begin{minipage}{0.3\textwidth}
+            \begin{block}{\texttt{Frozen}}
+                \begin{itemize}
+                    \item child read OK
+                    \item child write UB
+                \end{itemize}
+            \end{block}
+        \end{minipage}
+        ~
+        \begin{minipage}{0.3\textwidth}
+            \begin{block}{\texttt{Disabled}}
+                \begin{itemize}
+                    \item child read UB
+                    \item child write UB
+                \end{itemize}
+            \end{block}
+        \end{minipage}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{block}{Foreign read}
+            \begin{itemize}
+                \item \texttt{Disabled}, \texttt{Frozen}: nothing to do
+                \item \texttt{Active}: no longer unique\\
+                      most permissive solution: make it become \texttt{Frozen}
+            \end{itemize}
+        \end{block}
+
+        \begin{block}{Foreign write}
+            \begin{itemize}
+                \item \texttt{Disabled}: nothing to do
+                \item \texttt{Active}: no longer unique, must become \texttt{Disabled}
+                \item \texttt{Frozen}: no longer immutable, must become \texttt{Disabled}
+            \end{itemize}
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
 \begin{frame}
-    \frametitle{}
+    \frametitle{Parallel to the borrow checker}
+    \hspace{-5em}
+    \begin{description}
+        \item[\cmark] \texttt{\&mut} readable and writeable
+        \item[\cmark] \texttt{\&} and all their children are only readable
+        \item[\cmark] no one can read/write to the location of our \texttt{\&mut}
+        \item[\cmark] no one can write to the location of our \texttt{\&}
+        \item[\xmark] \texttt{\&mut} demoted to \texttt{\&}
+        \item[\xmark] several \texttt{\&mut} can coexist if never written to
+        ~\\~\\
+        \item[\(\to\)] mimicking exactly the borrow checker is not the goal
+    \end{description}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Reads on reborrow}
+    We must \textit{at least} do a read access on a reborrow: \texttt{dereferenceable}.\\
+
+    \begin{block}{Note}
+        We only do a read on mutable reborrows (creation of \texttt{Reserved}),
+        which is strictly more permissive than Stacked Borrows.
+    \end{block}
+
+    \begin{block}{Note}
+        One option to make Tree Borrows more restrictive (and allow more optimizations)
+        is to make non-two-phase mutable borrows \texttt{Active} (and write on reborrow).
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Raw pointers}
+    % TODO
+\end{frame}
+
+\subsection{Two-phase borrows}
+
+\begin{frame}[fragile, t]
+    \frametitle{Not all mutable references can be \texttt{Active}}
+    \begin{block}{}
+        \begin{lstlisting}[language=rust, escapechar=\@]
+@              @fn main() {
+@\visible<2>{>}@    let mut v = vec![0usize, 1, 2, 3];
+@\visible<3,5>{>}@    v.push(
+@\visible<4,5>{>}@        v.len()
+@\visible<5>{>}@    );
+@              @}
+        \end{lstlisting}
+    \end{block}
+    \begin{block}{}
+        \begin{tikzpicture}[
+            every node/.append style = {anchor = west},
+            grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+            edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+            ]
+            \node (nv) at (0,0) {\texttt{v:}}
+                    child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
+                    child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
+
+            \node<2->[right of=nv] {\texttt{Active}};
+            \node<3>[right of=nvpush] {~~\texttt{Active}};
+            \node<4->[right of=nvpush] {~~\texttt{Frozen}};
+            \node<4->[right of=nvlen] {~~\texttt{Frozen}};
+
+            \node (vert) at (5,0 |- nv) {};
+            \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
+            \node<4> at (vert |- nvlen) {\(\gets\) read};
+            \node<5> at (vert |- nvpush) {\(\gets\) write};
+        \end{tikzpicture}
+    \end{block}
+    \begin{onlyenv}<5>
+        \begin{block}{}
+            \texttt{push} attempts a write through \texttt{Frozen}.
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Behavior of \texttt{Reserved}}
+    \begin{itemize}
+        \item a mutable reference not yet written to
+        \item allows child reads, becomes \texttt{Active} on the first child write
+        \item allows foreign reads, becomes \texttt{Disabled} on the first foreign write
+    \end{itemize}
+    \(\to\) behaves as a \texttt{Frozen} until the first child write\\
+    \(\to\) can coexist with each other and with \texttt{Frozen}\\
+
+    In Tree Borrows we choose to make all mutable reborrows initially \texttt{Reserved},
+    not just two-phase ones.
+\end{frame}
+
+\begin{frame}[fragile, t]
+    \frametitle{\texttt{Reserved} in action}
+    \begin{block}{}
+        \begin{lstlisting}[language=rust, escapechar=\@]
+@              @fn main() {
+@\visible<2>{>}@    let mut v = vec![0usize, 1, 2, 3];
+@\visible<3,5>{>}@    v.push(
+@\visible<4,5>{>}@        v.len()
+@\visible<5>{>}@    );
+@              @}
+        \end{lstlisting}
+    \end{block}
+    \begin{block}{}
+        \begin{tikzpicture}[
+            every node/.append style = {anchor = west},
+            grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+            edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+            ]
+            \node (nv) at (0,0) {\texttt{v:}}
+                    child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
+                    child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
+
+            \node<2->[right of=nv] {\texttt{Active}};
+            \node<3,4>[right of=nvpush] {~~~~~\texttt{Reserved}};
+            \node<5>[right of=nvpush] {~~\texttt{Active}};
+            \node<4>[right of=nvlen] {~~\texttt{Frozen}};
+            \node<5>[right of=nvlen] {~~~~\texttt{Disabled}};
+
+            \node (vert) at (5,0 |- nv) {};
+            \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
+            \node<4> at (vert |- nvlen) {\(\gets\) read};
+            \node<5> at (vert |- nvpush) {\(\gets\) write};
+        \end{tikzpicture}
+    \end{block}
+    \begin{onlyenv}<5>
+        \begin{block}{}
+            Write through \texttt{Reserved} activates it into \texttt{Active}.
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
+\subsection{Justifying \texttt{noalias}}
+
+\begin{frame}[fragile]
+    \frametitle{The need for protectors}
+    \begin{onlyenv}<1>
+        \begin{block}{Function entry reborrows need something more}
+            \begin{lstlisting}[language=rust]
+fn copy(x: &mut u64, y: &u64) {
+    let val = *y;
+    *x = val;
+}
+
+fn main() {
+    let mut data = 0;
+    unsafe { copy(
+        &mut *addr_of_mut!(data),
+        &*addr_of!(data),
+    ); }
+}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        Concept adapted from Stacked Borrows: protectors.
+        \begin{itemize}
+            \item references get a protector on function entry
+            \item protector lasts until the end of the call
+        \end{itemize}
+        ~\\
+        While protected
+        \begin{itemize}
+            \item behavior changes
+                \begin{itemize}
+                    \item \(\texttt{Reserved} \to \texttt{Frozen}\) on foreign write
+                \end{itemize}
+            \item some transitions trigger UB
+                \begin{itemize}
+                    \item \(\texttt{\_} \to \texttt{Disabled}\)
+                    \item \(\texttt{Active} \to \texttt{Frozen}\)
+                \end{itemize}
+        \end{itemize}
+    \end{onlyenv}
 \end{frame}

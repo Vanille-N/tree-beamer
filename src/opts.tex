@@ -1,0 +1,100 @@
+\section{Optimizations}
+
+\subsection{Possible optimizations}
+
+% write grouping, read reordering, spurious read
+
+\begin{frame}[fragile, t]
+    \frametitle{Write reordering}
+    \begin{onlyenv}<1-5>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust, escapechar=@]
+@\visible<2>{>}@fn write(x: &mut u64) {
+@\visible<3>{>}@    *x = 42;
+@\visible<4,5>{>}@    opaque();
+@ @}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+    \begin{onlyenv}<6->
+        \begin{block}{}
+            \begin{lstlisting}[language=rust, escapechar=@]
+@ @fn write(x: &mut u64) {
+@ @    opaque();
+@ @    *x = 42;
+@ @}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<1-5>
+        \begin{block}{}
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node (nparent) at (0,0) {\texttt{?}}
+                    child {node (nx) {\texttt{x:}}};
+
+                \node<2>[right = 0cm of nx, anchor=west] {\texttt{Reserved}};
+                \node<3>[right = 0cm of nx, anchor=west] {\texttt{Active}};
+                \node<4>[right = 0cm of nx, anchor=west] {\texttt{Active} | \texttt{Frozen} | \texttt{Disabled}};
+                \node<5>[right = 0cm of nx, anchor=west] {\texttt{Active} | \cancel{\texttt{Frozen}} | \cancel{\texttt{Disabled}}};
+
+                \node (vert) at (7,0 |- nparent) {};
+                \node<3>[anchor=west] at (vert |- nx) {\(\gets\) write};
+                \node<4>[anchor=west] at (vert |- nparent) {\(\gets\) ?};
+            \end{tikzpicture}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<7>
+        \begin{block}{Nontermination breaks things}
+            \footnotesize Reverting this is not possible unless we know that \texttt{opaque()} terminates !
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+// put here a foreign pointer to x
+static mut PTR: Option<*mut u64> = Some(_);
+fn opaque() { unsafe {
+    if let Some(ptr) = PTR {
+        assert!(*ptr != 42);
+        loop {}
+    }
+} }
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Spurious reads}
+
+\end{frame}
+
+\subsection{Lost optimizations}
+
+% spurious write, mention nontermination
+
+\begin{frame}
+    \frametitle{}
+\end{frame}
+
+\subsection{Strengthening the model}
+
+% write on function entry
+%   + spurious writes
+%   - copy_nonoverlapping
+
+\begin{frame}
+    \frametitle{}
+\end{frame}
+
+% Active -> Frozen
+%   + move write towards read
+%   ~ no real pattern lost, because borchk forbids it already
+%   - permute all reads
+%     (mention stacked borrows)
+
+\begin{frame}
+    \frametitle{}
+\end{frame}
