@@ -5,12 +5,12 @@
 % write grouping, read reordering, spurious read
 
 \begin{frame}[fragile, t]
-    \frametitle{Write reordering}
+    \frametitle{{\cmark} Delay protected writes}
     \begin{onlyenv}<1-5>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 @\visible<2>{>}@fn write(x: &mut u64) {
-@\visible<3>{>}@    *x = 42;
+@\visible<3>{>}@    *x = 42; // move down ?
 @\visible<4,5>{>}@    opaque();
 @ @}
             \end{lstlisting}
@@ -66,27 +66,151 @@ fn opaque() { unsafe {
     \end{onlyenv}
 \end{frame}
 
-\begin{frame}
-    \frametitle{Spurious reads}
+\begin{frame}[fragile, t]
+    \frametitle{{\cmark} Spurious read}
+    \begin{onlyenv}<1-2>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust]
+fn sum_while(incr: &u64) -> u64 {
+    let mut sum = 0;
 
+    while condition() {
+        sum += *incr; // hoist ?
+    }
+    sum
+}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust]
+fn sum_while(incr: &u64) -> u64 {
+    let mut sum = 0;
+    let incr = *incr;
+    while condition() {
+        sum += incr;
+    }
+    sum
+}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2->
+        \begin{block}{}
+            \begin{itemize}
+                \item \texttt{incr} cannot be mutated
+                \item thanks to the read on reborrow and the protector, \texttt{incr} is known to be readable...
+                    \begin{itemize}
+                        \item ...even if \texttt{condition()} is never true
+                        \item ...even if \texttt{condition()} does not terminate
+                    \end{itemize}
+            \end{itemize}
+        \end{block}
+    \end{onlyenv}
 \end{frame}
 
 \subsection{Lost optimizations}
 
 % spurious write, mention nontermination
 
-\begin{frame}
-    \frametitle{}
+\begin{frame}[fragile, t]
+    \frametitle{{\xmark} Spurious write}
+    \begin{onlyenv}<1>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust]
+fn repeat_write(
+    target: &mut u64,
+    source: u64,
+    repeat: usize,
+) {
+
+
+    for _ in 0..repeat {
+        *target = source;
+    }
+}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust]
+fn repeat_write(
+    target: &mut u64,
+    source: u64,
+    repeat: usize,
+) {
+    let old = *target;
+
+    for _ in 0..repeat {
+        *target = source;
+    }
+}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3->
+        \begin{block}{}
+            \begin{lstlisting}[language=rust]
+fn repeat_write(
+    target: &mut u64,
+    source: u64,
+    repeat: usize,
+) {
+    let old = *target;
+    *target = source;
+    if unlikely!(repeat == 0) {
+        *target = old;
+    }
+}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<4>
+        \begin{block}{}
+            Write then revert is still a write...
+        \end{block}
+    \end{onlyenv}
 \end{frame}
 
 \subsection{Strengthening the model}
+
+% TODO: add an intro slide
 
 % write on function entry
 %   + spurious writes
 %   - copy_nonoverlapping
 
-\begin{frame}
-    \frametitle{}
+\begin{frame}[fragile, t]
+    \frametitle{Write on function entry}
+
+    \begin{exampleblock}{Variant}
+        Write to mutable references on function entry.
+    \end{exampleblock}
+
+    \begin{block}{{\cmark} Spurious writes}
+        \begin{itemize}
+            \item guaranteed writeable by the write on function entry
+            \item still \texttt{Active} thanks to the protector
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{{\xmark} ``\texttt{as\_mut\_ptr}'' pattern}
+        \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+BCryptGenRandom(
+    handle,
+    buffer.as_mut_ptr(),   // takes `&mut buffer` despite being read-only
+    buffer.len() as ULONG, // invalidates mutable borrows of `buffer`
+    opts,
+)
+        \end{lstlisting}
+    \end{block}
 \end{frame}
 
 % Active -> Frozen
@@ -95,6 +219,72 @@ fn opaque() { unsafe {
 %   - permute all reads
 %     (mention stacked borrows)
 
-\begin{frame}
-    \frametitle{}
+\begin{frame}[fragile, t]
+    \frametitle{\texttt{Active} becomes \texttt{Disabled}}
+
+    \begin{exampleblock}{Variant}
+        On a foreign read, \texttt{Active} becomes \texttt{Disabled} instead of \texttt{Frozen}.
+    \end{exampleblock}
+
+%%% possible
+
+    \begin{onlyenv}<2>
+        \begin{block}{{\cmark} Delay arbitrary writes towards reads}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let x = &mut *y;
+*x = 42; // move down ?
+opaque();
+let z = *x;
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3-4>
+        \begin{block}{{\cmark} Delay arbitrary writes towards reads}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let x = &mut *y;
+opaque();
+*x = 42;
+let y = *x;
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<4>
+        \begin{block}{}
+            Was already possible for protected references,
+            this makes it available always.
+        \end{block}
+    \end{onlyenv}
+
+%%% impossible
+
+    \begin{onlyenv}<5>
+        \begin{block}{{\xmark} Arbitrary read reordering}
+            \begin{lstlisting}[language=rust]
+let x = &mut *y;
+*x = 42;
+let y = *x; // move down ?
+let w = *z;
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<6-7>
+        \begin{block}{{\xmark} Arbitrary read reordering}
+            \begin{lstlisting}[language=rust]
+let x = &mut *y;
+*x = 42;
+let w = *z; // invalidates `x`
+let y = *x; // UB!
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<7>
+        \begin{block}{}
+            More UB is not \textit{always} more optimizations!\\
+            Same phenomenon with making non-two-phase directly \texttt{Active}.
+        \end{block}
+    \end{onlyenv}
 \end{frame}

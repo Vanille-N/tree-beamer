@@ -45,11 +45,4 @@
         UB in \texttt{arrayvec}, \texttt{slotmap}, \texttt{nalgebra}, \texttt{json}, ...\\
         according to SB but not TB
     \end{block}
-    \begin{block}{Grepping \texttt{as\_mut\_ptr} in error logs}
-        \begin{description}
-            \item[SB:] 12226
-            \item[TB:] 3252
-        \end{description}
-        {\scriptsize\texttt{rg as\_mut\_ptr logs/ ---count-matches ---no-filename | paste -s -d+ - | bc}}
-    \end{block}
 \end{frame}
