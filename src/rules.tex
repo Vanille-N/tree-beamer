@@ -78,23 +78,22 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{Reads on reborrow}
-    We must \textit{at least} do a read access on a reborrow: \texttt{dereferenceable}.\\
-
-    \begin{block}{Note}
-        We only do a read on mutable reborrows (creation of \texttt{Reserved}),
-        which is strictly more permissive than Stacked Borrows.
-    \end{block}
-
-    \begin{block}{Note}
-        One option to make Tree Borrows more restrictive (and allow more optimizations)
-        is to make non-two-phase mutable borrows \texttt{Active} (and write on reborrow).
-    \end{block}
-\end{frame}
-
-\begin{frame}
     \frametitle{Raw pointers}
-    % TODO
+    \begin{block}{Mutability \textit{and} aliasing ?}
+        Make them all the ``same'' pointer: same tag.
+        \begin{itemize}
+            \item arbitrary usage order between pointers with the same tag
+            \item all copies lose permissions at the same time as the original
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{\texttt{UnsafeCell}}
+        Similar approach: \texttt{\&UnsafeCell<T>} is treated as a raw pointer.
+    \end{block}
+
+    \begin{exampleblock}{WIP: finer grained version ?}
+        Thoughts of introducing new permission to handle per-location interior mutability
+    \end{exampleblock}
 \end{frame}
 
 \subsection{Two-phase borrows}
@@ -149,6 +148,7 @@
     \(\to\) behaves as a \texttt{Frozen} until the first child write\\
     \(\to\) can coexist with each other and with \texttt{Frozen}\\
 
+    ~\\
     In Tree Borrows we choose to make all mutable reborrows initially \texttt{Reserved},
     not just two-phase ones.
 \end{frame}
@@ -196,28 +196,44 @@
 
 \subsection{Justifying \texttt{noalias}}
 
+\begin{frame}
+    \frametitle{Reads on reborrow}
+    We must \textit{at least} do a read access on a reborrow: \texttt{dereferenceable}.\\
+
+    \begin{block}{Note}
+        We only do a read on mutable reborrows (creation of \texttt{Reserved}),
+        which is strictly more permissive than Stacked Borrows.
+    \end{block}
+
+    \begin{block}{Note}
+        One option to make Tree Borrows more restrictive (and allow more optimizations)
+        is to make non-two-phase mutable borrows \texttt{Active} (and write on reborrow).
+    \end{block}
+\end{frame}
+
 \begin{frame}[fragile]
     \frametitle{The need for protectors}
-    \begin{onlyenv}<1>
+    \begin{onlyenv}<1-3>
         \begin{block}{Function entry reborrows need something more}
-            \begin{lstlisting}[language=rust]
-fn copy(x: &mut u64, y: &u64) {
-    let val = *y;
-    *x = val;
-}
+            \begin{lstlisting}[language=rust, escapechar=@]
+@ @fn main() {
+@ @    let mut data = 0;
+@ @    unsafe { copy(
+@\visible<2>{>}@        &mut *addr_of_mut!(data),
+@\visible<2>{>}@        &*addr_of!(data),
+@ @    ); }
+@ @}
 
-fn main() {
-    let mut data = 0;
-    unsafe { copy(
-        &mut *addr_of_mut!(data),
-        &*addr_of!(data),
-    ); }
-}
+@ @fn copy(x: &mut u64, y: &u64) {
+@\visible<3>{>}@    let val = *y; // x: Reserved
+@\visible<3>{>}@    *x = val; // x: Active
+@ @}
+
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<2>
+    \begin{onlyenv}<4>
         Concept adapted from Stacked Borrows: protectors.
         \begin{itemize}
             \item references get a protector on function entry
@@ -236,5 +252,10 @@ fn main() {
                     \item \(\texttt{Active} \to \texttt{Frozen}\)
                 \end{itemize}
         \end{itemize}
+
+        \begin{block}
+            Protectors provide enough guarantees to justify \texttt{noalias} on
+            references.
+        \end{block}
     \end{onlyenv}
 \end{frame}

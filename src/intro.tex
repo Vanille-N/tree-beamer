@@ -58,21 +58,21 @@ fn assign(target: &mut u64, source: &u64) {
 \begin{frame}[fragile]
     \frametitle{Aliasing assumptions are easy to break}
     \begin{block}{}
-        \begin{lstlisting}[language=rust]
-static mut PTR: Option<*mut u64> = None;
-fn opaque() { unsafe {
-    if let Some(ptr) = PTR {
-        *ptr += 1;
-    }
-} }
+        \begin{lstlisting}[language=rust, escapechar=@]
+@ @static mut PTR: Option<*mut u64> = None;
+@ @fn opaque() { unsafe {
+@ @    if let Some(ptr) = PTR {
+@\visible<3>{>}@        *ptr += 1;
+@ @    }
+@ @} }
 
-fn main() {
-   let x = &mut 42u64;
-   let y = &mut 666u64;
-   unsafe { PTR = Some(y as *mut u64); }
-   assign(&mut *x, &*y);
-   assert_eq!(*x, 666);
-}
+@ @fn main() {
+@ @   let x = &mut 42u64;
+@ @   let y = &mut 666u64;
+@\visible<2>{>}@   unsafe { PTR = Some(y as *mut u64); }
+@ @   assign(&mut *x, &*y);
+@ @   assert_eq!(*x, 666);
+@ @}
         \end{lstlisting}
     \end{block}
 \end{frame}
@@ -81,18 +81,10 @@ fn main() {
     \frametitle{Is my optimization unsound ?\\No, it's the client that is UB.}
     In this case: pointer aliasing UB.
 
-
     \begin{itemize}
-        \item ``miscompiling'' some weird code is worth the gain for the majority of codebases
-            (as long as we have a tool to detect it);
-        \item there's already UB elsewhere anyway (LLVM, uninit, invalid values, data races);
-        \item there is overlap: Tree Borrows UB encompasses some LLVM (\texttt{noalias}) and
-            data race UB.
+        \item enable optimizations by ruling out aliasing patterns
+        \item justify LLVM attributes on pointers
     \end{itemize}
-    \begin{block}{Later}
-        Tree Borrows brings pointer aliasing UB more in line with the other kinds:
-        see \texttt{crates.io}-wide measurements.
-    \end{block}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -134,7 +126,7 @@ error: Undefined Behavior:
   --> src/example.rs
    |
    | fn assign(target: &mut u64, source: &u64) {
-   |                                 ^^^^^^
+   |                                ^^^^^^
    |
    [...]
         \end{lstlisting}
