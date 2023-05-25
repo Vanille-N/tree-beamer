@@ -11,9 +11,11 @@
             \begin{minipage}{\textwidth}
                 \begin{lstlisting}[language=rust]
 fn assign(target: &mut u64, source: &u64) {
+
    let val = *source;
    opaque();
    *target = val;
+
 }
                 \end{lstlisting}
             \end{minipage}
@@ -27,7 +29,9 @@ fn assign(target: &mut u64, source: &u64) {
 fn assign(target: &mut u64, source: &u64) {
    opaque();
    let val = *source;
+
    *target = val;
+
 }
                 \end{lstlisting}
             \end{minipage}
@@ -42,7 +46,9 @@ fn assign(target: &mut u64, source: &u64) {
             \begin{minipage}{\textwidth}
                 \begin{lstlisting}[language=rust, escapechar=!]
 fn assign(target: &mut u64, source: &u64) {
+
    let val = *source;
+
    *target = val;
    opaque();
 }

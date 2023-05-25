@@ -120,8 +120,7 @@ fn foo(w2: &mut u64) {
             grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
             edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
             \node (root) at (0,0) {\texttt{?}}
-                child {node {\texttt{?}}
-                    child {node (nprevlast) {\texttt{?}}}
+                child {node (nfather) {\texttt{?}}
                     child {node (nxfirst) {\color{red}\texttt{x}}
                         child {node {\texttt{?}}}
                         child {node {\texttt{?}}
@@ -129,13 +128,14 @@ fn foo(w2: &mut u64) {
                     child[missing] {}
                     child[missing] {}
                     child[missing] {}
-                    child {node (nnextfirst) {\texttt{?}}
+                    child {node (nnextfirst) {\texttt{?}}}
+                    child {node {\texttt{?}}
                         child {node (nnextlast) {\texttt{?}}}}}
                 ;
             \draw (2.5,0 |- root) node (vmark) {};
             \draw [decorate, decoration = {brace}] (vmark |- nxfirst) -- (vmark |- nxlast)
                 node[midway] {~\textit{child} accesses for \color{red}\texttt{x}};
-            \draw [decorate, decoration = {brace}] (vmark |- root) -- (vmark |- nprevlast)
+            \draw [decorate, decoration = {brace}] (vmark |- root) -- (vmark |- nfather)
                 node[midway] {~\textit{foreign} accesses for \color{red}\texttt{x}};
             \draw [decorate, decoration = {brace}] (vmark |- nnextfirst) -- (vmark |- nnextlast)
                 node[midway] {~\textit{foreign} accesses for \color{red}\texttt{x}};
@@ -301,3 +301,20 @@ let y = &*x;
     \end{block}
 \end{frame}
 
+\begin{frame}
+    \frametitle{Summary}
+    \begin{itemize}
+        \item pointers are identified by a tag, and tags are stored in a tree structure;
+        \item a reborrow of \(t\) either...
+            \begin{itemize}
+                \item creates a new tag \(t'\), \(t'\) is recorded as a child of \(t\), or
+                \item keeps the same tag \(t\).
+            \end{itemize}
+        \item each tag has a permission on each location:
+            \begin{itemize}
+                \item accesses through child tags are \textit{child accesses},
+                \item accesses through non-child tags are \textit{foreign accesses},
+                \item all accesses can cause a modification of the permission, and some modifications are indicators of UB.
+            \end{itemize}
+    \end{itemize}
+\end{frame}

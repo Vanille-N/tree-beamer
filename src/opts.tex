@@ -12,6 +12,7 @@
 @\visible<2>{>}@fn write(x: &mut u64) {
 @\visible<3>{>}@    *x = 42; // move down ?
 @\visible<4,5>{>}@    opaque();
+
 @ @}
             \end{lstlisting}
         \end{block}
@@ -20,6 +21,7 @@
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 @ @fn write(x: &mut u64) {
+
 @ @    opaque();
 @ @    *x = 42;
 @ @}
@@ -234,6 +236,7 @@ BCryptGenRandom(
 let x = &mut *y;
 *x = 42; // move down ?
 opaque();
+
 let z = *x;
             \end{lstlisting}
         \end{block}
@@ -243,6 +246,7 @@ let z = *x;
         \begin{block}{{\cmark} Delay arbitrary writes towards reads}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let x = &mut *y;
+
 opaque();
 *x = 42;
 let z = *x;
@@ -266,6 +270,7 @@ let x = &mut *y;
 *x = 42;
 let y = *x; // move down ?
 let w = *z;
+
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
@@ -275,6 +280,7 @@ let w = *z;
             \begin{lstlisting}[language=rust]
 let x = &mut *y;
 *x = 42;
+
 let w = *z; // invalidates `x`
 let y = *x; // UB!
             \end{lstlisting}
@@ -287,4 +293,14 @@ let y = *x; // UB!
             Same phenomenon with making non-two-phase directly \texttt{Active}.
         \end{block}
     \end{onlyenv}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Summary}
+    \begin{itemize}
+        \item read reorderings, spurious reads are possible
+        \item spurious writes and unprotected write reorderings are not
+        \item the model can be strengthened to justify stronger optimizations for
+            writes, but at the cost of commonly written patterns and some read-read reorderings
+    \end{itemize}
 \end{frame}

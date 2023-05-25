@@ -46,3 +46,24 @@
         according to SB but not TB
     \end{block}
 \end{frame}
+
+\begin{frame}
+    \frametitle{Summary}
+    \begin{itemize}
+        \item patterns allowed by Stacked Borrows but forbidden by Tree Borrows are rare
+        \item Tree Borrows UB is much less common on \texttt{crates.io}
+        \item elimination of out-of-bounds UB
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Questions ?}
+
+    Not talked about
+    \begin{itemize}
+        \item performance of TB in miri
+        \item tweaked rules for interactions between interior mutability and protectors/\texttt{Reserved}
+        \item lazy initialization outside bounds
+        \item ongoing attempt at formalization
+    \end{itemize}
+\end{frame}

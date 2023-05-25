@@ -23,15 +23,15 @@
 
 % What structure do we want for the presentation ?
 % In no particular order:
-%[ ] - SB basics
+%[X] - SB basics
 %[X]   - quick word on 2-phase borrows
 %[X]   - same interface
 %[X]   - stack structure and comparison of dimensions
-%[ ] - comparison with SB
-%[ ]   - are the lost optimizations important ?
+%[X] - comparison with SB
+%[X]   - are the lost optimizations important ?
 %[X]     - spurious writes: can't assume termination
-%[ ]   - what more code can we write ?
-%[ ]     - copy_nonoverlapping is a good selling point
+%[X]   - what more code can we write ?
+%[X]     - copy_nonoverlapping is a good selling point
 %[X] - derivation of the tree structure
 %[X]   - with things that should not change anything significant
 %[X]     - `fn(&x) { x }` ~ `fn(&x) { &*x }`
@@ -55,6 +55,8 @@
 %[X] - how to use / a working example
 %[X]   - MIRIFLAGS
 %[X]   - interpretation of errors
+
+%%% SECTIONS %%%
 
 \input{intro}
 
