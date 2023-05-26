@@ -1,4 +1,11 @@
-\section{Why a tree ?}
+\section{Tree Structure}
+
+% FIXME:
+% * Are you also keeping track of the well-formedness of the tree somehow? 
+%   Is it an assumption or do you throw an error if you somehow detect a cycle?
+% * Is there a state transition between the Active-Frozen-Disabled?
+% * bring back the intuition of why a tree is a better structure
+
 
 \begin{frame}[fragile]
     \frametitle{A Tree of pointers}
@@ -13,7 +20,7 @@
                     child {node {\texttt{y2}}}}
                 child[missing] {}
                 child {node {\texttt{z1}, \texttt{z2}}}
-                child {node {w1}
+                child {node {\texttt{w1}}
                     child {node {\texttt{w2}}
                         child {node {\texttt{w3}}}}};
             \end{tikzpicture}
@@ -59,6 +66,10 @@ fn foo(w2: &mut u64) {
     \end{itemize}
 \end{frame}
 
+% FIXME:
+% - slide 9: have examples for each of these alongside?
+
+
 \begin{frame}
     \frametitle{One pointer, \(2 \times 2\) kinds of accesses}
     \begin{block}{}
@@ -96,6 +107,10 @@ fn foo(w2: &mut u64) {
         so usually all unknown accesses are \textit{foreign} accesses.
     \end{block}
 \end{frame}
+
+% FIXME:
+% - slide 10 was very quick, couldnt' read text in time
+
 
 \begin{frame}
     \frametitle{Summary}

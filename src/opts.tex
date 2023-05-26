@@ -2,7 +2,10 @@
 
 \subsection{Possible optimizations}
 
-% write grouping, read reordering, spurious read
+% FIXME:
+% Optimizations section: big table would be nice. Especially because you don't have a benchmarking result, seeing that most optimizations are still preserved (or more optimizations are added) by TB (vs. SB) would be nice
+%- slide 20: put a clear sign that you're transitiioning to a different part of talk. can you visualize the protector stuff somehow?
+
 
 \begin{frame}[fragile, t]
     \frametitle{{\cmark} Delay protected writes}
@@ -52,6 +55,10 @@
     \end{onlyenv}
 \end{frame}
 
+% FIXME:
+% - slide 21: "speculative read" should be slide title?
+
+
 \begin{frame}[fragile, t]
     \frametitle{{\cmark} Spurious read}
     \begin{onlyenv}<1-2>
@@ -100,7 +107,10 @@ fn sum_while(incr: &u64) -> u64 {
 
 \subsection{Lost optimizations}
 
-% spurious write, mention nontermination
+% FIXME:
+% - slide 22: is stacked borrows strictly stronger than tree borrows? maybe give examples of these optimizations before? (speculative write, etc. )
+% - slide 23: I didn't get this. Very hard to follow. Maybe example with intermediate states would help?
+
 
 \begin{frame}
     \frametitle{Allowed by Stacked Borrows but not Tree Borrows}
@@ -111,16 +121,11 @@ fn sum_while(incr: &u64) -> u64 {
 
     \begin{onlyenv}<2>
         \begin{block}{}
-            What would be the cost of enabling those optimizations ?
+            What would be the cost of enabling those optimizations ? \\
+            (SB has no choice, TB does)
         \end{block}
     \end{onlyenv}
 \end{frame}
-
-% TODO: add an intro slide
-
-% write on function entry
-%   + spurious writes
-%   - copy_nonoverlapping
 
 \begin{frame}[fragile, t]
     \frametitle{Speculative writes}
@@ -148,11 +153,9 @@ BCryptGenRandom(
     \end{block}
 \end{frame}
 
-% Active -> Frozen
-%   + move write towards read
-%   ~ no real pattern lost, because borchk forbids it already
-%   - permute all reads
-%     (mention stacked borrows)
+% FIXME:
+% - slide 24: the change in the opt is hard to see because stuff is shifting.
+
 
 \begin{frame}[fragile, t]
     \frametitle{Read-Write reorderings}

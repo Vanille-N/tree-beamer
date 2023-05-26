@@ -1,0 +1,220 @@
+\begin{frame}
+    \frametitle{Indistinguishable structures: trees vs stacks}
+    \begin{minipage}{0.45\textwidth}
+        \begin{block}{}
+            \[[a, b, c, d] \ne [a, c, d, b]\]
+            \centering
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+            \node[draw] at (0,0) {\(a\)}
+                child {node[draw] {\(b\)}}
+                child {node[draw] {\(c\)}}
+                child {node[draw] {\(d\)}};
+            \node at (1.5,-0.5) {\(\simeq\)};
+            \node[draw] at (2.5,0) {\(a\)}
+                child {node[draw] {\(c\)}}
+                child {node[draw] {\(d\)}}
+                child {node[draw] {\(b\)}};
+            \end{tikzpicture}
+        \end{block}
+    \end{minipage}
+    ~\ ~\
+    \begin{minipage}{0.45\textwidth}
+        \begin{block}{}
+            \[[a, b, c, d] \simeq [a, b, c, d]\]
+            \centering
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+                \node[draw] at (0,0) {\(a\)}
+                    child {node[draw] {\(b\)}}
+                    child {node[draw] {\(c\)}
+                        child[draw] {node[draw] {\(d\)}}};
+                \node at (2,-0.5) {\(\ne\)};
+                \node[draw] at (2.7,0) {\(a\)}
+                    child {node[draw] {\(b\)}
+                        child {node[draw] {\(c\)}}}
+                    child [missing] {}
+                    child {node[draw] {\(d\)}};
+            \end{tikzpicture}
+        \end{block}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{All strict child accesses are the same}
+    \begin{minipage}{0.45\textwidth}
+        \begin{block}{}
+            {\tiny
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+fn reborrow(x: &u64) -> &u64 {
+    &*x
+}
+            \end{lstlisting}
+            }
+            {\small
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+            \node (nxcaller) at (0,0) {\texttt{x}}
+                child {node (nxcallee) {\texttt{x}}
+                    child {node {\texttt{\&*x}}
+                        child {node {\texttt{ret}}
+                            child {node {} edge from parent [draw=none]}}}};
+            \node[right of=nxcaller] {\tiny(caller)};
+            \node[right of=nxcallee] {\tiny(callee)};
+            \end{tikzpicture}
+            }
+        \end{block}
+    \end{minipage}
+    ~\ ~\
+    \begin{minipage}{0.45\textwidth}
+        \begin{block}{}
+            {\tiny
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+fn reborrow(x: &u64) -> &u64 {
+    &*&*x
+}
+            \end{lstlisting}
+            }
+            {\small
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+            \node (nxcaller) at (0,0) {\texttt{x}}
+                child {node (nxcallee) {\texttt{x}}
+                    child {node {\texttt{\&*x}}
+                        child {node {\texttt{\&*\&*x}}
+                            child {node {\texttt{ret}}}}}};
+            \node[right of=nxcaller] {\tiny(caller)};
+            \node[right of=nxcallee] {\tiny(callee)};
+            \end{tikzpicture}
+            }
+        \end{block}
+    \end{minipage}
+
+    \begin{block}{}
+        {\small
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+            \node (nx) at (0,0) {\texttt{x}}
+                    child {node {\texttt{?}}
+                        child {node {\texttt{ret}}}};
+            \node[right of=nx] {\tiny(caller)};
+            \end{tikzpicture}
+        }
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{All non-child accesses are the same}
+        \begin{minipage}{0.28\textwidth}
+        \begin{block}{}
+            {\tiny
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let y = &*&*x;
+x.do_something();
+            \end{lstlisting}
+            }
+            {\small
+                \begin{tikzpicture}[
+                    every node/.append style = {anchor = west},
+                    grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                    edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+                \node (nx) at (0,0) {\texttt{x}}
+                    child {node {\texttt{\&*x}}
+                        child {node {\texttt{y}}}};
+                \node[right of=nx] {\(\gets \text{access}\)};
+                \end{tikzpicture}
+            }
+        \end{block}
+    \end{minipage}
+    ~\ ~\
+    \begin{minipage}{0.28\textwidth}
+        \begin{block}{}
+            {\tiny
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let y = &*x;
+x.do_something();
+            \end{lstlisting}
+            }
+            {\small
+                \begin{tikzpicture}[
+                    every node/.append style = {anchor = west},
+                    grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                    edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+                \node (nx) at (0,0) {\texttt{x}}
+                    child {node {\texttt{y}}
+                        child {node {} edge from parent [draw=none]}};
+                \node[right of=nx] {\(\gets \text{access}\)};
+                \end{tikzpicture}
+            }
+        \end{block}
+    \end{minipage}
+    ~\ ~\
+    \begin{minipage}{0.28\textwidth}
+        \begin{block}{}
+            {\tiny
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let y = &*x;
+(&*x).do_something();
+            \end{lstlisting}
+            }
+            {\small
+                \begin{tikzpicture}[
+                    every node/.append style = {anchor = west},
+                    grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                    edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+                \node (nx) at (0,0) {\texttt{x}}
+                    child {node(nrefx) {\texttt{\&*x}}}
+                    child {node {\texttt{y}}};
+                \node[right of=nrefx] {\(\gets \text{access}\)};
+                \end{tikzpicture}
+            }
+        \end{block}
+    \end{minipage}
+
+
+    \begin{block}{}
+        {\small
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+            \node (nx) at (0,0) {\texttt{?}}
+                    child {node {\texttt{y}}};
+            \node[right of=nx] {\(\gets \text{access}\)};
+            \end{tikzpicture}
+        }
+    \end{block}
+\end{frame}
+
+\begin{frame}[t]
+    \frametitle{Raw pointers}
+    \begin{block}{Mutability \textit{and} aliasing ?}
+        Make them all the ``same'' pointer: same tag.
+        \begin{itemize}
+            \item arbitrary usage order between pointers with the same tag
+            \item all copies lose permissions at the same time as the original
+        \end{itemize}
+    \end{block}
+
+    \begin{onlyenv}<2>
+        \begin{block}{\texttt{UnsafeCell}}
+            Similar approach: \texttt{\&UnsafeCell<T>} is treated as a raw pointer.
+        \end{block}
+
+        \begin{exampleblock}{WIP: finer grained version ?}
+            Thoughts of introducing new permission to handle per-location interior mutability
+        \end{exampleblock}
+    \end{onlyenv}
+\end{frame}
+
+

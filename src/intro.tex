@@ -4,6 +4,35 @@
 
 \section{Introduction}
 
+% FIXME:
+% * "transitions can ignore UB" -> can you explain more in detail what you mean by that, or clarify
+% * does everyone know stacked borrows?
+% * SB is more strict in what way? can you give an example of what the limitations are?
+% * better highlighting of marked lines
+% - s5: you didn't introduce tree borrows distinctly before?
+% - s6: "I can't ignore StackedBorrows" sounds weird. The idea is very much based on it, no? You could say "TreeBorrows does not come out of the void" or something.
+% maybe put a demo of the miri impl somewhere? that might also be good to show some of the examples/ motivate features.
+% The new contribution of SB is unclear
+% talk about operational semantics, ditch "same interface"
+% introduce SB early, say upfront that the goal is compiler optimizations (remove loads, remove stores, permute operations)
+% define "UB" = Undefined Behavior
+% impossible to reorder reads. does the compiler reorder reads ? Is compiler + SB unsound ?
+% flip around the patterns vs opts tradeoff: we need this pattern so we cannot have this optimization
+% what is miri ? Say that it does not change the type system but checks its guarantees.
+% MIRIFLAGs=... line in demo: make invocation of cargo more visible
+% make the first example executable and explain it more; introduce raw pointers as a technique to bypass the type system
+% UB vs unsound, who is at fault ?
+% intro example motivates SB, not TB. TB is motivated immediately afterwards by an example that SB rejects (or the list of common crates with UB): the motivation for TB is we want more defined behavior, and see what optimizations we have to sacrifice in the process
+% "coexist in miri" don't care.
+% tradeoff between optimizations and UB more explicit
+% explain why the tree is structural; provide intuition why it's also the good structure
+% just mention that it's per-location, remove the weird slide with a list of perms.
+% fit state transition system at each step of the model somehow ?
+% more annotations in code examples
+% better explanation of what the comparison to the borchk means; less fixing show model that works
+% replace "need fixing" to say explicitly that it is the object of the two following subsections
+% be clearer what is the version of the model at all times
+
 \begin{frame}[fragile,t]
     \frametitle{A motivating example}
     \begin{onlyenv}<1-2>
@@ -107,7 +136,7 @@
 @ @
 @ @   const VAL: u64 = 42;
 @ @   *rmut = VAL;
-@ @   foo(&mut *rmut); // Shoul be a noop, right ?
+@ @   foo(&mut *rmut); // Should be a noop wrt x, right ?
 @ @   assert_eq!(*rmut, VAL);
 @ @}
             \end{lstlisting}
@@ -145,6 +174,7 @@
     \begin{itemize}
         \item enable optimizations by ruling out aliasing patterns
         \item justify LLVM attributes on pointers
+        % FIXME: which attributes ?
     \end{itemize}
 \end{frame}
 
@@ -169,10 +199,21 @@ error: Undefined Behavior:
         \end{lstlisting}
 \end{frame}
 
+% FIXME:
+% - presentation on slide 6: very bottom-up. Maybe have some more examples first?
+% - maybe get inspiration from stacked borrows paper presentation?
+% - generally,I think you shouldn't assume that everyone is deeply familiar with the ideas of SB
+
 \begin{frame}[fragile]
     \frametitle{(Tree|Stacked) Borrows}
     \begin{itemize}
         \item SB predates TB: design of TB inspired by shortcomings of SB
+            \begin{itemize}
+                \item two-phase borrows do not match their informal specification
+                \item mutable reborrows assert uniqueness too eagerly
+                \item cannot handle types of unknown size
+                \item overall: SB is too strict
+            \end{itemize}
         \item similar enough interface for them to coexist in \texttt{miri}\\
             (switch: \texttt{MIRIFLAGS+=" -Zmiri-tree-borrows"})
             \begin{minipage}{0.9\textwidth}

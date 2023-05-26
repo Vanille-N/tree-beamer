@@ -1,9 +1,10 @@
 \section{Deriving rules}
 
-% first Active, Frozen, Disabled
-% then Reserved
-% then protectors
-% then interiormut
+% FIXME:
+% Frozen: why wouldn't you also allow foreign to read?
+% Maybe you can formulate a lattice of set of allowed behaviors by "Active-Frozen-Disabled" tags if it makes sense (if it's too complicated to  give a transition diagram)
+% - slide 11: maybe also show offsets on a line, so that I dont' have to count? take more time to explain the ops.
+
 
 \begin{frame}
     \frametitle{Life of a permission}
@@ -21,6 +22,10 @@
         \only<6->{\([p_2, p_3, {\color{blue}p_6}, {\color{blue}p_7}, {\color{blue}p_8}, p_0, ...]\)}
         \only<6->{\(\text{UB at location [3]: } p_4 \to p_7\)}~\\
 \end{frame}
+
+% FIXME:
+% - slide 12: at this point, I didn't quite get yet what a foreign access is.
+
 
 \begin{frame}[t]
     \frametitle{Active, Frozen, Disabled}
@@ -79,6 +84,9 @@
     \end{onlyenv}
 \end{frame}
 
+% FIXME:
+% - I like slide 13
+
 \begin{frame}
     \frametitle{Parallel to the borrow checker}
     Similarities
@@ -86,16 +94,24 @@
     \begin{description}
         \item[\cmark] \texttt{\&mut} readable and writeable
         \item[\cmark] \texttt{\&} and all their children are only readable
-        \item[\cmark] no one can read/write to the location of our \texttt{\&mut}
-        \item[\cmark] no one can write to the location of our \texttt{\&}
-    \end{description}
+        \item[\cmark] data behind \texttt{\&mut} is owned exclusively
+        \item[\cmark] data behind \texttt{\&} is immutable
+    \end{description}~\\
 
-    Differences
+    Differences (acceptable)
     \hspace{-5em}
     \begin{description}
         \item[\xmark] \texttt{\&mut} demoted to \texttt{\&}
         \item[\xmark] several \texttt{\&mut} can coexist if never written to
-    \end{description}
+    \end{description}~\\
+
+    Differences (need fixing)
+    \hspace{-5em}
+    \begin{description}
+        \item[\xmark] two-phase borrows not handled yet
+        \item[\xmark] too permissive for \texttt{noalias} and \texttt{dereferenceable}
+    \end{description}~\\
+
 \end{frame}
 
 \subsection{Two-phase borrows}
@@ -139,6 +155,12 @@
         \end{block}
     \end{onlyenv}
 \end{frame}
+
+
+% FIXME:
+% Slide 15 was a little bit quick, you could send more time here or cut out the second half of the text on this slide
+% - slide 15: put on slide that you introduce a new permission "New permission: Reserved"
+
 
 \begin{frame}
     \frametitle{Behavior of \texttt{Reserved}}
@@ -202,35 +224,42 @@
     \frametitle{Reads on reborrow}
     We must \textit{at least} do a read access on a reborrow: \texttt{dereferenceable}.\\
 
-    \begin{block}{Note}
+    \begin{block}{\texttt{extern} type}
+        A reborrow on the range \([\text{begin}, \text{end})\) produces
+        \begin{itemize}
+            \item a read access on \([\text{begin}, \text{end})\)
+            \item a new permission (\texttt{Reserved} or \texttt{Frozen}) on \([0, +\infty)\)
+        \end{itemize}
+    \end{block}
+
+     \begin{block}{}
         On mutable reborrows (creation of \texttt{Reserved}) we only perform a read,
         which is strictly more permissive than Stacked Borrows.
     \end{block}
 \end{frame}
 
+% FIXME: Slide 18 title can be slightly more descriptive, describing what protectors are
+% (The transitions that trigger UB -> it would be nice to have the transition diagram as well)
+% Can you give a high-level overview of the purpose of the"core triple" vs. other things
+% - slide 17: Generally: please put more examples when you introudce something
+
+
 \begin{frame}[fragile]
     \frametitle{The need for protectors}
-    \begin{onlyenv}<1-3>
+    \begin{onlyenv}<1>
         \begin{block}{Function entry reborrows need something more}
             \begin{lstlisting}[language=rust, escapechar=@]
-@ @fn main() {
-@ @    let mut data = 0;
-@ @    unsafe { copy(
-@\visible<2>{>}@        &mut *addr_of_mut!(data),
-@\visible<2>{>}@        &*addr_of!(data),
-@ @    ); }
+@ @fn write(x: &mut u64) {
+@ @    opaque(); // x: Reserved
+@ @    *x = 42;   // x: Active
+@ @    opaque(); // x: Frozen
+@ @    // `x` does not satisfy the requirements of `noalias`
 @ @}
-
-@ @fn copy(x: &mut u64, y: &u64) {
-@\visible<3>{>}@    let val = *y; // x: Reserved
-@\visible<3>{>}@    *x = val; // x: Active
-@ @}
-
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<4>
+    \begin{onlyenv}<2>
         Concept adapted from Stacked Borrows: protectors.
         \begin{itemize}
             \item references get a protector on function entry
@@ -256,6 +285,9 @@
         \end{block}
     \end{onlyenv}
 \end{frame}
+
+% FIXME:
+% - slide 19: you should properly introduce noalias and dereferencable and what they mean before, how they are used (where rustc puts them)
 
 \begin{frame}
     \frametitle{Summary}
