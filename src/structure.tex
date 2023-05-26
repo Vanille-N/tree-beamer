@@ -6,7 +6,6 @@
 % * Is there a state transition between the Active-Frozen-Disabled?
 % * bring back the intuition of why a tree is a better structure
 
-
 \begin{frame}[fragile]
     \frametitle{A Tree of pointers}
     \begin{minipage}{0.45\textwidth}
@@ -69,7 +68,6 @@ fn foo(w2: &mut u64) {
 % FIXME:
 % - slide 9: have examples for each of these alongside?
 
-
 \begin{frame}
     \frametitle{One pointer, \(2 \times 2\) kinds of accesses}
     \begin{block}{}
@@ -108,9 +106,17 @@ fn foo(w2: &mut u64) {
     \end{block}
 \end{frame}
 
-% FIXME:
-% - slide 10 was very quick, couldnt' read text in time
+\begin{frame}[fragile]
+    \frametitle{Kinds of accesses: examples}
+    % FIXME: improve and include tree structure
+    \begin{block}{}
+        let x = &mut ...;
+        let y = &mut *x;
 
+        *x = 1; // Write access; foreign for y; child for x.
+        let _ = *y; // Read access; child for y; child for x.
+    \end{block}
+\end{frame}
 
 \begin{frame}
     \frametitle{Summary}

@@ -5,28 +5,17 @@
 \section{Introduction}
 
 % FIXME:
-% * "transitions can ignore UB" -> can you explain more in detail what you mean by that, or clarify
-% * does everyone know stacked borrows?
 % * SB is more strict in what way? can you give an example of what the limitations are?
 % * better highlighting of marked lines
-% - s5: you didn't introduce tree borrows distinctly before?
-% - s6: "I can't ignore StackedBorrows" sounds weird. The idea is very much based on it, no? You could say "TreeBorrows does not come out of the void" or something.
 % maybe put a demo of the miri impl somewhere? that might also be good to show some of the examples/ motivate features.
 % The new contribution of SB is unclear
-% talk about operational semantics, ditch "same interface"
-% introduce SB early, say upfront that the goal is compiler optimizations (remove loads, remove stores, permute operations)
 % define "UB" = Undefined Behavior
 % impossible to reorder reads. does the compiler reorder reads ? Is compiler + SB unsound ?
 % flip around the patterns vs opts tradeoff: we need this pattern so we cannot have this optimization
 % what is miri ? Say that it does not change the type system but checks its guarantees.
-% MIRIFLAGs=... line in demo: make invocation of cargo more visible
-% make the first example executable and explain it more; introduce raw pointers as a technique to bypass the type system
 % UB vs unsound, who is at fault ?
-% intro example motivates SB, not TB. TB is motivated immediately afterwards by an example that SB rejects (or the list of common crates with UB): the motivation for TB is we want more defined behavior, and see what optimizations we have to sacrifice in the process
-% "coexist in miri" don't care.
 % tradeoff between optimizations and UB more explicit
 % explain why the tree is structural; provide intuition why it's also the good structure
-% just mention that it's per-location, remove the weird slide with a list of perms.
 % fit state transition system at each step of the model somehow ?
 % more annotations in code examples
 % better explanation of what the comparison to the borchk means; less fixing show model that works
@@ -35,201 +24,113 @@
 
 \begin{frame}[fragile,t]
     \frametitle{A motivating example}
-    \begin{onlyenv}<1-2>
-        \begin{block}{}
-            \begin{minipage}{\textwidth}
-                \begin{lstlisting}[language=rust, escapechar=@]
-@ @/// What does this do ?
-@ @fn foo(x: &mut u64) {
-@ @   let val1 = *x;
-@ @   opaque();
-@ @   let val2 = *x;
-@\visible<2>{>}@   *x = val1;
-@ @   opaque();
-@ @   *x = val2;
-@ @}
-                \end{lstlisting}
-            \end{minipage}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3-4>
-        \begin{block}{}
-            \begin{minipage}{\textwidth}
-                \begin{lstlisting}[language=rust, escapechar=@]
-@ @/// What does this do ?
-@ @fn foo(x: &mut u64) {
-@\visible<4>{>}@   let val1 = *x;
-@ @   opaque();
-@ @   let val2 = *x;
-@ @
-@ @   opaque();
-@ @   *x = val2;
-@ @}
-                \end{lstlisting}
-            \end{minipage}
-        \end{block}
-        \begin{block}{Assumptions}
-            \texttt{opaque} does not read from \texttt{*x}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5-6>
-        \begin{block}{}
-            \begin{minipage}{\textwidth}
-                \begin{lstlisting}[language=rust, escapechar=@]
-@ @/// What does this do ?
-@ @fn foo(x: &mut u64) {
-@ @
-@ @   opaque();
-@\visible<6>{>}@   let val2 = *x;
-@ @
-@ @   opaque();
-@\visible<6>{>}@   *x = val2;
-@ @}
-                \end{lstlisting}
-            \end{minipage}
-        \end{block}
-        \begin{block}{Assumptions}
-            \texttt{opaque} does not read from or write to \texttt{*x}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<7>
-        \begin{block}{}
-            \begin{minipage}{\textwidth}
-                \begin{lstlisting}[language=rust, escapechar=@]
-@ @/// Calls opaque twice, does not modify the argument.
-@ @fn foo(x: &mut u64) {
-@ @
-@ @   opaque();
-@ @
-@ @
-@ @   opaque();
-@ @
-@ @}
-                \end{lstlisting}
-            \end{minipage}
-        \end{block}
-        \begin{block}{Assumptions}
-            \texttt{opaque} does not read from or write to \texttt{*x}
-        \end{block}
-    \end{onlyenv}
-
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Aliasing assumptions are easy to break}
-    \begin{onlyenv}<1>
-        \begin{block}{}
-            \begin{lstlisting}[language=rust, escapechar=@]
-
-
-
-
-
-
-@ @fn main() {
-@ @   let mut x = 0;
-@ @   let rmut = &mut x;
-@ @
-@ @
-@ @   const VAL: u64 = 42;
-@ @   *rmut = VAL;
-@ @   foo(&mut *rmut); // Should be a noop wrt x, right ?
-@ @   assert_eq!(*rmut, VAL);
-@ @}
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<2-4>
-        \begin{block}{}
-            \begin{lstlisting}[language=rust, escapechar=@]
-@ @static mut PTR: Option<*mut u64> = None;
-@ @fn opaque() { unsafe {
-@ @    if let Some(ptr) = PTR {
-@\visible<4>{>}@        *ptr = 31;
-@ @    }
-@ @} }
-@ @fn main() {
-@ @   let mut x = 0;
-@ @   let rmut = &mut x;
-@\visible<3>{>}@   unsafe { PTR = Some(rmut as *mut u64); }
-@ @
-@ @   const VAL: u64 = 42;
-@ @   *rmut = VAL;
-@ @   foo(&mut *rmut); // Shoul be a noop, right ?
-@ @   assert_eq!(*rmut, VAL); // Panic !?
-@ @}
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
+    See code example: \texttt{demo}
 \end{frame}
 
 \begin{frame}
     \frametitle{Is my optimization unsound ?\\No, it's the client that is UB.}
-    In this case: pointer aliasing UB.
-
+    UB: ``Undefined Behavior''
     \begin{itemize}
-        \item enable optimizations by ruling out aliasing patterns
-        \item justify LLVM attributes on pointers
-        % FIXME: which attributes ?
+        \item the semantics of a program that contains UB are undefined: any behavior can occur
+        \item equivalently: the compiler can assume that UB does not occur
     \end{itemize}
+    The compiler is allowed to ``miscompile'' programs that contain UB.\\
+
+    In this case: pointer aliasing UB.\\
+    (Other kinds: uninitialized memory, data races, dangling pointers, ...)
 \end{frame}
 
-\begin{frame}[fragile]
-    \frametitle{What Tree Borrows thinks of the previous example}
-    \texttt{\$ MIRIFLAGS=-Zmiri-tree-borrows cargo +miri miri run}
-        \begin{lstlisting}
-error: Undefined Behavior:
-  --> src/example.rs
-   |
-   |         *ptr = 31;
-   |         ^^^^^^^^^ write access is forbidden
-   |
-   [...]
-
-  --> src/example.rs
-   |
-   | fn foo(x: &mut u64) {
-   |         ^
-   |
-   [...]
-        \end{lstlisting}
-\end{frame}
-
-% FIXME:
-% - presentation on slide 6: very bottom-up. Maybe have some more examples first?
-% - maybe get inspiration from stacked borrows paper presentation?
-% - generally,I think you shouldn't assume that everyone is deeply familiar with the ideas of SB
-
-\begin{frame}[fragile]
-    \frametitle{(Tree|Stacked) Borrows}
+\begin{frame}
+    \frametitle{The role of pointer aliasing UB}
+    (Tree|Stacked) Borrows
     \begin{itemize}
-        \item SB predates TB: design of TB inspired by shortcomings of SB
+        \item define an aliasing discipline
+        \item detect violations of this discipline
+    \end{itemize}
+    in order to
+    \begin{itemize}
+        \item enable compiler optimizations by ruling out aliasing patterns
             \begin{itemize}
-                \item two-phase borrows do not match their informal specification
-                \item mutable reborrows assert uniqueness too eagerly
-                \item cannot handle types of unknown size
-                \item overall: SB is too strict
+                \item remove redundant loads and stores
+                \item permute noninterfering operations
             \end{itemize}
-        \item similar enough interface for them to coexist in \texttt{miri}\\
-            (switch: \texttt{MIRIFLAGS+=" -Zmiri-tree-borrows"})
-            \begin{minipage}{0.9\textwidth}
-            \begin{block}{}
-                \begin{lstlisting}[language=rust, basicstyle=\ttfamily\fontsize{7}{8}\selectfont]
-fn new_alloc(Size, MemoryKind) -> Self;
-fn dealloc(&mut self, AllocRange, Provenance) -> Result<()>;
-
-fn read(&mut self, AllocRange, Provenance) -> Result<()>;
-fn write(&mut self, AllocRange, Provenance) -> Result<()>;
-
-fn retag_ptr(&mut self, Provenance, RetagKind, Type) -> Result<Provenance>;
-                \end{lstlisting}
-            \end{block}
-            \end{minipage}
-    \end{itemize}
+        \item hint at bugs in \texttt{unsafe} code
+        \item justify LLVM attributes on pointers that \texttt{rustc} emits
+            (\texttt{noalias} and \texttt{dereferenceable} require their own
+            additional aliasing guarantees and enable corresponding optimizations)
+    \end{itemize}~\\
 \end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{Motivating example: with Miri}
+    Miri (\href{https://github.com/rust-lang/miri}{\texttt{github:rust-lang/miri}}) is
+    \begin{itemize}
+        \item a Rust interpreter
+        \item that detects UB
+    \end{itemize}~\\
+
+    Back to \texttt{demo}: run with Miri
+\end{frame}
+
+\begin{frame}
+    \frametitle{Basics of Stacked Borrows (SB)}
+    \begin{block}{Starting observation}
+        Proper usage of mutable references follows a stack discipline.
+    \end{block}
+    \begin{block}{Key ideas}
+        \begin{itemize}
+            \item per-location tracking of pointers (with improved allocation-level tracking)
+            \item use a stack to store pointer identifiers
+            \item on each reborrow a new identifier is pushed to the stack
+            \item a pointer can be used if its identifier is in the stack
+            \item using of a pointer pops everything above it (more recent)
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{An example SB execution}
+\end{frame}
+
+\begin{frame}
+    \frametitle{SB too strict ?}
+    % TODO
+    % mention tradeoff here
+\end{frame}
+
+\begin{frame}[t]
+    \frametitle{\cancel{Stacked} Tree Borrows (TB)}
+    \begin{onlyenv}<1>
+        \begin{block}{Starting observation}
+            Proper usage of mutable references follows a stack discipline.
+        \end{block}
+        \begin{block}{Key ideas}
+            \begin{itemize}
+                \item per-location tracking of pointers
+                \item use a stack to store pointer identifiers
+                \item on each reborrow a new identifier is pushed to the top of the stack
+                \item a pointer can be used if its identifier is in the stack
+                \item using of a pointer pops everything above it (more recent)
+            \end{itemize}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{block}{Starting observation}
+            Proper usage of {\color{red}all pointers} follows a {\color{red}tree} discipline.
+        \end{block}
+        \begin{block}{Key ideas}
+            \begin{itemize}
+                \item per-location tracking of pointers
+                \item use a {\color{red}tree} to store pointer identifiers
+                \item on each reborrow a new identifier is {\color{red}added as a leaf of the tree}
+                \item \cancel{a pointer can be used if its identifier is in the stack}
+                \item \cancel{using of a pointer pops everything above it (more recent)}
+                \item each pointer has permissions
+                \item a pointer can be used if its permission allows it (to be defined)
+                \item using a pointer makes incompatible (to be defined) pointers lose permissions
+            \end{itemize}
+        \end{block}
+    \end{onlyenv}
+\end{frame}
 

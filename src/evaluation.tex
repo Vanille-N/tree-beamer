@@ -1,10 +1,5 @@
 \section{Evaluation}
 
-% FIXME:
-% Slide 26,27 : Labelling the graph and tables with units would be nice
-% - slide 26: introudce shortcuts SB and TB before.
-
-
 \begin{frame}
     \frametitle{Counting crates with UB (1/2)}
     {\footnotesize
@@ -29,7 +24,8 @@
         Accesses outside range       & 903 &   0 & \tiny(3) \\
         Wildcard pointers            & 213 & --- & \tiny(4) \\
         \hline
-    \end{tabular}~\\~\\
+    \end{tabular}
+    Number of crates that contain UB, for subclasses of UB defined by SB and TB.~\\~\\
     From 97~851 crates, of which 3~808 contain UB of any kind\\~\\
 
     {\footnotesize
@@ -61,18 +57,17 @@
     \end{itemize}
 \end{frame}
 
-% FIXME:
-% - slide 30: actually mention these points.
-
-
 \begin{frame}
     \frametitle{Questions ?}
 
-    Not talked about
+    TB also has...
     \begin{itemize}
         \item tweaked rules for interactions between interior mutability and protectors/\texttt{Reserved}
-        \item lazy initialization outside bounds
-        \item performance of TB in miri
-        \item ongoing attempt at formalization
+        \item performance improvements compared to the naive implementation
+            \begin{itemize}
+                \item many tricks to trim tree traversals
+                \item lazy initialization for out-of-range accesses
+            \end{itemize}
+        \item ongoing attempt at formalization in Coq
     \end{itemize}
 \end{frame}

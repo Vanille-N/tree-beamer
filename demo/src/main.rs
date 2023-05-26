@@ -1,21 +1,41 @@
-static mut PTR: Option<*mut u64> = None;
+#[allow(unused_variables)]
+fn foo(x: &mut u64) {
+    let val = *x; // This read is unused after the redundant operation is removed
+    untrusted::opaque(); // We don't know what this does, but we do know that it
+                         // can't have access to our exclusively owned `x`.
+    *x = val; // This write is redundant because `untrusted::opaque` can't modify `*x`
 
-fn opaque() { unsafe {
-    if let Some(ptr) = PTR {
-        *ptr += 1;
-    }
-} }
-
-fn main() {
-    let x = &mut 42u64;
-    let y = &mut 666u64;
-    unsafe { PTR = Some(y as *mut u64); }
-    assign(&mut *x, &*y);
-    assert_eq!(*x, 666);
+    // After these optimizations, it is clear that `foo` only calls `untrusted::opaque`
+    // and does not change the contents of `x`.
 }
 
-fn assign(target: &mut u64, source: &u64) {
-    let val = *source;
-    opaque();
-    *target = val;
+fn main() {
+    // No matter how shady `untrusted::init` is, we own an `&mut` and now
+    // have guaranteed exclusive ownership from type-level information.
+    let x: &mut u64 = untrusted::init();
+
+    // Since `foo` does not modify `x`, we should get the same value
+    // after than before... right ?
+    *x = 42;
+    foo(&mut *x);
+    assert_eq!(*x, 42); // Oh no.
+
+    // `unsafe` code can thus break the guarantees of the type system,
+    // and in doing so invalidate assumptions that can be made in safe contexts.
+}
+
+
+/// The source of our troubles
+mod untrusted {
+    static mut DATA: u64 = 0;
+
+    pub fn init() -> &'static mut u64 {
+        // `unsafe` lets us bypass the type system.
+        unsafe { &mut DATA }
+    }
+
+    pub fn opaque() {
+        // `unsafe` lets us bypass the type system.
+        unsafe { DATA = 57; }
+    }
 }

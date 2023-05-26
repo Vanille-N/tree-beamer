@@ -1,33 +1,50 @@
 \section{Optimizations}
 
+\begin{frame}
+    \frametitle{Some standard optimizations}
+    \begin{tabular}{|l|c|c|l}
+        Possible in...                     & SB     & TB \\
+        Speculative read                   & \cmark & \cmark &\\
+        Speculative write                  & \cmark & \xmark &\visible<2>{\(\gets\)}\\
+        Redundant read                     & \cmark & \cmark &\\
+        Redundant write                    & \cmark & \cmark &\\
+        Read-Write reorder                 & \cmark & \xmark &\visible<2>{\(\gets\)}\\
+        Read-Write reorder (fn args)       & \cmark & \cmark &\\
+        Read-Read reorder                  & \xmark & \cmark &\visible<3>{\(\gets\)}\\
+        Read-Read reorder (fn args)        & \cmark & \cmark &\\
+        Write-Write reorder                & \cmark & \cmark &\\
+        Write-Write reorder (fn args)      & \cmark & \cmark &\\
+        Write-Read reorder                 & \cmark & \cmark &\\
+        Write-Read reorder (fn args)       & \cmark & \cmark &\\
+    \end{tabular}
+    What is the cost of these extra optimizations ?
+\end{frame}
+
 \subsection{Possible optimizations}
-
-% FIXME:
-% Optimizations section: big table would be nice. Especially because you don't have a benchmarking result, seeing that most optimizations are still preserved (or more optimizations are added) by TB (vs. SB) would be nice
-%- slide 20: put a clear sign that you're transitiioning to a different part of talk. can you visualize the protector stuff somehow?
-
 
 \begin{frame}[fragile, t]
     \frametitle{{\cmark} Delay protected writes}
     \begin{onlyenv}<1-5>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
-@\visible<2>{>}@fn write(x: &mut u64) {
-@\visible<3>{>}@    *x = 42; // move down ?
-@\visible<4,5>{>}@    opaque();
+fn write(x: &mut u64) {
+    x: [protected] Reserved
+    *x = 42; // x: [protected] Active (optimization: move down ?)
+    opaque(); // maybe foreign read/write
 
-@ @}
+}
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
     \begin{onlyenv}<6->
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
-@ @fn write(x: &mut u64) {
+fn write(x: &mut u64) {
+    // x: [protected] Reserved
 
-@ @    opaque();
-@ @    *x = 42;
-@ @}
+    opaque(); // guaranteed no foreign read/write
+    *x = 42; x: [protected] Active
+}
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
@@ -42,10 +59,10 @@
                 \node (nparent) at (0,0) {\texttt{?}}
                     child {node (nx) {\texttt{x:}}};
 
-                \node<2>[right = 0cm of nx, anchor=west] {\texttt{Reserved}};
-                \node<3>[right = 0cm of nx, anchor=west] {\texttt{Active}};
-                \node<4>[right = 0cm of nx, anchor=west] {\texttt{Active} | \texttt{Frozen} | \texttt{Disabled}};
-                \node<5>[right = 0cm of nx, anchor=west] {\texttt{Active} | \cancel{\texttt{Frozen}} | \cancel{\texttt{Disabled}}};
+                \node<2>[right = 0cm of nx, anchor=west] {[protected] \texttt{Reserved}};
+                \node<3>[right = 0cm of nx, anchor=west] {[protected] \texttt{Active}};
+                \node<4>[right = 0cm of nx, anchor=west] {[protected] \texttt{Active} | \texttt{Frozen} | \texttt{Disabled}};
+                \node<5>[right = 0cm of nx, anchor=west] {[protected] \texttt{Active} | \cancel{\texttt{Frozen}} | \cancel{\texttt{Disabled}}};
 
                 \node (vert) at (7,0 |- nparent) {};
                 \node<3>[anchor=west] at (vert |- nx) {\(\gets\) write};
@@ -55,20 +72,17 @@
     \end{onlyenv}
 \end{frame}
 
-% FIXME:
-% - slide 21: "speculative read" should be slide title?
-
-
 \begin{frame}[fragile, t]
-    \frametitle{{\cmark} Spurious read}
+    \frametitle{{\cmark} Speculative read}
     \begin{onlyenv}<1-2>
         \begin{block}{}
             \begin{lstlisting}[language=rust]
 fn sum_while(incr: &u64) -> u64 {
     let mut sum = 0;
-
-    while condition() {
-        sum += *incr; // hoist ?
+    // incr: [protected] Frozen
+    while condition() { // maybe foreign read/write
+        sum += *incr; // incr: [protected] Frozen|Disabled (optimization: move up ?)
+        // UB if Disabled
     }
     sum
 }
@@ -81,8 +95,8 @@ fn sum_while(incr: &u64) -> u64 {
             \begin{lstlisting}[language=rust]
 fn sum_while(incr: &u64) -> u64 {
     let mut sum = 0;
-    let incr = *incr;
-    while condition() {
+    let incr = *incr; // incr: [protected] Frozen
+    while condition() { // guaranteed no foreign read/write
         sum += incr;
     }
     sum
@@ -90,144 +104,185 @@ fn sum_while(incr: &u64) -> u64 {
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
-
-    \begin{onlyenv}<2->
-        \begin{block}{}
-            \begin{itemize}
-                \item \texttt{incr} cannot be mutated
-                \item thanks to the read on reborrow and the protector, \texttt{incr} is known to be readable...
-                    \begin{itemize}
-                        \item ...even if \texttt{condition()} is never true
-                        \item ...even if \texttt{condition()} does not terminate
-                    \end{itemize}
-            \end{itemize}
-        \end{block}
-    \end{onlyenv}
 \end{frame}
 
-\subsection{Lost optimizations}
-
-% FIXME:
-% - slide 22: is stacked borrows strictly stronger than tree borrows? maybe give examples of these optimizations before? (speculative write, etc. )
-% - slide 23: I didn't get this. Very hard to follow. Maybe example with intermediate states would help?
-
-
-\begin{frame}
-    \frametitle{Allowed by Stacked Borrows but not Tree Borrows}
-    \begin{itemize}
-        \item speculative write
-        \item stronger read-write reorderings
-    \end{itemize}
-
-    \begin{onlyenv}<2>
-        \begin{block}{}
-            What would be the cost of enabling those optimizations ? \\
-            (SB has no choice, TB does)
-        \end{block}
-    \end{onlyenv}
-\end{frame}
+\subsection{Impossible optimizations}
 
 \begin{frame}[fragile, t]
     \frametitle{Speculative writes}
 
-    \begin{exampleblock}{Variant}
+    \begin{exampleblock}{Possible strengthening}
         Write to mutable references on function entry.
     \end{exampleblock}
 
-    \begin{block}{{\cmark} Speculative writes}
-        \begin{itemize}
-            \item guaranteed writeable by the write on function entry
-            \item still \texttt{Active} thanks to the protector
-        \end{itemize}
-    \end{block}
-
-    \begin{block}{{\xmark} ``\texttt{as\_mut\_ptr}'' pattern}
-        \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-BCryptGenRandom(
-    handle,
-    buffer.as_mut_ptr(),   // takes `&mut buffer` despite being read-only
-    buffer.len() as ULONG, // invalidates mutable borrows of `buffer`
-    opts,
-)
-        \end{lstlisting}
-    \end{block}
-\end{frame}
-
-% FIXME:
-% - slide 24: the change in the opt is hard to see because stuff is shifting.
-
-
-\begin{frame}[fragile, t]
-    \frametitle{Read-Write reorderings}
-
-    \begin{exampleblock}{Variant}
-        On a foreign read, \texttt{Active} becomes \texttt{Disabled} instead of \texttt{Frozen}.
-    \end{exampleblock}
-
-%%% possible
-
-    \begin{onlyenv}<2>
-        \begin{block}{{\cmark} Delay arbitrary writes towards reads}
+    \begin{onlyenv}<1>
+        \begin{block}{{\xmark} Speculative writes}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let x = &mut *y;
-*x = 42; // move down ?
-opaque();
+fn foo(x: &mut u64) {
+    // x: [protected] Reserved|Frozen
 
-let z = *x;
+
+    maybe_nonterminating(); // maybe foreign read/write
+    // x: [protected] Reserved|Frozen|Disabled
+    *x = 42;
+    // UB if x is Disabled
+    // UB if x is Frozen AND maybe_nonterminating terminates
+}
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<3-4>
-        \begin{block}{{\cmark} Delay arbitrary writes towards reads}
+    \begin{onlyenv}<2>
+        \begin{block}{{\cmark} Speculative writes: strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let x = &mut *y;
+fn foo(x: &mut u64) {
+    // x: [protected] Active
 
-opaque();
-*x = 42;
-let z = *x;
+    maybe_nonterminating(); // maybe foreign read/write
+    // x: [protected] Active|Frozen|Disabled
+    // UB if x is Frozen or Disabled, thus x: [protected] Active
+    *x = 42; // x: [protected] Active
+}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        \begin{block}{{\cmark} Speculative writes: strengthened model}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+fn foo(x: &mut u64) {
+    // x: [protected] Active
+    *x = 42; // x: [protected] Active
+    maybe_nonterminating(); // maybe foreign read/write
+    // x: [protected] Active|Frozen|Disabled, UB if Frozen|Disabled, thus x: [protected] Active
+
+}
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
 
     \begin{onlyenv}<4>
-        \begin{block}{}
-            Was already possible for protected references,
-            this makes it available always.
+        \begin{block}{{\cmark} ``\texttt{as\_mut\_ptr}'' pattern}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+BCryptGenRandom(
+    handle,
+    // as_mut_ptr: &mut T -> *mut T
+    buffer.as_mut_ptr(), // creates anonymous1: Reserved
+    buffer.len() as ULONG, // creates anonymous2: Frozen, anonymous1 stays Reserved (foreign read)
+    opts,
+) // function entry: anonymous1 is still Reserved
+            \end{lstlisting}
         \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<5>
+        \begin{block}{{\xmark} ``\texttt{as\_mut\_ptr}'' pattern: strengthened model}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+BCryptGenRandom(
+    handle,
+    // as_mut_ptr: &mut T -> *mut T
+    buffer.as_mut_ptr(), // creates anonymous1: Active
+    buffer.len() as ULONG, // creates anonymous2: Frozen, anonymous1 becomes Frozen (foreign read)
+    opts,
+) // function entry: anonymous1 is Frozen -> UB
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile, t]
+    \frametitle{Read-Write reorderings}
+%%% possible
+    \begin{exampleblock}{Possible strengthening}
+        Foreign read makes \texttt{Active} become \texttt{Disabled}
+        (rather than \texttt{Frozen})
+    \end{exampleblock}
+
+
+    \begin{onlyenv}<1>
+        \begin{block}{{\xmark} Delay arbitrary writes towards reads}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let x = &mut *y; // x: Reserved
+*x = 42; // x: Active (optimization: move down ?)
+opaque(); // x: Active|Frozen|Disabled (maybe foreign read/write)
+
+let _ = *x; // UB if x is Disabled, thus x: Active|Frozen
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{errorblock}{{\cmark} Delay arbitrary writes towards reads: strengthened model}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let x = &mut *y; // x: Reserved
+*x = 42; // x: Active (optimization: move down ?)
+opaque(); // x: Active|Disabled (maybe foreign read/write)
+
+let _ = *x; // UB if x is Disabled, thus x:Active
+            \end{lstlisting}
+        \end{exampleblock}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        \begin{errorblock}{{\cmark} Delay arbitrary writes towards reads: strengthened model}
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let x = &mut *y;
+
+opaque(); // Known not to read or write to `*x`
+*x = 42;
+let _ = *x;
+            \end{lstlisting}
+        \end{exampleblock}
     \end{onlyenv}
 
 %%% impossible
 
+    \begin{onlyenv}<4>
+        \begin{block}{{\cmark} Arbitrary read reordering}
+            \begin{lstlisting}[language=rust]
+let x = &mut *z; // x: Reserved
+*x = 42; // x: Active
+let _ = *x; // x: Active (optimization: move down ?)
+let _ = *z; // x: Frozen (foreign read)
+
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
     \begin{onlyenv}<5>
-        \begin{block}{{\xmark} Arbitrary read reordering}
+        \begin{block}{{\cmark} Arbitrary read reordering}
             \begin{lstlisting}[language=rust]
-let x = &mut *z;
-*x = 42;
-let y = *x; // move down ?
-let w = *z;
+let x = &mut *z; // x: Reserved
+*x = 42; // x: Active
 
+let _ = *z; // x: Frozen (foreign read)
+let _ = *x; // x: Frozen
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<6-7>
-        \begin{block}{{\xmark} Arbitrary read reordering}
+    \begin{onlyenv}<4>
+        \begin{errorblock}{{\xmark} Arbitrary read reordering: strengthened model}
             \begin{lstlisting}[language=rust]
-let x = &mut *z;
-*x = 42;
+let x = &mut *z; // x: Reserved
+*x = 42; // x: Active
+let _ = *x; // x: Active (optimization: move down ?)
+let _ = *z; // x: Disabled (foreign read)
 
-let w = *z; // invalidates `x`
-let y = *x; // UB!
             \end{lstlisting}
-        \end{block}
+        \end{errorblock}
     \end{onlyenv}
 
-    \begin{onlyenv}<7>
-        \begin{block}{}
-            More UB is not \textit{always} more optimizations!\\
-            Same phenomenon with making non-two-phase directly \texttt{Active}.
-        \end{block}
+    \begin{onlyenv}<5>
+        \begin{errorblock}{{\xmark} Arbitrary read reordering: strengthened model}
+            \begin{lstlisting}[language=rust]
+let x = &mut *z; // x: Reserved
+*x = 42; // x: Active
+
+let _ = *z; // x: Disabled (foreign read)
+let _ = *x; // Access through Disabled: UB!
+            \end{lstlisting}
+        \end{errorblock}
     \end{onlyenv}
 \end{frame}
 
