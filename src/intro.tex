@@ -6,81 +6,136 @@
 
 \begin{frame}[fragile,t]
     \frametitle{A motivating example}
-    \begin{onlyenv}<1>
+    \begin{onlyenv}<1-2>
         \begin{block}{}
             \begin{minipage}{\textwidth}
-                \begin{lstlisting}[language=rust]
-fn assign(target: &mut u64, source: &u64) {
-
-   let val = *source;
-   opaque();
-   *target = val;
-
-}
+                \begin{lstlisting}[language=rust, escapechar=@]
+@ @/// What does this do ?
+@ @fn foo(x: &mut u64) {
+@ @   let val1 = *x;
+@ @   opaque();
+@ @   let val2 = *x;
+@\visible<2>{>}@   *x = val1;
+@ @   opaque();
+@ @   *x = val2;
+@ @}
                 \end{lstlisting}
             \end{minipage}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<2>
+    \begin{onlyenv}<3-4>
         \begin{block}{}
             \begin{minipage}{\textwidth}
-                \begin{lstlisting}[language=rust, escapechar=!]
-fn assign(target: &mut u64, source: &u64) {
-   opaque();
-   let val = *source;
-
-   *target = val;
-
-}
+                \begin{lstlisting}[language=rust, escapechar=@]
+@ @/// What does this do ?
+@ @fn foo(x: &mut u64) {
+@\visible<4>{>}@   let val1 = *x;
+@ @   opaque();
+@ @   let val2 = *x;
+@ @
+@ @   opaque();
+@ @   *x = val2;
+@ @}
                 \end{lstlisting}
             \end{minipage}
         \end{block}
         \begin{block}{Assumptions}
-            \texttt{opaque} does not write to \texttt{*source}
+            \texttt{opaque} does not read from \texttt{*x}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<3>
+    \begin{onlyenv}<5-6>
         \begin{block}{}
             \begin{minipage}{\textwidth}
-                \begin{lstlisting}[language=rust, escapechar=!]
-fn assign(target: &mut u64, source: &u64) {
-
-   let val = *source;
-
-   *target = val;
-   opaque();
-}
+                \begin{lstlisting}[language=rust, escapechar=@]
+@ @/// What does this do ?
+@ @fn foo(x: &mut u64) {
+@ @
+@ @   opaque();
+@\visible<6>{>}@   let val2 = *x;
+@ @
+@ @   opaque();
+@\visible<6>{>}@   *x = val2;
+@ @}
                 \end{lstlisting}
             \end{minipage}
         \end{block}
-        \begin{block}<3>{Assumptions}
-            \texttt{opaque} does not read from \texttt{*target}
+        \begin{block}{Assumptions}
+            \texttt{opaque} does not read from or write to \texttt{*x}
         \end{block}
     \end{onlyenv}
+
+    \begin{onlyenv}<7>
+        \begin{block}{}
+            \begin{minipage}{\textwidth}
+                \begin{lstlisting}[language=rust, escapechar=@]
+@ @/// Calls opaque twice, does not modify the argument.
+@ @fn foo(x: &mut u64) {
+@ @
+@ @   opaque();
+@ @
+@ @
+@ @   opaque();
+@ @
+@ @}
+                \end{lstlisting}
+            \end{minipage}
+        \end{block}
+        \begin{block}{Assumptions}
+            \texttt{opaque} does not read from or write to \texttt{*x}
+        \end{block}
+    \end{onlyenv}
+
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Aliasing assumptions are easy to break}
-    \begin{block}{}
-        \begin{lstlisting}[language=rust, escapechar=@]
+    \begin{onlyenv}<1>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust, escapechar=@]
+
+
+
+
+
+
+@ @fn main() {
+@ @   let mut x = 0;
+@ @   let rmut = &mut x;
+@ @
+@ @
+@ @   const VAL: u64 = 42;
+@ @   *rmut = VAL;
+@ @   foo(&mut *rmut); // Shoul be a noop, right ?
+@ @   assert_eq!(*rmut, VAL);
+@ @}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2-4>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust, escapechar=@]
 @ @static mut PTR: Option<*mut u64> = None;
 @ @fn opaque() { unsafe {
 @ @    if let Some(ptr) = PTR {
-@\visible<3>{>}@        *ptr += 1;
+@\visible<4>{>}@        *ptr = 31;
 @ @    }
 @ @} }
-
 @ @fn main() {
-@ @   let x = &mut 42u64;
-@ @   let y = &mut 666u64;
-@\visible<2>{>}@   unsafe { PTR = Some(y as *mut u64); }
-@ @   assign(&mut *x, &*y);
-@ @   assert_eq!(*x, 666);
+@ @   let mut x = 0;
+@ @   let rmut = &mut x;
+@\visible<3>{>}@   unsafe { PTR = Some(rmut as *mut u64); }
+@ @
+@ @   const VAL: u64 = 42;
+@ @   *rmut = VAL;
+@ @   foo(&mut *rmut); // Shoul be a noop, right ?
+@ @   assert_eq!(*rmut, VAL); // Panic !?
 @ @}
-        \end{lstlisting}
-    \end{block}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
 \end{frame}
 
 \begin{frame}
@@ -100,15 +155,15 @@ fn assign(target: &mut u64, source: &u64) {
 error: Undefined Behavior:
   --> src/example.rs
    |
-   |         *ptr += 1;
+   |         *ptr = 31;
    |         ^^^^^^^^^ write access is forbidden
    |
    [...]
 
   --> src/example.rs
    |
-   | fn assign(target: &mut u64, source: &u64) {
-   |                                ^^^^^^
+   | fn foo(x: &mut u64) {
+   |         ^
    |
    [...]
         \end{lstlisting}
