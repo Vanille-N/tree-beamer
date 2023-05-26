@@ -7,7 +7,7 @@
 \begin{frame}[fragile,t]
     \frametitle{A motivating example}
     \begin{onlyenv}<1>
-        \begin{block}{Initial}
+        \begin{block}{}
             \begin{minipage}{\textwidth}
                 \begin{lstlisting}[language=rust]
 fn assign(target: &mut u64, source: &u64) {
@@ -23,7 +23,7 @@ fn assign(target: &mut u64, source: &u64) {
     \end{onlyenv}
 
     \begin{onlyenv}<2>
-        \begin{block}{Optimized}
+        \begin{block}{}
             \begin{minipage}{\textwidth}
                 \begin{lstlisting}[language=rust, escapechar=!]
 fn assign(target: &mut u64, source: &u64) {
@@ -42,7 +42,7 @@ fn assign(target: &mut u64, source: &u64) {
     \end{onlyenv}
 
     \begin{onlyenv}<3>
-        \begin{block}{Optimized}
+        \begin{block}{}
             \begin{minipage}{\textwidth}
                 \begin{lstlisting}[language=rust, escapechar=!]
 fn assign(target: &mut u64, source: &u64) {
@@ -94,30 +94,6 @@ fn assign(target: &mut u64, source: &u64) {
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{(Tree|Stacked) Borrows}
-    \begin{itemize}
-        \item SB predates TB: design of TB inspired by shortcomings of SB
-        \item similar enough interface for them to coexist in \texttt{miri}\\
-            (switch: \texttt{MIRIFLAGS+=" -Zmiri-tree-borrows"})
-            \begin{minipage}{0.9\textwidth}
-            \begin{block}{}
-                \begin{lstlisting}[language=rust, basicstyle=\ttfamily\fontsize{7}{8}\selectfont]
-fn new_alloc(Size, MemoryKind) -> Self;
-fn dealloc(&mut self, AllocRange, Provenance) -> Result<()>;
-
-fn read(&mut self, AllocRange, Provenance) -> Result<()>;
-fn write(&mut self, AllocRange, Provenance) -> Result<()>;
-
-fn retag_ptr(&mut self, Provenance, RetagKind, Type) -> Result<Provenance>;
-                \end{lstlisting}
-            \end{block}
-            \end{minipage}
-        \item different enough internal workings that even the shared
-        concepts (permissions, protectors) are not exactly mapped 1-1
-    \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
     \frametitle{What Tree Borrows thinks of the previous example}
     \texttt{\$ MIRIFLAGS=-Zmiri-tree-borrows cargo +miri miri run}
         \begin{lstlisting}
@@ -137,3 +113,27 @@ error: Undefined Behavior:
    [...]
         \end{lstlisting}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{(Tree|Stacked) Borrows}
+    \begin{itemize}
+        \item SB predates TB: design of TB inspired by shortcomings of SB
+        \item similar enough interface for them to coexist in \texttt{miri}\\
+            (switch: \texttt{MIRIFLAGS+=" -Zmiri-tree-borrows"})
+            \begin{minipage}{0.9\textwidth}
+            \begin{block}{}
+                \begin{lstlisting}[language=rust, basicstyle=\ttfamily\fontsize{7}{8}\selectfont]
+fn new_alloc(Size, MemoryKind) -> Self;
+fn dealloc(&mut self, AllocRange, Provenance) -> Result<()>;
+
+fn read(&mut self, AllocRange, Provenance) -> Result<()>;
+fn write(&mut self, AllocRange, Provenance) -> Result<()>;
+
+fn retag_ptr(&mut self, Provenance, RetagKind, Type) -> Result<Provenance>;
+                \end{lstlisting}
+            \end{block}
+            \end{minipage}
+    \end{itemize}
+\end{frame}
+
+

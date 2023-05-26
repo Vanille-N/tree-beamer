@@ -98,27 +98,6 @@
     \end{description}
 \end{frame}
 
-\begin{frame}[t]
-    \frametitle{Raw pointers}
-    \begin{block}{Mutability \textit{and} aliasing ?}
-        Make them all the ``same'' pointer: same tag.
-        \begin{itemize}
-            \item arbitrary usage order between pointers with the same tag
-            \item all copies lose permissions at the same time as the original
-        \end{itemize}
-    \end{block}
-
-    \begin{onlyenv}<2>
-        \begin{block}{\texttt{UnsafeCell}}
-            Similar approach: \texttt{\&UnsafeCell<T>} is treated as a raw pointer.
-        \end{block}
-
-        \begin{exampleblock}{WIP: finer grained version ?}
-            Thoughts of introducing new permission to handle per-location interior mutability
-        \end{exampleblock}
-    \end{onlyenv}
-\end{frame}
-
 \subsection{Two-phase borrows}
 
 \begin{frame}[fragile, t]
@@ -226,11 +205,6 @@
     \begin{block}{Note}
         On mutable reborrows (creation of \texttt{Reserved}) we only perform a read,
         which is strictly more permissive than Stacked Borrows.
-    \end{block}
-
-    \begin{block}{Note}
-        One option to make Tree Borrows more restrictive (and allow more optimizations)
-        is to make non-two-phase mutable borrows \texttt{Active} (and write on reborrow).
     \end{block}
 \end{frame}
 

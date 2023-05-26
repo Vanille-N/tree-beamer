@@ -50,22 +50,6 @@
             \end{tikzpicture}
         \end{block}
     \end{onlyenv}
-
-    \begin{onlyenv}<7>
-        \begin{block}{Nontermination breaks things}
-            \footnotesize Reverting this is not possible unless we know that \texttt{opaque()} terminates !
-            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-// put here a foreign pointer to x
-static mut PTR: Option<*mut u64> = Some(_);
-fn opaque() { unsafe {
-    if let Some(ptr) = PTR {
-        assert!(*ptr != 42);
-        loop {}
-    }
-} }
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
 \end{frame}
 
 \begin{frame}[fragile, t]
@@ -118,70 +102,19 @@ fn sum_while(incr: &u64) -> u64 {
 
 % spurious write, mention nontermination
 
-\begin{frame}[fragile, t]
-    \frametitle{{\xmark} Spurious write}
-    \begin{onlyenv}<1>
-        \begin{block}{}
-            \begin{lstlisting}[language=rust]
-fn repeat_write(
-    target: &mut u64,
-    source: u64,
-    repeat: usize,
-) {
-
-
-    for _ in 0..repeat {
-        *target = source;
-    }
-}
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
+\begin{frame}
+    \frametitle{Allowed by Stacked Borrows but not Tree Borrows}
+    \begin{itemize}
+        \item speculative write
+        \item stronger read-write reorderings
+    \end{itemize}
 
     \begin{onlyenv}<2>
         \begin{block}{}
-            \begin{lstlisting}[language=rust]
-fn repeat_write(
-    target: &mut u64,
-    source: u64,
-    repeat: usize,
-) {
-    let old = *target;
-
-    for _ in 0..repeat {
-        *target = source;
-    }
-}
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3->
-        \begin{block}{}
-            \begin{lstlisting}[language=rust]
-fn repeat_write(
-    target: &mut u64,
-    source: u64,
-    repeat: usize,
-) {
-    let old = *target;
-    *target = source;
-    if unlikely!(repeat == 0) {
-        *target = old;
-    }
-}
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<4>
-        \begin{block}{}
-            Write then revert is still a write...
+            What would be the cost of enabling those optimizations ?
         \end{block}
     \end{onlyenv}
 \end{frame}
-
-\subsection{Strengthening the model}
 
 % TODO: add an intro slide
 
@@ -190,13 +123,13 @@ fn repeat_write(
 %   - copy_nonoverlapping
 
 \begin{frame}[fragile, t]
-    \frametitle{Write on function entry}
+    \frametitle{Speculative writes}
 
     \begin{exampleblock}{Variant}
         Write to mutable references on function entry.
     \end{exampleblock}
 
-    \begin{block}{{\cmark} Spurious writes}
+    \begin{block}{{\cmark} Speculative writes}
         \begin{itemize}
             \item guaranteed writeable by the write on function entry
             \item still \texttt{Active} thanks to the protector
@@ -222,7 +155,7 @@ BCryptGenRandom(
 %     (mention stacked borrows)
 
 \begin{frame}[fragile, t]
-    \frametitle{\texttt{Active} becomes \texttt{Disabled}}
+    \frametitle{Read-Write reorderings}
 
     \begin{exampleblock}{Variant}
         On a foreign read, \texttt{Active} becomes \texttt{Disabled} instead of \texttt{Frozen}.
@@ -266,7 +199,7 @@ let z = *x;
     \begin{onlyenv}<5>
         \begin{block}{{\xmark} Arbitrary read reordering}
             \begin{lstlisting}[language=rust]
-let x = &mut *y;
+let x = &mut *z;
 *x = 42;
 let y = *x; // move down ?
 let w = *z;
@@ -278,7 +211,7 @@ let w = *z;
     \begin{onlyenv}<6-7>
         \begin{block}{{\xmark} Arbitrary read reordering}
             \begin{lstlisting}[language=rust]
-let x = &mut *y;
+let x = &mut *z;
 *x = 42;
 
 let w = *z; // invalidates `x`
