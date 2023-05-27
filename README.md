@@ -7,10 +7,19 @@ Slides and sources for the presentation of Tree Borrows at the
 (_Rust Formal Methods Interest Group_) session of Monday, May 29th 2023 (7PM CEST).
 
 
+## Pre-rendered PDF
+
+A PDF version of the slides can be downloaded from
+[my homepage](https://perso.crans.org/vanille/share/satge/arpe/rfmig.pdf),
+but it is not guaranteed to be up to date with recent changes to the source
+code.
+
+It also does not include executable examples (see `demo/`).
+
+
 ## Building from source
 
-A PDF version of the slides has not yet been uploaded. You can compile from source.
-
+You can clone this repository and compile from source to have the latest version.
 Requires:
 - `latexmk` (tested 2023-05-27 with version 4.79)
 - `pdflatex` (tested 2023-05-27 with version 3.141592653-2.6-1.40.25)
