@@ -4,6 +4,26 @@
 % VERB: Is it an assumption or do you throw an error if you somehow detect a cycle?
 
 \begin{frame}[fragile]
+    \frametitle{When are pointers different ?}
+    LLVM and Rust specifications talk about ``other references/pointers'', but what does that mean ?
+
+    Suggests that two pointers to the same data are ``different''.
+
+    A pointer in our semantics is:
+    \begin{lstlisting}[language=rust]
+struct Pointer {
+    address: usize,
+    size: usize,
+    tag: usize, // <- added specifically for TB/SB
+}
+    \end{lstlisting}~\\
+
+    Even if two pointers point to the same data, they are not equal for TB
+    if they have different tags.
+    On the other hand, TB does not care about the size or the type.
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{A Tree of pointers}
     \begin{minipage}{0.45\textwidth}
         \begin{block}{}
@@ -94,9 +114,9 @@ fn foo(w2: &mut u64) {
         ~\\
         each \textit{read} or \textit{write}.
     \end{block}
-    \begin{block}{Remark}
-        Child accesses can be detected locally,
-        so usually all unknown accesses are \textit{foreign} accesses.
+    \begin{block}{``pointers based on...''}
+        LLVM specification: ``pointer B is based on pointer A'' \(\simeq\) TB: ``B is a child of A''.
+        (\sout{SB: B was created before A})
     \end{block}
 \end{frame}
 
