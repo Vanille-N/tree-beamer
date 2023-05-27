@@ -1,111 +1,91 @@
 \section{Deriving rules}
 
-% FIXME:
-% Frozen: why wouldn't you also allow foreign to read?
-% Maybe you can formulate a lattice of set of allowed behaviors by "Active-Frozen-Disabled" tags if it makes sense (if it's too complicated to  give a transition diagram)
-% - slide 11: maybe also show offsets on a line, so that I dont' have to count? take more time to explain the ops.
-
-
 \begin{frame}
-    \frametitle{Life of a permission}
+    \frametitle{How many permissions ?}
+    Mostly: one permission per ``kind of pointer''\\
+    Where ``kind'' includes:
+    \begin{itemize}
+        \item mutability,
+        \item interior mutability,
+        \item lifetime information,
+        \item creation context,
+        \item ...
+    \end{itemize}~\\
 
-    \only<1->{\([p_0, p_0, p_0, p_0, p_0, p_0, ...]\)}
-    \only<2->{+\text{foreign write [1..=3]}}~\\
-        \only<2->{\([p_0, {\color{blue}p_1}, {\color{blue}p_1}, {\color{blue}p_1}, p_0, p_0, ...]\)}
-    \only<3->{+\text{child read [0..=1]}}~\\
-        \only<3->{\([{\color{blue}p_2}, {\color{blue}p_3}, p_1, p_1, p_0, p_0, ...]\)}
-    \only<4->{+\text{child read [0..=2]}}~\\
-        \only<4->{\([{\color{blue}p_2}, {\color{blue}p_3}, {\color{blue}p_3}, p_1, p_0, p_0, ...]\)}
-    \only<5->{+\text{child write [3..=4]}}~\\
-        \only<5->{\([p_2, p_3, p_3, {\color{blue}p_4}, {\color{blue}p_5}, p_0, ...]\)}
-    \only<6->{+\text{foreign write [2..=4]}}~\\
-        \only<6->{\([p_2, p_3, {\color{blue}p_6}, {\color{blue}p_7}, {\color{blue}p_8}, p_0, ...]\)}
-        \only<6->{\(\text{UB at location [3]: } p_4 \to p_7\)}~\\
+    Use rules of what guarantees the pointer provides
+    to determine the behavior of the permission:
+    \begin{itemize}
+        \item if the pointer allows mutation, the corresponding permission must allow child writes
+        \item if the pointer guarantees uniqueness, the corresponding permission must not allow foreign accesses
+        \item ...
+    \end{itemize}
 \end{frame}
-
-% FIXME:
-% - slide 12: at this point, I didn't quite get yet what a foreign access is.
-
 
 \begin{frame}[t]
     \frametitle{Active, Frozen, Disabled}
-    At the very least we need permissions to represent
+    Core triplet of permissions to represent
     \begin{itemize}
         \item unique mutable references: \texttt{Active},
         \item shared immutable references: \texttt{Frozen},
-        \item no longer usable: \texttt{Disabled}.
+        \item lifetime ended: \texttt{Disabled}.
     \end{itemize}
 
     \begin{onlyenv}<1>
-        \begin{minipage}{0.3\textwidth}
-            \begin{block}{\texttt{Active}}
-                \begin{itemize}
-                    \item child read OK
-                    \item child write OK
-                \end{itemize}
-            \end{block}
-        \end{minipage}
-        ~
-        \begin{minipage}{0.3\textwidth}
-            \begin{block}{\texttt{Frozen}}
-                \begin{itemize}
-                    \item child read OK
-                    \item child write UB
-                \end{itemize}
-            \end{block}
-        \end{minipage}
-        ~
-        \begin{minipage}{0.3\textwidth}
-            \begin{block}{\texttt{Disabled}}
-                \begin{itemize}
-                    \item child read UB
-                    \item child write UB
-                \end{itemize}
-            \end{block}
-        \end{minipage}
-    \end{onlyenv}
-
-    \begin{onlyenv}<2>
-        \begin{block}{Foreign read}
+        \begin{block}{Child read: must allow reading}
             \begin{itemize}
-                \item \texttt{Disabled}, \texttt{Frozen}: nothing to do
-                \item \texttt{Active}: no longer unique\\
-                      most permissive solution: make it become \texttt{Frozen}
+                \item \texttt{Disabled} \(\to\) UB
+                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
+                \item \texttt{Active} \(\to\) \texttt{Active}
             \end{itemize}
         \end{block}
 
-        \begin{block}{Foreign write}
+        \begin{block}{Child write: must allow writing}
             \begin{itemize}
-                \item \texttt{Disabled}: nothing to do
-                \item \texttt{Active}: no longer unique, must become \texttt{Disabled}
-                \item \texttt{Frozen}: no longer immutable, must become \texttt{Disabled}
+                \item \texttt{Disabled} \(\to\) UB
+                \item \texttt{Frozen} \(\to\) UB
+                \item \texttt{Active} \(\to\) \texttt{Active}
+            \end{itemize}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{block}{Foreign read: no longer unique}
+            \begin{itemize}
+                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
+                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
+                \item \texttt{Active} \(\to\) \texttt{Frozen}
+            \end{itemize}
+        \end{block}
+
+        \begin{block}{Foreign write: no longer immutable}
+            \begin{itemize}
+                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
+                \item \texttt{Frozen} \(\to\) \texttt{Disabled}
+                \item \texttt{Active} \(\to\) \texttt{Disabled}
             \end{itemize}
         \end{block}
     \end{onlyenv}
 \end{frame}
-
-% FIXME:
-% - I like slide 13
 
 \begin{frame}
     \frametitle{Parallel to the borrow checker}
     Similarities
     \hspace{-5em}
     \begin{description}
-        \item[\cmark] \texttt{\&mut} readable and writeable
-        \item[\cmark] \texttt{\&} and all their children are only readable
-        \item[\cmark] data behind \texttt{\&mut} is owned exclusively
-        \item[\cmark] data behind \texttt{\&} is immutable
+        \item[\cmark] \texttt{Active} (\texttt{\&mut}) readable and writeable
+        \item[\cmark] \texttt{Frozen} (\texttt{\&}) and all their children are only readable
+        \item[\cmark] data behind \texttt{Active} (\texttt{\&mut}) is owned exclusively
+        \item[\cmark] data behind \texttt{Frozen} (\texttt{\&}) is immutable
     \end{description}~\\
 
-    Differences (acceptable)
+    Differences (OK to be more permissive than the borrow checker)
     \hspace{-5em}
     \begin{description}
-        \item[\xmark] \texttt{\&mut} demoted to \texttt{\&}
-        \item[\xmark] several \texttt{\&mut} can coexist if never written to
+        \item[\xmark] \texttt{Active} (\texttt{\&mut}) demoted to \texttt{Frozen} (\texttt{\&})
+        \item[\xmark] several \texttt{Active} (\texttt{\&mut}) can coexist if never written to
     \end{description}~\\
 
-    Differences (need fixing)
+    Unsoundness (two following subsections fix them)
     \hspace{-5em}
     \begin{description}
         \item[\xmark] two-phase borrows not handled yet
@@ -114,17 +94,17 @@
 
 \end{frame}
 
-\subsection{Two-phase borrows}
+\subsection{Fix unsoundness n°1: two-phase borrows}
 
 \begin{frame}[fragile, t]
     \frametitle{Not all mutable references can be \texttt{Active}}
-    \begin{block}{}
+    \begin{block}{Core triplet: unsound}
         \begin{lstlisting}[language=rust, escapechar=\@]
 @              @fn main() {
-@\visible<2>{>}@    let mut v = vec![0usize, 1, 2, 3];
-@\visible<3,5>{>}@    v.push(
-@\visible<4,5>{>}@        v.len()
-@\visible<5>{>}@    );
+@\visible<2>{\color{red}>}@    let mut v = vec![0usize, 1, 2, 3];
+@\visible<3,5>{\color{red}>}@    v.push(
+@\visible<4,5>{\color{red}>}@        v.len()
+@\visible<5>{\color{red}>}@    );
 @              @}
         \end{lstlisting}
     \end{block}
@@ -156,36 +136,33 @@
     \end{onlyenv}
 \end{frame}
 
-
-% FIXME:
-% Slide 15 was a little bit quick, you could send more time here or cut out the second half of the text on this slide
-% - slide 15: put on slide that you introduce a new permission "New permission: Reserved"
-
-
 \begin{frame}
-    \frametitle{Behavior of \texttt{Reserved}}
+    \frametitle{New permission: \texttt{Reserved}}
+    A mutable reference not yet written to
     \begin{itemize}
-        \item a mutable reference not yet written to
-        \item allows child reads, becomes \texttt{Active} on the first child write
-        \item allows foreign reads, becomes \texttt{Disabled} on the first foreign write
+        \item \texttt{Reserved} +child read \(\to\) \texttt{Reserved}
+        \item \texttt{Reserved} +child write \(\to\) \texttt{Active}
+        \item \texttt{Reserved} +foreign read \(\to\) \texttt{Reserved}
+        \item \texttt{Reserved} +foreign write \(\to\) \texttt{Disabled}
     \end{itemize}
-    \(\to\) behaves as a \texttt{Frozen} until the first child write\\
-    \(\to\) can coexist with each other and with \texttt{Frozen}\\
+    \(\Rightarrow\) behaves as a \texttt{Frozen} until the first child write\\
+    \(\Rightarrow\) can coexist with each other and with \texttt{Frozen}~\\~\\
 
-    ~\\
-    In Tree Borrows we choose to make all mutable reborrows initially \texttt{Reserved},
-    not just two-phase ones.
+    \begin{block}{}
+        Intuition: an \texttt{\&mut} that has not been written to yet is not very
+        different from an \texttt{\&}.
+    \end{block}
 \end{frame}
 
 \begin{frame}[fragile, t]
     \frametitle{\texttt{Reserved} in action}
-    \begin{block}{}
+    \begin{block}{Core triplet + \texttt{Reserved}: fixed}
         \begin{lstlisting}[language=rust, escapechar=\@]
 @              @fn main() {
-@\visible<2>{>}@    let mut v = vec![0usize, 1, 2, 3];
-@\visible<3,5>{>}@    v.push(
-@\visible<4,5>{>}@        v.len()
-@\visible<5>{>}@    );
+@\visible<2>{\color{red}>}@    let mut v = vec![0usize, 1, 2, 3];
+@\visible<3,5>{\color{red}>}@    v.push(
+@\visible<4,5>{\color{red}>}@        v.len()
+@\visible<5>{\color{red}>}@    );
 @              @}
         \end{lstlisting}
     \end{block}
@@ -218,36 +195,12 @@
     \end{onlyenv}
 \end{frame}
 
-\subsection{Justifying \texttt{noalias}}
-
-\begin{frame}
-    \frametitle{Reads on reborrow}
-    We must \textit{at least} do a read access on a reborrow: \texttt{dereferenceable}.\\
-
-    \begin{block}{\texttt{extern} type}
-        A reborrow on the range \([\text{begin}, \text{end})\) produces
-        \begin{itemize}
-            \item a read access on \([\text{begin}, \text{end})\)
-            \item a new permission (\texttt{Reserved} or \texttt{Frozen}) on \([0, +\infty)\)
-        \end{itemize}
-    \end{block}
-
-     \begin{block}{}
-        On mutable reborrows (creation of \texttt{Reserved}) we only perform a read,
-        which is strictly more permissive than Stacked Borrows.
-    \end{block}
-\end{frame}
-
-% FIXME: Slide 18 title can be slightly more descriptive, describing what protectors are
-% (The transitions that trigger UB -> it would be nice to have the transition diagram as well)
-% Can you give a high-level overview of the purpose of the"core triple" vs. other things
-% - slide 17: Generally: please put more examples when you introudce something
-
+\subsection{Fix unsoundness n°2: justifying \texttt{noalias}}
 
 \begin{frame}[fragile]
-    \frametitle{The need for protectors}
+    \frametitle{Protectors lock permissions until the end of the function}
     \begin{onlyenv}<1>
-        \begin{block}{Function entry reborrows need something more}
+        \begin{block}{Core triplet + \texttt{Reserved}: unsound}
             \begin{lstlisting}[language=rust, escapechar=@]
 @ @fn write(x: &mut u64) {
 @ @    opaque(); // x: Reserved
@@ -266,31 +219,40 @@
             \item protector lasts until the end of the call
         \end{itemize}
         ~\\
-        While protected
+        While protected, behavior changes
         \begin{itemize}
-            \item behavior changes
-                \begin{itemize}
-                    \item \(\texttt{Reserved} \to \texttt{Frozen}\) on foreign write
-                \end{itemize}
-            \item some transitions trigger UB
-                \begin{itemize}
-                    \item \(\texttt{\_} \to \texttt{Disabled}\)
-                    \item \(\texttt{Active} \to \texttt{Frozen}\)
-                \end{itemize}
-        \end{itemize}
+            \item \(\texttt{Reserved}~\text{+foreign read}\to \cancel{\texttt{Reserved}}~\texttt{Frozen}\)
+            \item \(\texttt{Reserved/Active/Frozen}~\text{+foreign write} \to \cancel{\texttt{Disabled}}~\text{UB}\)
+            \item \(\texttt{Active}~\text{+foreign read}\to \cancel{\texttt{Frozen}}~\text{UB}\)
+        \end{itemize}~\\
 
         \begin{block}{}
-            Protectors provide enough guarantees to justify \texttt{noalias} and
-            \texttt{dereferenceable} on references in function arguments.
+            Intuition: \texttt{noalias} requires exclusive access during the entire
+            function call, so we remember the set of all functions that have not yet
+            returned and enforce exclusivity for their arguments.
         \end{block}
     \end{onlyenv}
-\end{frame}
 
-% FIXME:
-% - slide 19: you should properly introduce noalias and dereferencable and what they mean before, how they are used (where rustc puts them)
+    \begin{onlyenv}<3>
+        \begin{block}{Core triplet + \texttt{Reserved} + protectors: fixed}
+            \begin{lstlisting}[language=rust, escapechar=@]
+@ @fn write(x: &mut u64) {
+@ @    opaque(); // x: [P] Reserved
+@ @    *x = 42;   // x: [P] Active
+@ @    opaque(); // x: [P] Frozen
+@ @    // UB: while x is protected,
+@ @    // Active -> Frozen is forbidden
+@ @}
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+
+\end{frame}
 
 \begin{frame}
     \frametitle{Summary}
+    % FIXME: rework
     \begin{itemize}
         \item \texttt{Reserved}, \texttt{Active}, \texttt{Frozen}, \texttt{Disabled}
             represent different possible states of pointers

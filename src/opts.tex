@@ -4,32 +4,32 @@
     \frametitle{Some standard optimizations}
     \begin{tabular}{|l|c|c|l}
         Possible in...                     & SB     & TB \\
-        Speculative read                   & \cmark & \cmark &\\
-        Speculative write                  & \cmark & \xmark &\visible<2>{\(\gets\)}\\
-        Redundant read                     & \cmark & \cmark &\\
-        Redundant write                    & \cmark & \cmark &\\
-        Read-Write reorder                 & \cmark & \xmark &\visible<2>{\(\gets\)}\\
-        Read-Write reorder (fn args)       & \cmark & \cmark &\\
-        Read-Read reorder                  & \xmark & \cmark &\visible<3>{\(\gets\)}\\
-        Read-Read reorder (fn args)        & \cmark & \cmark &\\
-        Write-Write reorder                & \cmark & \cmark &\\
-        Write-Write reorder (fn args)      & \cmark & \cmark &\\
-        Write-Read reorder                 & \cmark & \cmark &\\
-        Write-Read reorder (fn args)       & \cmark & \cmark &\\
+        Insert speculative read            & \cmark & \cmark &\\
+        Insert speculative write           & \cmark & \xmark &\visible<2>{\(\gets\)}\\
+        Remove redundant read              & \cmark & \cmark &\\
+        Remove redundant write             & \cmark & \cmark &\\
+        Reorder read-write                 & \cmark & \xmark &\visible<2>{\(\gets\)}\\
+        Reorder read-write (fn args)       & \cmark & \cmark &\\
+        Reorder read-read                  & \xmark & \cmark &\visible<3>{\(\gets\)}\\
+        Reorder read-read (fn args)        & \cmark & \cmark &\\
+        Reorder write-write                & \cmark & \cmark &\\
+        Reorder write-write (fn args)      & \cmark & \cmark &\\
+        Reorder write-read                 & \cmark & \cmark &\\
+        Reorder write-read (fn args)       & \cmark & \cmark &\\
+        Reorder reborrow-reborrow          & \xmark & \cmark &\visible<3>{\(\gets\)}\\
     \end{tabular}
-    What is the cost of these extra optimizations ?
 \end{frame}
 
 \subsection{Possible optimizations}
 
 \begin{frame}[fragile, t]
-    \frametitle{{\cmark} Delay protected writes}
+    \frametitle{{\cmark} Reorder write-any (fn args)}
     \begin{onlyenv}<1-5>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) {
-    x: [protected] Reserved
-    *x = 42; // x: [protected] Active (optimization: move down ?)
+    // x: [P] Reserved
+    *x = 42; // x: [P] Active (optimization: move down ?)
     opaque(); // maybe foreign read/write
 
 }
@@ -40,10 +40,10 @@ fn write(x: &mut u64) {
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) {
-    // x: [protected] Reserved
+    // x: [P] Reserved
 
     opaque(); // guaranteed no foreign read/write
-    *x = 42; x: [protected] Active
+    *x = 42; // x: [P] Active
 }
             \end{lstlisting}
         \end{block}
@@ -59,10 +59,10 @@ fn write(x: &mut u64) {
                 \node (nparent) at (0,0) {\texttt{?}}
                     child {node (nx) {\texttt{x:}}};
 
-                \node<2>[right = 0cm of nx, anchor=west] {[protected] \texttt{Reserved}};
-                \node<3>[right = 0cm of nx, anchor=west] {[protected] \texttt{Active}};
-                \node<4>[right = 0cm of nx, anchor=west] {[protected] \texttt{Active} | \texttt{Frozen} | \texttt{Disabled}};
-                \node<5>[right = 0cm of nx, anchor=west] {[protected] \texttt{Active} | \cancel{\texttt{Frozen}} | \cancel{\texttt{Disabled}}};
+                \node<2>[right = 0cm of nx, anchor=west] {[P] \texttt{Reserved}};
+                \node<3>[right = 0cm of nx, anchor=west] {[P] \texttt{Active}};
+                \node<4>[right = 0cm of nx, anchor=west] {[P] \texttt{Active} | \texttt{Frozen} | \texttt{Disabled}};
+                \node<5>[right = 0cm of nx, anchor=west] {[P] \texttt{Active} | \cancel{\texttt{Frozen}} | \cancel{\texttt{Disabled}}};
 
                 \node (vert) at (7,0 |- nparent) {};
                 \node<3>[anchor=west] at (vert |- nx) {\(\gets\) write};
@@ -73,15 +73,16 @@ fn write(x: &mut u64) {
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{{\cmark} Speculative read}
-    \begin{onlyenv}<1-2>
+    \frametitle{{\cmark} Insert speculative read}
+    \begin{onlyenv}<1>
         \begin{block}{}
             \begin{lstlisting}[language=rust]
 fn sum_while(incr: &u64) -> u64 {
     let mut sum = 0;
-    // incr: [protected] Frozen
+    // incr: [P] Frozen
     while condition() { // maybe foreign read/write
-        sum += *incr; // incr: [protected] Frozen|Disabled (optimization: move up ?)
+        sum += *incr; // incr: [P] Frozen|Disabled
+        // (optimization: move up ?)
         // UB if Disabled
     }
     sum
@@ -90,14 +91,16 @@ fn sum_while(incr: &u64) -> u64 {
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<3>
+    \begin{onlyenv}<2>
         \begin{block}{}
             \begin{lstlisting}[language=rust]
 fn sum_while(incr: &u64) -> u64 {
     let mut sum = 0;
-    let incr = *incr; // incr: [protected] Frozen
+    let incr = *incr; // incr: [P] Frozen
     while condition() { // guaranteed no foreign read/write
         sum += incr;
+
+
     }
     sum
 }
@@ -109,21 +112,21 @@ fn sum_while(incr: &u64) -> u64 {
 \subsection{Impossible optimizations}
 
 \begin{frame}[fragile, t]
-    \frametitle{Speculative writes}
+    \frametitle{Insert speculative write}
 
     \begin{exampleblock}{Possible strengthening}
         Write to mutable references on function entry.
     \end{exampleblock}
 
     \begin{onlyenv}<1>
-        \begin{block}{{\xmark} Speculative writes}
+        \begin{block}{{\xmark} Base model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 fn foo(x: &mut u64) {
-    // x: [protected] Reserved|Frozen
+    // x: [P] Reserved|Frozen
 
 
     maybe_nonterminating(); // maybe foreign read/write
-    // x: [protected] Reserved|Frozen|Disabled
+    // x: [P] Reserved|Frozen|Disabled
     *x = 42;
     // UB if x is Disabled
     // UB if x is Frozen AND maybe_nonterminating terminates
@@ -133,28 +136,29 @@ fn foo(x: &mut u64) {
     \end{onlyenv}
 
     \begin{onlyenv}<2>
-        \begin{block}{{\cmark} Speculative writes: strengthened model}
+        \begin{block}{{\cmark} Strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 fn foo(x: &mut u64) {
-    // x: [protected] Active
+    // x: [P] Active
 
     maybe_nonterminating(); // maybe foreign read/write
-    // x: [protected] Active|Frozen|Disabled
-    // UB if x is Frozen or Disabled, thus x: [protected] Active
-    *x = 42; // x: [protected] Active
+    // x: [P] Active|Frozen|Disabled
+    // UB if x is Frozen or Disabled, thus x: [P] Active
+    *x = 42; // x: [P] Active
 }
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
 
     \begin{onlyenv}<3>
-        \begin{block}{{\cmark} Speculative writes: strengthened model}
+        \begin{block}{{\cmark} Strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 fn foo(x: &mut u64) {
-    // x: [protected] Active
-    *x = 42; // x: [protected] Active
+    // x: [P] Active
+    *x = 42; // x: [P] Active
     maybe_nonterminating(); // maybe foreign read/write
-    // x: [protected] Active|Frozen|Disabled, UB if Frozen|Disabled, thus x: [protected] Active
+    // x: [P] Active|Frozen|Disabled
+    // UB if Frozen|Disabled, thus x: [P] Active
 
 }
             \end{lstlisting}
@@ -166,9 +170,10 @@ fn foo(x: &mut u64) {
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 BCryptGenRandom(
     handle,
-    // as_mut_ptr: &mut T -> *mut T
+    // as_mut_ptr: &mut T -> *mut T (does not actually write)
     buffer.as_mut_ptr(), // creates anonymous1: Reserved
-    buffer.len() as ULONG, // creates anonymous2: Frozen, anonymous1 stays Reserved (foreign read)
+    buffer.len() as ULONG, // creates anonymous2: Frozen
+                             // anonymous1 stays Reserved (foreign read)
     opts,
 ) // function entry: anonymous1 is still Reserved
             \end{lstlisting}
@@ -182,16 +187,23 @@ BCryptGenRandom(
     handle,
     // as_mut_ptr: &mut T -> *mut T
     buffer.as_mut_ptr(), // creates anonymous1: Active
-    buffer.len() as ULONG, // creates anonymous2: Frozen, anonymous1 becomes Frozen (foreign read)
+    buffer.len() as ULONG, // creates anonymous2: Frozen
+                             // anonymous1 becomes Frozen (foreign read)
     opts,
 ) // function entry: anonymous1 is Frozen -> UB
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
+    \begin{onlyenv}<5>
+        \begin{block}{}
+            This pattern is lost precisely because \texttt{as\_mut\_ptr}
+            would be allowed to perform a speculative write!
+        \end{block}
+    \end{onlyenv}
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Read-Write reorderings}
+    \frametitle{Reorder read-write}
 %%% possible
     \begin{exampleblock}{Possible strengthening}
         Foreign read makes \texttt{Active} become \texttt{Disabled}
@@ -200,7 +212,7 @@ BCryptGenRandom(
 
 
     \begin{onlyenv}<1>
-        \begin{block}{{\xmark} Delay arbitrary writes towards reads}
+        \begin{block}{{\xmark} Base model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let x = &mut *y; // x: Reserved
 *x = 42; // x: Active (optimization: move down ?)
@@ -212,7 +224,7 @@ let _ = *x; // UB if x is Disabled, thus x: Active|Frozen
     \end{onlyenv}
 
     \begin{onlyenv}<2>
-        \begin{errorblock}{{\cmark} Delay arbitrary writes towards reads: strengthened model}
+        \begin{block}{{\cmark} Strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let x = &mut *y; // x: Reserved
 *x = 42; // x: Active (optimization: move down ?)
@@ -220,11 +232,11 @@ opaque(); // x: Active|Disabled (maybe foreign read/write)
 
 let _ = *x; // UB if x is Disabled, thus x:Active
             \end{lstlisting}
-        \end{exampleblock}
+        \end{block}
     \end{onlyenv}
 
     \begin{onlyenv}<3>
-        \begin{errorblock}{{\cmark} Delay arbitrary writes towards reads: strengthened model}
+        \begin{block}{{\cmark} Strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let x = &mut *y;
 
@@ -232,13 +244,13 @@ opaque(); // Known not to read or write to `*x`
 *x = 42;
 let _ = *x;
             \end{lstlisting}
-        \end{exampleblock}
+        \end{block}
     \end{onlyenv}
 
 %%% impossible
 
     \begin{onlyenv}<4>
-        \begin{block}{{\cmark} Arbitrary read reordering}
+        \begin{block}{{\cmark} Reorder read-read}
             \begin{lstlisting}[language=rust]
 let x = &mut *z; // x: Reserved
 *x = 42; // x: Active
@@ -250,7 +262,7 @@ let _ = *z; // x: Frozen (foreign read)
     \end{onlyenv}
 
     \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Arbitrary read reordering}
+        \begin{block}{{\cmark} Reorder read-read}
             \begin{lstlisting}[language=rust]
 let x = &mut *z; // x: Reserved
 *x = 42; // x: Active
@@ -261,8 +273,8 @@ let _ = *x; // x: Frozen
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<4>
-        \begin{errorblock}{{\xmark} Arbitrary read reordering: strengthened model}
+    \begin{onlyenv}<6>
+        \begin{block}{{\xmark} Reorder read-read: strengthened model}
             \begin{lstlisting}[language=rust]
 let x = &mut *z; // x: Reserved
 *x = 42; // x: Active
@@ -270,11 +282,11 @@ let _ = *x; // x: Active (optimization: move down ?)
 let _ = *z; // x: Disabled (foreign read)
 
             \end{lstlisting}
-        \end{errorblock}
+        \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<5>
-        \begin{errorblock}{{\xmark} Arbitrary read reordering: strengthened model}
+    \begin{onlyenv}<7>
+        \begin{block}{{\xmark} Reorder read-read: strengthened model}
             \begin{lstlisting}[language=rust]
 let x = &mut *z; // x: Reserved
 *x = 42; // x: Active
@@ -282,15 +294,16 @@ let x = &mut *z; // x: Reserved
 let _ = *z; // x: Disabled (foreign read)
 let _ = *x; // Access through Disabled: UB!
             \end{lstlisting}
-        \end{errorblock}
+        \end{block}
     \end{onlyenv}
 \end{frame}
 
 \begin{frame}
     \frametitle{Summary}
+    % FIXME: rework
     \begin{itemize}
-        \item read reorderings, spurious reads are possible
-        \item spurious writes and unprotected write reorderings are not
+        \item read reorderings, speculative reads are possible
+        \item speculative writes and unprotected write reorderings are not
         \item the model can be strengthened to justify stronger optimizations for
             writes, but at the cost of commonly written patterns and some read-read reorderings
     \end{itemize}
