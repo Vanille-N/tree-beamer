@@ -2,21 +2,20 @@
 
 \begin{frame}
     \frametitle{How many permissions ?}
-    Mostly: one permission per ``kind of pointer''\\
-    Where ``kind'' includes:
+    In short: one permission per ``kind of pointer''
     \begin{itemize}
-        \item mutability,
-        \item interior mutability,
+        \item (interior) mutability,
         \item lifetime information,
         \item creation context,
         \item ...
     \end{itemize}~\\
 
-    Use rules of what guarantees the pointer provides
-    to determine the behavior of the permission:
+    Guarantees required of pointers determine behavior of permissions:
     \begin{itemize}
-        \item if the pointer allows mutation, the corresponding permission must allow child writes
-        \item if the pointer guarantees uniqueness, the corresponding permission must not allow foreign accesses
+        \item pointer allows mutation \\
+            \(\qquad\Rightarrow\) permission allows child writes
+        \item pointer guarantees uniqueness\\
+            \(\qquad\Rightarrow\) permission prevents foreign accesses
         \item ...
     \end{itemize}
 \end{frame}
@@ -98,46 +97,53 @@
 
 \begin{frame}[fragile, t]
     \frametitle{Not all mutable references can be \texttt{Active}}
+    \begin{alertblock}{Two-phase borrows}
+        Mutable reborrows in function arguments tolerate shared reborrows
+        until function entry.
+    \end{alertblock}
     \begin{block}{Core triplet: unsound}
-        \begin{lstlisting}[language=rust, escapechar=\@]
+        \begin{minipage}{0.40\textwidth}
+            \begin{lstlisting}[language=rust, escapechar=\@]
 @              @fn main() {
-@\visible<2>{\color{red}>}@    let mut v = vec![0usize, 1, 2, 3];
+@\visible<2>{\color{red}>}@    let mut v =
+@\visible<2>{\color{red}>}@        vec![1usize];
 @\visible<3,5>{\color{red}>}@    v.push(
 @\visible<4,5>{\color{red}>}@        v.len()
 @\visible<5>{\color{red}>}@    );
 @              @}
-        \end{lstlisting}
-    \end{block}
-    \begin{block}{}
-        \begin{tikzpicture}[
-            every node/.append style = {anchor = west},
-            grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-            edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-            ]
-            \node (nv) at (0,0) {\texttt{v:}}
-                    child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
-                    child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
+            \end{lstlisting}
+        \end{minipage}
+        \vline
+        \begin{minipage}{0.40\textwidth}
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node (nv) at (0,0) {\texttt{v:}}
+                        child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
+                        child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
 
-            \node<2->[right of=nv] {\texttt{Active}};
-            \node<3>[right of=nvpush] {~~\texttt{Active}};
-            \node<4->[right of=nvpush] {~~\texttt{Frozen}};
-            \node<4->[right of=nvlen] {~~\texttt{Frozen}};
+                \node<2->[right of=nv] {\texttt{Active}};
+                \node<3>[right of=nvpush] {~~\texttt{Active}};
+                \node<4->[right of=nvpush] {~~\texttt{Frozen}};
+                \node<4->[right of=nvlen] {~~\texttt{Frozen}};
 
-            \node (vert) at (5,0 |- nv) {};
-            \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
-            \node<4> at (vert |- nvlen) {\(\gets\) read};
-            \node<5> at (vert |- nvpush) {\(\gets\) write};
-        \end{tikzpicture}
+                \node (vert) at (3,0 |- nv) {};
+                \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
+                \node<4> at (vert |- nvlen) {\(\gets\) read};
+                \node<5> at (vert |- nvpush) {\(\gets\) write (UB)};
+            \end{tikzpicture}
+        \end{minipage}
     \end{block}
-    \begin{onlyenv}<5>
-        \begin{block}{}
-            \texttt{push} attempts a write through \texttt{Frozen}.
-        \end{block}
-    \end{onlyenv}
 \end{frame}
 
 \begin{frame}
     \frametitle{New permission: \texttt{Reserved}}
+    \begin{exampleblock}{Intuition}
+        An \texttt{\&mut} not yet written to is not different from a \texttt{\&}.
+    \end{exampleblock}
+
     A mutable reference not yet written to
     \begin{itemize}
         \item \texttt{Reserved} +child read \(\to\) \texttt{Reserved}
@@ -147,52 +153,51 @@
     \end{itemize}
     \(\Rightarrow\) behaves as a \texttt{Frozen} until the first child write\\
     \(\Rightarrow\) can coexist with each other and with \texttt{Frozen}~\\~\\
-
-    \begin{block}{}
-        Intuition: an \texttt{\&mut} that has not been written to yet is not very
-        different from an \texttt{\&}.
-    \end{block}
 \end{frame}
 
 \begin{frame}[fragile, t]
     \frametitle{\texttt{Reserved} in action}
+    \begin{alertblock}{Two-phase borrows}
+        Mutable reborrows in function arguments tolerate shared reborrows
+        until function entry.
+    \end{alertblock}
+
     \begin{block}{Core triplet + \texttt{Reserved}: fixed}
-        \begin{lstlisting}[language=rust, escapechar=\@]
+        \begin{minipage}{0.4\textwidth}
+            \begin{lstlisting}[language=rust, escapechar=\@]
 @              @fn main() {
-@\visible<2>{\color{red}>}@    let mut v = vec![0usize, 1, 2, 3];
+@\visible<2>{\color{red}>}@    let mut v =
+@\visible<2>{\color{red}>}@        vec![1usize];
 @\visible<3,5>{\color{red}>}@    v.push(
 @\visible<4,5>{\color{red}>}@        v.len()
 @\visible<5>{\color{red}>}@    );
 @              @}
-        \end{lstlisting}
-    \end{block}
-    \begin{block}{}
-        \begin{tikzpicture}[
-            every node/.append style = {anchor = west},
-            grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-            edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-            ]
-            \node (nv) at (0,0) {\texttt{v:}}
-                    child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
-                    child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
+            \end{lstlisting}
+        \end{minipage}
+        \vline
+        \begin{minipage}{0.40\textwidth}
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node (nv) at (0,0) {\texttt{v:}}
+                        child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
+                        child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
 
-            \node<2->[right of=nv] {\texttt{Active}};
-            \node<3,4>[right of=nvpush] {~~~~~\texttt{Reserved}};
-            \node<5>[right of=nvpush] {~~\texttt{Active}};
-            \node<4>[right of=nvlen] {~~\texttt{Frozen}};
-            \node<5>[right of=nvlen] {~~~~\texttt{Disabled}};
+                \node<2->[right of=nv] {\texttt{Active}};
+                \node<3,4>[right of=nvpush] {~~~~~\texttt{Reserved}};
+                \node<5>[right of=nvpush] {~~\texttt{Active}};
+                \node<4>[right of=nvlen] {~~\texttt{Frozen}};
+                \node<5>[right of=nvlen] {~~~~\texttt{Disabled}};
 
-            \node (vert) at (5,0 |- nv) {};
-            \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
-            \node<4> at (vert |- nvlen) {\(\gets\) read};
-            \node<5> at (vert |- nvpush) {\(\gets\) write};
-        \end{tikzpicture}
+                \node (vert) at (4,0 |- nv) {};
+                \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
+                \node<4> at (vert |- nvlen) {\(\gets\) read};
+                \node<5> at (vert |- nvpush) {\(\gets\) write};
+            \end{tikzpicture}
+        \end{minipage}
     \end{block}
-    \begin{onlyenv}<5>
-        \begin{block}{}
-            Write through \texttt{Reserved} activates it into \texttt{Active}.
-        \end{block}
-    \end{onlyenv}
 \end{frame}
 
 \subsection{Fix unsoundness n°2: justifying \texttt{noalias}}
@@ -200,19 +205,28 @@
 \begin{frame}[fragile]
     \frametitle{Protectors lock permissions until the end of the function}
     \begin{onlyenv}<1>
+        \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
+            No foreign access during the same function call as a child write.
+        \end{alertblock}
         \begin{block}{Core triplet + \texttt{Reserved}: unsound}
             \begin{lstlisting}[language=rust, escapechar=@]
-@ @fn write(x: &mut u64) {
-@ @    opaque(); // x: Reserved
-@ @    *x = 42;   // x: Active
-@ @    opaque(); // x: Frozen
-@ @    // `x` does not satisfy the requirements of `noalias`
-@ @}
+fn write(x: &mut u64) {
+    *x = 42;   // x: Active
+    opaque(/* foreign read for x */);
+    // x: Frozen
+    // `x` does not satisfy the requirements of `noalias`
+}
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
 
     \begin{onlyenv}<2>
+        \begin{exampleblock}{Intuition}
+            \texttt{noalias} requires exclusive access during the entire
+            function call, so we remember the set of all functions that have not yet
+            returned and enforce exclusivity for their arguments.
+        \end{exampleblock}
+
         Concept adapted from Stacked Borrows: protectors.
         \begin{itemize}
             \item references get a protector on function entry
@@ -225,45 +239,36 @@
             \item \(\texttt{Reserved/Active/Frozen}~\text{+foreign write} \to \cancel{\texttt{Disabled}}~\text{UB}\)
             \item \(\texttt{Active}~\text{+foreign read}\to \cancel{\texttt{Frozen}}~\text{UB}\)
         \end{itemize}~\\
-
-        \begin{block}{}
-            Intuition: \texttt{noalias} requires exclusive access during the entire
-            function call, so we remember the set of all functions that have not yet
-            returned and enforce exclusivity for their arguments.
-        \end{block}
     \end{onlyenv}
 
     \begin{onlyenv}<3>
+        \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
+            No foreign access during the same function call as a child write.
+        \end{alertblock}
+
         \begin{block}{Core triplet + \texttt{Reserved} + protectors: fixed}
             \begin{lstlisting}[language=rust, escapechar=@]
-@ @fn write(x: &mut u64) {
-@ @    opaque(); // x: [P] Reserved
-@ @    *x = 42;   // x: [P] Active
-@ @    opaque(); // x: [P] Frozen
-@ @    // UB: while x is protected,
-@ @    // Active -> Frozen is forbidden
-@ @}
+fn write(x: &mut u64) {
+    *x = 42; // x: [P] Active
+    opaque(/* foreign read for x */);
+    // x: [P] Frozen
+    // UB: while x is protected,
+    // Active -> Frozen is forbidden
+}
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
-
-
 \end{frame}
+
+\subsection*{}
 
 \begin{frame}
     \frametitle{Summary}
-    % FIXME: rework
     \begin{itemize}
         \item \texttt{Reserved}, \texttt{Active}, \texttt{Frozen}, \texttt{Disabled}
-            represent different possible states of pointers
-            \begin{itemize}
-                \item all but \texttt{Disabled} allow child reads
-                \item \texttt{Active} and \texttt{Reserved} enable child writes
-                \item everything becomes \texttt{Disabled} on a foreign write
-                \item \texttt{Active} becomes \texttt{Frozen} on a foreign read
-            \end{itemize}
-        \item protectors are added on function entry and strengthen the guarantees
-            of \texttt{Reserved}, \texttt{Active} and \texttt{Frozen} to guarantee \texttt{noalias}
-            and \texttt{dereferenceable}
+            represent different possible states of pointers.\\
+        \item Interactions with child and foreign accesses enforce uniqueness/immutability guarantees.
+        \item Protectors are added on function entry to strengthen these guarantees up to the
+            requirements of \texttt{noalias}.\\
     \end{itemize}
 \end{frame}

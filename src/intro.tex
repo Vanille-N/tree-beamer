@@ -6,18 +6,27 @@
 
 % VERB: impossible to reorder reads. does the compiler reorder reads ? Is compiler + SB unsound ?
 % VERB: explain why the tree is structural; provide intuition why it's also the good structure
-% FIXME: rework all summary slides
+% FIXME: shorten by 20min in total (examples should flow more smoothly)
 
 \begin{frame}[fragile,t]
     \frametitle{A motivating example}
     See code example: \texttt{demo}
+
+    \begin{onlyenv}<2>
+        \begin{block}{}
+            optimizations rely on type information\\
+            + \texttt{unsafe} can bypass the type system\\
+            = many optimizations are unsound in the presence of \texttt{unsafe}
+        \end{block}
+        Do we have to give up on all these optimizations ?
+    \end{onlyenv}
 \end{frame}
 
 \begin{frame}
     \frametitle{Is my optimization unsound ?\\No, it's the client that is UB.}
     UB: ``Undefined Behavior''
     \begin{itemize}
-        \item the semantics of a program that contains UB are undefined: any behavior can occur
+        \item semantics of a program that contains UB: any behavior
         \item equivalently: the compiler can assume that UB does not occur
     \end{itemize}~\\~\\
 
@@ -41,7 +50,6 @@
                 \item remove redundant loads and stores
                 \item permute noninterfering operations
             \end{itemize}
-        \item \textbf{hint at bugs} in \texttt{unsafe} code
         \item \textbf{justify LLVM attributes} on pointers that \texttt{rustc} emits
             \begin{itemize}
                 \item \texttt{noalias}: added by rustc on references, means that the data
@@ -93,38 +101,40 @@ let z = &mut *x; // [x, z] (usage of x pops y)
     \end{block}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[t]
     \frametitle{SB too strict ?}
-    Many optimizations are now possible again, but...~\\
+    Many optimizations are possible again, but...~\\
 
     UB in \texttt{tokio}, \texttt{pyo3}, \texttt{rkyv}, \texttt{eyre},
     \texttt{ndarray}, \texttt{arrayvec}, \texttt{slotmap}, \texttt{nalgebra},
-    \texttt{json}, ...~\\
-    Enforcing SB would break backwards compatibility, so right now the compiler
-    cannot do any SB-related optimizations.
+    \texttt{json}, ...~\\~\\
 
-    \begin{block}{Essential tradeoff}
-        More UB is...
-        \begin{itemize}
-            \item more optimizations (stronger assumptions)
-            \item less safety (especially if rules are vague)
-        \end{itemize}
-    \end{block}
-    \begin{block}{}
-        UB is the responsibility of the user (the compiler doesn't care about it),
-        so \textbf{too much UB makes users unhappy}.
-    \end{block}
+    Enforcing SB would break too much backwards compatibility,
+    so right now the compiler cannot apply any SB-enabled optimizations.
+
+    \begin{onlyenv}<2>
+        \begin{block}{Essential tradeoff}
+            More UB is...
+            \begin{itemize}
+                \item more optimizations (stronger assumptions)
+                \item less safety (especially if rules are vague)
+            \end{itemize}
+        \end{block}
+        \begin{block}{}
+            UB is the responsibility of the user, so\\
+            \textbf{too much UB makes users unhappy}.
+        \end{block}
+    \end{onlyenv}
 \end{frame}
 
 \begin{frame}[fragile, t]
     \frametitle{Information loss in the stack}
     \begin{block}{}
-        \[[a, b, c, d]\]
+        \[[..., a, b, c, d]\]
     \end{block}
-
     \begin{minipage}{0.3\textwidth}
         \begin{block}{}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let a = &...;
 let b = &*a;
 let c = &*b;
@@ -135,18 +145,19 @@ let d = &*a;
                 every node/.append style = {anchor = west},
                 grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
                 edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
-                \node[draw] at (0,0) {\(a\)}
-                    child {node[draw] {\(b\)}
-                        child {node[draw] {\(c\)}}}
-                    child [missing] {}
-                    child[draw] {node[draw] {\(d\)}};
+                \node {...}
+                    child {node[draw] {\(a\)}
+                        child {node[draw] {\(b\)}
+                            child {node[draw] {\(c\)}}}
+                        child [missing] {}
+                        child[draw] {node[draw] {\(d\)}}};
             \end{tikzpicture}
         \end{block}
     \end{minipage}
     ~
     \begin{minipage}{0.3\textwidth}
         \begin{block}{}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let a = &...;
 let b = &*a;
 let c = &*a;
@@ -157,17 +168,18 @@ let d = &*a;
                 every node/.append style = {anchor = west},
                 grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
                 edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
-                \node[draw] at (2.7,0) {\(a\)}
-                    child {node[draw] {\(b\)}}
-                    child {node[draw] {\(c\)}}
-                    child {node[draw] {\(d\)}};
+                \node {...}
+                    child {node[draw] {\(a\)}
+                        child {node[draw] {\(b\)}}
+                        child {node[draw] {\(c\)}}
+                        child {node[draw] {\(d\)}}};
             \end{tikzpicture}
         \end{block}
     \end{minipage}
     ~
-    \begin{minipage}{0.3\textwidth}
+    \begin{minipage}{0.32\textwidth}
         \begin{block}{}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let a = &...;
 let b = &*a;
 let c = &*b;
@@ -178,10 +190,11 @@ let d = &*c;
                 every node/.append style = {anchor = west},
                 grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
                 edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
-                \node[draw] at (2.7,0) {\(a\)}
-                    child {node[draw] {\(b\)}
-                        child {node[draw] {\(c\)}
-                            child {node[draw] {\(d\)}}}};
+                \node {...}
+                    child {node[draw] {\(a\)}
+                        child {node[draw] {\(b\)}
+                            child {node[draw] {\(c\)}
+                                child {node[draw] {\(d\)}}}}};
             \end{tikzpicture}
         \end{block}
     \end{minipage}

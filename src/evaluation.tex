@@ -50,11 +50,12 @@
 
 \begin{frame}
     \frametitle{Summary}
-    % FIXME: rework
     \begin{itemize}
+        \item Tree Borrows UB is much less common on \texttt{crates.io} than Stacked Borrows UB\\
+            \(\qquad\Rightarrow\) fulfills goal of being more permissive
+        \item elimination of out-of-bounds UB\\
+            \(\qquad\Rightarrow\) frequent blocker in SB for many popular crates
         \item patterns allowed by Stacked Borrows but forbidden by Tree Borrows are rare
-        \item Tree Borrows UB is much less common on \texttt{crates.io}
-        \item elimination of out-of-bounds UB
     \end{itemize}
 \end{frame}
 
@@ -72,6 +73,8 @@
         \item ongoing attempt at formalization in Coq
     \end{itemize}~\\~\\
     \vfill
+
+    Don't hesitate to test your code with Miri and send us your interesting cases of UB!\\
     Slides for this presentation on \href{https://github.com/Vanille-N/tree-beamer}{\texttt{github:Vanille-N/tree-beamer}}\\
-    Complementary material: \href{https://perso.crans.org/vanille/treebor}{\texttt{perso.crans.org/vanille/treebor}}
+    Complementary material: \href{https://perso.crans.org/vanille/treebor}{\texttt{perso.crans.org/vanille/treebor}}\\
 \end{frame}

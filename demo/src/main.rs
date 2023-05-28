@@ -6,11 +6,16 @@
 //! in Rust, through Stacked or Tree
 //! Borrows.
 
+
+
+
+
 #[allow(unused_variables)]
 fn foo(x: &mut u64) {
     // This read is unused after the
     // redundant operation is removed
     let val = *x;
+
 
     // We don't know what this does,
     // but we do know that it can't
@@ -28,6 +33,11 @@ fn foo(x: &mut u64) {
     // `untrusted::opaque` and does not
     // change the contents of `x`.
 }
+
+
+
+
+
 
 fn main() {
     // No matter how shady `untrusted::init`

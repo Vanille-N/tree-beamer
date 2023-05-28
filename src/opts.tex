@@ -24,50 +24,34 @@
 
 \begin{frame}[fragile, t]
     \frametitle{{\cmark} Reorder write-any (fn args)}
-    \begin{onlyenv}<1-5>
+    \begin{onlyenv}<1>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) {
     // x: [P] Reserved
-    *x = 42; // x: [P] Active (optimization: move down ?)
-    opaque(); // maybe foreign read/write
+    *x = 42; // (optimization: move down ?)
+    // x: [P] Active
+    opaque(/* maybe foreign read/write */);
+    // x: [P] Active (Frozen|Disabled -> UB)
+
 
 }
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
-    \begin{onlyenv}<6->
+    \begin{onlyenv}<2>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) {
     // x: [P] Reserved
 
-    opaque(); // guaranteed no foreign read/write
-    *x = 42; // x: [P] Active
+
+    opaque(/* assume no foreign read/write */);
+    // x: [P] Reserved
+    *x = 42;
+    // x: [P] Active
 }
             \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<1-5>
-        \begin{block}{}
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node (nparent) at (0,0) {\texttt{?}}
-                    child {node (nx) {\texttt{x:}}};
-
-                \node<2>[right = 0cm of nx, anchor=west] {[P] \texttt{Reserved}};
-                \node<3>[right = 0cm of nx, anchor=west] {[P] \texttt{Active}};
-                \node<4>[right = 0cm of nx, anchor=west] {[P] \texttt{Active} | \texttt{Frozen} | \texttt{Disabled}};
-                \node<5>[right = 0cm of nx, anchor=west] {[P] \texttt{Active} | \cancel{\texttt{Frozen}} | \cancel{\texttt{Disabled}}};
-
-                \node (vert) at (7,0 |- nparent) {};
-                \node<3>[anchor=west] at (vert |- nx) {\(\gets\) write};
-                \node<4>[anchor=west] at (vert |- nparent) {\(\gets\) ?};
-            \end{tikzpicture}
         \end{block}
     \end{onlyenv}
 \end{frame}
@@ -77,15 +61,12 @@ fn write(x: &mut u64) {
     \begin{onlyenv}<1>
         \begin{block}{}
             \begin{lstlisting}[language=rust]
-fn sum_while(incr: &u64) -> u64 {
-    let mut sum = 0;
-    // incr: [P] Frozen
-    while condition() { // maybe foreign read/write
-        sum += *incr; // incr: [P] Frozen|Disabled
-        // (optimization: move up ?)
-        // UB if Disabled
-    }
-    sum
+fn read(x: &u64) -> u64 {
+    // x: [P] Frozen
+
+    opaque(/* maybe foreign write */);
+    // x: [P] Frozen (Disabled -> UB)
+    *x // (optimization: move up ?)
 }
             \end{lstlisting}
         \end{block}
@@ -94,15 +75,12 @@ fn sum_while(incr: &u64) -> u64 {
     \begin{onlyenv}<2>
         \begin{block}{}
             \begin{lstlisting}[language=rust]
-fn sum_while(incr: &u64) -> u64 {
-    let mut sum = 0;
-    let incr = *incr; // incr: [P] Frozen
-    while condition() { // guaranteed no foreign read/write
-        sum += incr;
-
-
-    }
-    sum
+fn read(x: &u64) -> u64 {
+    // x: [P] Frozen
+    let val = *x;
+    opaque(/* assume no foreign write */);
+    // x: [P] Frozen
+    val
 }
             \end{lstlisting}
         \end{block}
@@ -122,14 +100,11 @@ fn sum_while(incr: &u64) -> u64 {
         \begin{block}{{\xmark} Base model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 fn foo(x: &mut u64) {
-    // x: [P] Reserved|Frozen
+    // x: [P] Reserved
 
-
-    maybe_nonterminating(); // maybe foreign read/write
-    // x: [P] Reserved|Frozen|Disabled
-    *x = 42;
-    // UB if x is Disabled
-    // UB if x is Frozen AND maybe_nonterminating terminates
+    opaque(/* maybe foreign read/write */);
+    // x: [P] Reserved|Frozen (Disabled -> UB)
+    *x = 42; // (optimization: move up ?)
 }
             \end{lstlisting}
         \end{block}
@@ -141,10 +116,9 @@ fn foo(x: &mut u64) {
 fn foo(x: &mut u64) {
     // x: [P] Active
 
-    maybe_nonterminating(); // maybe foreign read/write
-    // x: [P] Active|Frozen|Disabled
-    // UB if x is Frozen or Disabled, thus x: [P] Active
-    *x = 42; // x: [P] Active
+    opaque(/* maybe foreign read/write */);
+    // x: [P] Active (Frozen|Disabled -> UB)
+    *x = 42;
 }
             \end{lstlisting}
         \end{block}
@@ -155,10 +129,9 @@ fn foo(x: &mut u64) {
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 fn foo(x: &mut u64) {
     // x: [P] Active
-    *x = 42; // x: [P] Active
-    maybe_nonterminating(); // maybe foreign read/write
-    // x: [P] Active|Frozen|Disabled
-    // UB if Frozen|Disabled, thus x: [P] Active
+    *x = 42;
+    opaque(/* assume no foreign read/write */);
+    // x: [P] Active (Frozen|Disabled -> UB)
 
 }
             \end{lstlisting}
@@ -214,11 +187,16 @@ BCryptGenRandom(
     \begin{onlyenv}<1>
         \begin{block}{{\xmark} Base model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let x = &mut *y; // x: Reserved
-*x = 42; // x: Active (optimization: move down ?)
-opaque(); // x: Active|Frozen|Disabled (maybe foreign read/write)
+let x = &mut *y;
+// x: Reserved
+*x = 42; // (optimization: move down ?)
+// x: Active
+opaque(/* maybe foreign read/write */);
+// x: Active|Frozen|Disabled
 
-let _ = *x; // UB if x is Disabled, thus x: Active|Frozen
+
+let _ = *x;
+// x: Active|Frozen (Disabled -> UB)
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
@@ -226,11 +204,16 @@ let _ = *x; // UB if x is Disabled, thus x: Active|Frozen
     \begin{onlyenv}<2>
         \begin{block}{{\cmark} Strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let x = &mut *y; // x: Reserved
-*x = 42; // x: Active (optimization: move down ?)
-opaque(); // x: Active|Disabled (maybe foreign read/write)
+let x = &mut *y;
+// x: Reserved
+*x = 42; // (optimization: move down ?)
+// x: Active
+opaque(/* maybe foreign read/write */);
+// x: Active|Disabled
 
-let _ = *x; // UB if x is Disabled, thus x:Active
+
+let _ = *x;
+// x: Active (Disabled -> UB)
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
@@ -239,10 +222,15 @@ let _ = *x; // UB if x is Disabled, thus x:Active
         \begin{block}{{\cmark} Strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let x = &mut *y;
+// x: Reserved
 
-opaque(); // Known not to read or write to `*x`
+
+opaque(/* assume no foreign read/write */);
+// x: Reserved
 *x = 42;
+// x: Active
 let _ = *x;
+// x: Active
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
@@ -300,11 +288,13 @@ let _ = *x; // Access through Disabled: UB!
 
 \begin{frame}
     \frametitle{Summary}
-    % FIXME: rework
     \begin{itemize}
-        \item read reorderings, speculative reads are possible
-        \item speculative writes and unprotected write reorderings are not
-        \item the model can be strengthened to justify stronger optimizations for
-            writes, but at the cost of commonly written patterns and some read-read reorderings
+        \item TB allows read reorderings (SB does not)
+        \item TB allows speculative reads (SB as well)
+        \item TB forbids speculative writes (SB allows them)
+            \begin{itemize}
+                \item the model can be strengthened to justify these optimizations...
+                \item ...at the cost of common patterns.
+            \end{itemize}
     \end{itemize}
 \end{frame}

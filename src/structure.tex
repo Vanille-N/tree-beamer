@@ -3,24 +3,25 @@
 % VERB: Are you also keeping track of the well-formedness of the tree somehow? 
 % VERB: Is it an assumption or do you throw an error if you somehow detect a cycle?
 
-\begin{frame}[fragile]
+\begin{frame}[fragile, t]
     \frametitle{When are pointers different ?}
-    LLVM and Rust specifications talk about ``other references/pointers'', but what does that mean ?
+    LLVM and Rust specifications: ``other references/pointers''
 
-    Suggests that two pointers to the same data are ``different''.
+    Suggests that two pointers to the same data are ``different''.\\~\\
 
-    A pointer in our semantics is:
-    \begin{lstlisting}[language=rust]
+    \begin{onlyenv}<2>
+        A pointer in our semantics is:
+        \begin{lstlisting}[language=rust]
 struct Pointer {
     address: usize,
     size: usize,
     tag: usize, // <- added specifically for TB/SB
 }
-    \end{lstlisting}~\\
+        \end{lstlisting}~\\
 
-    Even if two pointers point to the same data, they are not equal for TB
-    if they have different tags.
-    On the other hand, TB does not care about the size or the type.
+        Two pointers to the same data are not equal for TB/SB
+        if they have different tags.
+    \end{onlyenv}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -66,18 +67,18 @@ fn foo(w2: &mut u64) {
 
 \begin{frame}
     \frametitle{What's in the tree ?}
-    Each pointer is given a tag (opaque, impossible to forge, primitive operation to create a fresh tag)
-    ~\\
-    What (Tree|Stacked) Borrows track:
+    Each pointer is given a tag~\\~\\
+
+    (Tree|Stacked) Borrows track:
     \begin{itemize}
-        \item \textbf{permission} of each tag for each location;
-        \item some \textbf{structure} between those tags;
-        \item all accesses are done through a tag:
+        \item \textbf{permission}: per tag, per location;
+        \item \textbf{hierarchy} between tags;
+        \item accesses are done through a tag:
             \begin{itemize}
-                \item read/write accesses \textbf{require permissions} on the tag used,\\
-                    UB occurs if the permissions are insufficient;
-                \item read/write accesses \textbf{alter permissions} of other tags,\\
-                    UB occurs if the modification is forbidden;
+                \item \textbf{require permissions} of the tag\\
+                    (UB if the permissions are insufficient)
+                \item \textbf{update permissions} of other tags\\
+                    (UB if the modification is forbidden)
             \end{itemize}
     \end{itemize}
 \end{frame}
@@ -115,8 +116,8 @@ fn foo(w2: &mut u64) {
         each \textit{read} or \textit{write}.
     \end{block}
     \begin{block}{``pointers based on...''}
-        LLVM specification: ``pointer B is based on pointer A'' \(\simeq\) TB: ``B is a child of A''.
-        (\sout{SB: B was created before A})
+        LLVM specification: ``pointer \texttt{y} is based on pointer \texttt{x}''\\
+        \(\simeq\) TB: ``\texttt{y} is a child of \texttt{x}''.
     \end{block}
 \end{frame}
 
@@ -146,19 +147,19 @@ let _ = *y; // Read access; child for y; child for x.
 
 \begin{frame}
     \frametitle{Summary}
-    % FIXME: rework
     \begin{itemize}
-        \item pointers are identified by a tag, and tags are stored in a tree structure;
-        \item a reborrow of \(t\) either...
+        \item pointers identified by a tag;
+        \item tags are stored in a tree structure;
             \begin{itemize}
-                \item creates a new tag \(t'\), \(t'\) is recorded as a child of \(t\), or
-                \item keeps the same tag \(t\).
+                \item reborrows create fresh tags,
+                \item new tag is a child of the reborrowed tag
             \end{itemize}
-        \item each tag has a permission on each location:
+        \item each tag has per-location permissions;
             \begin{itemize}
-                \item accesses through child tags are \textit{child accesses},
-                \item accesses through non-child tags are \textit{foreign accesses},
-                \item all accesses can cause a modification of the permission, and some modifications are indicators of UB.
+                \item permissions allow or reject \textit{child accesses}\\
+                    (done through child tags)
+                \item permissions evolve in response to \textit{foreign accesses}\\
+                    (done through non-child tags).
             \end{itemize}
     \end{itemize}
 \end{frame}
