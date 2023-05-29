@@ -20,7 +20,7 @@ It also does not include executable examples (see `examples/` which contains
 all code examples shown in the beamer, and associated documentation).
 
 
-## Building from source
+## Building the beamer from source
 
 You can clone this repository and compile from source to have the latest version.
 Requires:
@@ -36,6 +36,10 @@ See `Makefile` for details.
 
 If anything fails to compile, feel free to open an issue.
 
+## Running the code examples shown in the talk
+
+All code snippets are in `examples/`, with documentation and miri integration.
+See details in the folder's README.
 
 ## Contents
 
