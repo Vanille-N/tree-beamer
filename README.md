@@ -6,6 +6,10 @@ Slides and sources for the presentation of Tree Borrows at the
 [RFMIG](https://www.eventbrite.com/o/rust-formal-methods-interest-group-34404947509)
 (_Rust Formal Methods Interest Group_) session of Monday, May 29th 2023 (7PM CEST).
 
+Related:
+- [Tree Borrows by Example](https://perso.crans.org/vanille/treebor/)
+- [Implementation](https://github.com/rust-lang/miri/tree/master/src/borrow_tracker/tree_borrows)
+- [The model in detail](https://github.com/Vanille-N/tree-borrows)
 
 ## Pre-rendered PDF
 
@@ -13,8 +17,6 @@ A PDF version of the slides can be downloaded from
 [my homepage](https://perso.crans.org/vanille/share/satge/arpe/rfmig.pdf),
 but it is not guaranteed to be up to date with recent changes to the source
 code.
-
-![](badge.svg)
 
 It also does not include executable examples (see `examples/` which contains
 all code examples shown in the beamer, and associated documentation).

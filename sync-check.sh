@@ -4,8 +4,8 @@
 URL='https://perso.crans.org/vanille/share/satge/arpe/'
 HASH="$( curl "$URL/rfmig.hash" 2>/dev/null )"
 TIME="$( curl "$URL/rfmig.time" 2>/dev/null )"
-echo "$HASH"
-echo "$TIME"
+echo "Latest uploaded hash: $HASH"
+echo "Upload timestamp: $TIME"
 
 # Fetch all commits since
 COUNT="$( git log |
@@ -14,7 +14,9 @@ COUNT="$( git log |
     wc -l
 )"
 let 'COUNT -= 1'
-echo "$COUNT"
+echo "Recent commits:"
+git log | grep -E 'commit [a-f0-9]+' | sed -n "0,/$HASH/p"
+echo "Commits since upload: $COUNT"
 
 if [ $COUNT = 0 ]; then
     BADGE="https://img.shields.io/badge/Updated-$TIME-green"
