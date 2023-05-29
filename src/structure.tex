@@ -53,9 +53,9 @@ let y1 = &mut *x;
 let y2 = &*y1;
 
 let z1 = &*x;
-let z2 = z1 as *mut u64;
+let z2 = z1 as *const u64;
 
-foo(&mut *x);
+foo(x);
 fn foo(w2: &mut u64) {
     let w3 = &*w2;
 }

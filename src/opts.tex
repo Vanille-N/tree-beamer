@@ -141,14 +141,11 @@ fn foo(x: &mut u64) {
     \begin{onlyenv}<4>
         \begin{block}{{\cmark} ``\texttt{as\_mut\_ptr}'' pattern}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-BCryptGenRandom(
-    handle,
-    // as_mut_ptr: &mut T -> *mut T (does not actually write)
-    buffer.as_mut_ptr(), // creates anonymous1: Reserved
-    buffer.len() as ULONG, // creates anonymous2: Frozen
-                             // anonymous1 stays Reserved (foreign read)
-    opts,
-) // function entry: anonymous1 is still Reserved
+// as_mut_ptr: &mut [T] -> *mut T (does not actually write)
+let raw = buffer.as_mut_ptr(); // creates raw: Reserved
+let shr = buffer.as_ptr().add(1); // creates shr: Frozen
+                             // raw stays Reserved (foreign read)
+copy_nonoverlapping(shr, raw, 1); // raw gets activated
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
@@ -156,27 +153,18 @@ BCryptGenRandom(
     \begin{onlyenv}<5>
         \begin{block}{{\xmark} ``\texttt{as\_mut\_ptr}'' pattern: strengthened model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-BCryptGenRandom(
-    handle,
-    // as_mut_ptr: &mut T -> *mut T
-    buffer.as_mut_ptr(), // creates anonymous1: Active
-    buffer.len() as ULONG, // creates anonymous2: Frozen
-                             // anonymous1 becomes Frozen (foreign read)
-    opts,
-) // function entry: anonymous1 is Frozen -> UB
+// as_mut_ptr: &mut [T] -> *mut T (may speculatively write)
+let raw = buffer.as_mut_ptr(); // creates raw: Active
+let shr = buffer.as_ptr().add(1); // creates shr: Frozen
+                             // raw becomes Frozen (foreign read)
+copy_nonoverlapping(shr, raw, 1); // write through Frozen: UB
             \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-    \begin{onlyenv}<5>
-        \begin{block}{}
-            This pattern is lost precisely because \texttt{as\_mut\_ptr}
-            would be allowed to perform a speculative write!
         \end{block}
     \end{onlyenv}
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Reorder read-write}
+    \frametitle{Reorder write-read}
 %%% possible
     \begin{exampleblock}{Possible strengthening}
         Foreign read makes \texttt{Active} become \texttt{Disabled}
