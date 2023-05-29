@@ -20,7 +20,6 @@ fn foo(x: &mut u64) {
     // redundant operation is removed
     let val = *x;
 
-
     // We don't know what this does,
     // but we do know that it can't
     // have access to our exclusively
