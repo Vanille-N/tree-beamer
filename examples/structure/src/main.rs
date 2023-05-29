@@ -1,3 +1,7 @@
+//! Showing that the tree replicates the structure of reborrows.
+//! Pattern has no particular meaning.
+
+// Miri primitives.
 extern "Rust" {
     fn miri_write_to_stdout(bytes: &[u8]);
     fn miri_get_alloc_id(ptr: *const ()) -> u64;

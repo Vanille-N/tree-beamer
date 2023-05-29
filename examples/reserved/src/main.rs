@@ -1,3 +1,7 @@
+//! Demonstration of how Tree Borrows' `Reserved` handles two-phase borrows.
+//! Printed lines explain the behavior.
+
+// Miri primitives.
 extern "Rust" {
     fn miri_write_to_stdout(bytes: &[u8]);
     fn miri_get_alloc_id(ptr: *const ()) -> u64;
@@ -7,7 +11,7 @@ extern "Rust" {
 #[test]
 fn main() { unsafe {
     let mut v = vec![1usize];
-    v.reserve(1);
+    v.reserve(1); // Ensure that the vector does not get reallocated after we get its `alloc_id`.
     let alloc_id = miri_get_alloc_id(&v as *const Vec<_> as *const ());
     miri_write_to_stdout("There's a lot of clutter, but here's what you should look for:\n".as_bytes());
     miri_print_borrow_state(alloc_id, true);

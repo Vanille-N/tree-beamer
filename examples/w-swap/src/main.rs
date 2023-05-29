@@ -1,3 +1,12 @@
+//! Tree Borrows can justify delaying writes for protected references.
+//! - under TB,
+//!   * `MODE = Rw::Read` will be UB;
+//!   * `MODE = Rw::Write` will be UB;
+//!   * `MODE = Rw::Nothing` will be UB;
+//!   there is sufficient UB to assume the absence of any access.
+//!
+//! Same reasoning will apply to SB.
+
 #[test]
 pub fn main() {
     let x: &mut u64 = untrusted::init();
@@ -21,6 +30,9 @@ mod untrusted {
         unsafe { &mut X }
     }
 
+    // Depending on `MODE`, this function may perform
+    // one or none of a foreign read or a foreign write relative
+    // to any data handed by `init`.
     pub fn opaque() { unsafe {
         match MODE {
             Rw::Nothing => (),

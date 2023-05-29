@@ -1,5 +1,9 @@
+//! Demonstration of a Stacked Borrows execution on a basic pattern
+//! of interleaved writes through two different mutable references.
+
 use std::ptr::addr_of_mut;
 
+// Miri primitives.
 extern "Rust" {
     fn miri_write_to_stdout(bytes: &[u8]);
     fn miri_get_alloc_id(ptr: *const ()) -> u64;
