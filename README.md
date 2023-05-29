@@ -43,9 +43,9 @@ If anything fails to compile, feel free to open an issue.
     * `rustlistings.sty` is a syntax highlighter for Rust code listings provided by Ralf Jung
     * actual contents of the presentation are in `intro.tex`, `structure.tex`,
       `rules.tex`, `opts.tex`, `evaluation.tex`.
-- Executable examples:
-    * `demo` illustrates an example of UB shown in the talk.
-        See details in the documentation and README of `demo`.
+- Executable examples in `examples/`
+    * `demo/rw-elim` illustrates the example executed during the talk.
+    * for other examples see the `examples/README.md`
 
 
 ## Related resources
