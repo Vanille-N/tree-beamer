@@ -21,7 +21,7 @@ cmd_miri_sb() {
     echo "Miri flags: use Stacked Borrows"
     echo -e "     \033[1;34m\$ export MIRIFLAGS=''\033[0m"
     echo ""
-    export MIRIFLAGS=''
+    export MIRIFLAGS='-Zmiri-tag-gc=0'
 
     echo "Run in miri"
     echo -e "     \033[1;34m\$ cargo +miri miri test\033[0m"

@@ -14,6 +14,13 @@ $ ../demo.sh tb
 
 $ ../demo.sh sb
 # Executes `MIRIFLAGS= cargo +miri miri test`
+
+# Note:
+# Both sb and tb also set MIRIFLAGS+='-Zmiri-tag-gc=0' to guarantee reproducibility,
+# but that is more of an implementation detail and relevant only if you care about
+# seeing the entire structure.
+# If you run miri on your own codebase that contains nontrivial examples,
+# DO NOT use -Zmiri-tag-gc=0, performance will suffer a lot.
 ```
 
 ## Index

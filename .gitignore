@@ -1,3 +1,7 @@
+# Presentation artifacts
+main.pdf
 build/
-**/target
-Cargo.lock
+
+# Examples artifacts
+examples/**/Cargo.lock
+examples/**/target
