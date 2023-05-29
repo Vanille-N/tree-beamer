@@ -16,7 +16,8 @@ code.
 
 > Last uploaded: at least 2023-05-29 17:00
 
-It also does not include executable examples (see `demo/`).
+It also does not include executable examples (see `examples/` which contains
+all code examples shown in the beamer, and associated documentation).
 
 
 ## Building from source
