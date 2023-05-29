@@ -10,6 +10,10 @@
 
 
 
+
+
+
+
 #[allow(unused_variables)]
 fn foo(x: &mut u64) {
     // This read is unused after the
@@ -38,6 +42,9 @@ fn foo(x: &mut u64) {
 
 
 
+
+
+
 #[test]
 fn main() {
     // No matter how shady `untrusted::init`
@@ -60,6 +67,18 @@ fn main() {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 /// The source of our troubles
 mod untrusted {
     static mut DATA: u64 = 0;
@@ -76,3 +95,6 @@ mod untrusted {
         unsafe { DATA = 57; }
     }
 }
+
+
+

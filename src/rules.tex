@@ -32,17 +32,17 @@
     \begin{onlyenv}<1>
         \begin{block}{Child read: must allow reading}
             \begin{itemize}
-                \item \texttt{Disabled} \(\to\) UB
-                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
                 \item \texttt{Active} \(\to\) \texttt{Active}
+                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
+                \item \texttt{Disabled} \(\to\) UB
             \end{itemize}
         \end{block}
 
         \begin{block}{Child write: must allow writing}
             \begin{itemize}
-                \item \texttt{Disabled} \(\to\) UB
-                \item \texttt{Frozen} \(\to\) UB
                 \item \texttt{Active} \(\to\) \texttt{Active}
+                \item \texttt{Frozen} \(\to\) UB
+                \item \texttt{Disabled} \(\to\) UB
             \end{itemize}
         \end{block}
     \end{onlyenv}
@@ -50,17 +50,17 @@
     \begin{onlyenv}<2>
         \begin{block}{Foreign read: no longer unique}
             \begin{itemize}
-                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
-                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
                 \item \texttt{Active} \(\to\) \texttt{Frozen}
+                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
+                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
             \end{itemize}
         \end{block}
 
         \begin{block}{Foreign write: no longer immutable}
             \begin{itemize}
-                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
-                \item \texttt{Frozen} \(\to\) \texttt{Disabled}
                 \item \texttt{Active} \(\to\) \texttt{Disabled}
+                \item \texttt{Frozen} \(\to\) \texttt{Disabled}
+                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
             \end{itemize}
         \end{block}
     \end{onlyenv}
@@ -147,9 +147,9 @@
     A mutable reference not yet written to
     \begin{itemize}
         \item \texttt{Reserved} +child read \(\to\) \texttt{Reserved}
-        \item \texttt{Reserved} +child write \(\to\) \texttt{Active}
         \item \texttt{Reserved} +foreign read \(\to\) \texttt{Reserved}
         \item \texttt{Reserved} +foreign write \(\to\) \texttt{Disabled}
+        \item \texttt{Reserved} +child write \(\to\) \texttt{Active}
     \end{itemize}
     \(\Rightarrow\) behaves as a \texttt{Frozen} until the first child write\\
     \(\Rightarrow\) can coexist with each other and with \texttt{Frozen}~\\~\\
