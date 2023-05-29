@@ -14,6 +14,8 @@ A PDF version of the slides can be downloaded from
 but it is not guaranteed to be up to date with recent changes to the source
 code.
 
+> Last uploaded: at least 2023-05-29 17:00
+
 It also does not include executable examples (see `demo/`).
 
 

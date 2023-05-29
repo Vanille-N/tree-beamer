@@ -40,3 +40,5 @@ $ ../demo.sh sb
 |Reorder Write-Read  |`w-keep/`   | `tb` only reports UB if a Write is performed, `sb` always reports UB           |
 |Reorder Read-Read   |`r-swap/`   | `tb` allows it the reordered version, `sb` reports UB                          |
 
+See further documentation inside the `main.rs` of each example. Some additional details and reasonings
+are shown in the corresponding slides.
