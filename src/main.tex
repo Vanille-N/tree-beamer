@@ -20,42 +20,6 @@
 \renewcommand{\familydefault}{\sfdefault}
 \begin{document}
 
-
-% What structure do we want for the presentation ?
-% In no particular order:
-%[X] - SB basics
-%[X]   - quick word on 2-phase borrows
-%[X]   - same interface
-%[X]   - stack structure and comparison of dimensions
-%[X] - comparison with SB
-%[X]   - are the lost optimizations important ?
-%[X]     - spurious writes: can't assume termination
-%[X]   - what more code can we write ?
-%[X]     - copy_nonoverlapping is a good selling point
-%[X] - derivation of the tree structure
-%[X]   - with things that should not change anything significant
-%[X]     - `fn(&x) { x }` ~ `fn(&x) { &*x }`
-%[X]     - `*_ = 1` ~ `*(&*_) = 1`
-%        showing that it is basically mandatory that we only
-%        distinguish between child vs self vs foreign,
-%        then the lack of distinction between child and self is a choice,
-%        not a necessity.
-%[X]   - some freedom in when we create a new pointer:
-%        it's easy to define "equivalence classes" of "this reference
-%        and all its raw copies"
-%[X] - necessary rules
-%[X]   - noalias requirements
-%[X]   - unique path of Active
-%[X] - chosen rules
-%[X]   - Active -> Frozen
-%[X]   - everything starts Reserved
-%[X]   - not writing on function entry
-%[X]   for each of these show what we would lose/gain in terms of patterns/optimizations
-%      if we changed them.
-%[X] - how to use / a working example
-%[X]   - MIRIFLAGS
-%[X]   - interpretation of errors
-
 %%% SECTIONS %%%
 
 \input{intro}
