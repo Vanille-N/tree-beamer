@@ -14,7 +14,7 @@ A PDF version of the slides can be downloaded from
 but it is not guaranteed to be up to date with recent changes to the source
 code.
 
-> Last uploaded: at least 2023-05-29 20:06
+![](badge.svg)
 
 It also does not include executable examples (see `examples/` which contains
 all code examples shown in the beamer, and associated documentation).
