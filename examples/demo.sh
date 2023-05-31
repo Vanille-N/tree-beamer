@@ -37,6 +37,16 @@ cmd_test() {
     cargo test
 }
 
+print_help() {
+    echo "Usage: \$ $0 <CMD> [-- <EXTRA>]"
+    echo "Available commands for <CMD>:"
+    echo "   tb        execute miri with tree borrows"
+    echo "   sb        execute miri with stacked borrows"
+    echo "   test      execute natively"
+    echo ""
+    echo "Contents of <EXTRA> are passed at the end"
+}
+
 # Main
 case "$1" in
     ('test') cmd_test;;
@@ -44,11 +54,7 @@ case "$1" in
     ('sb') cmd_miri_sb;;
     (*)
         echo "Did not expect argument '$1'"
-        echo "Usage: \$ $0 [CMD]"
-        echo "Available commands:"
-        echo "   tb        execute miri with tree borrows"
-        echo "   sb        execute miri with stacked borrows"
-        echo "   test      execute natively"
+        print_help
         exit 1
         ;;
 esac

@@ -24,3 +24,11 @@ mod mwe {
         }
     }
 }
+
+mod real {
+    #[test]
+    fn main() {
+        let mut v = imbl::vector![0, 1, 2, 3, 4, 5, 6, 7];
+        v.retain(|n| n % 2 == 0);
+    }
+}
