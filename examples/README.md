@@ -47,3 +47,12 @@ $ ../demo.sh sb
 See further documentation inside the `main.rs` of each example.
 Some additional details and reasonings (for example the permissions at each step)
 are shown in the corresponding slides and not necessarily replicated here.
+
+### Found in the wild
+
+We also gather here some examples found "in the wild" in real crates, to show that
+the patterns listed above are not just theoretical, they occur in actual code and
+cause actual confusion.
+
+See `examples/wild/`
+
