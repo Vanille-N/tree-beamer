@@ -2,9 +2,14 @@
 
 by Neven Villani
 
-Slides and sources for the presentation of Tree Borrows at the
+Slides and sources for presentations of Tree Borrows.
+
+This branch (`rfmig`) is specific to the
 [RFMIG](https://www.eventbrite.com/o/rust-formal-methods-interest-group-34404947509)
-(_Rust Formal Methods Interest Group_) session of Monday, May 29th 2023 (7PM CEST).
+(_Rust Formal Methods Interest Group_) session of Monday, May 29th 2023 (7PM CEST)
+and the contents of the slides are frozen as of May 31st 2023.
+
+Other branches may contain material not presented here.
 
 Related:
 - [Tree Borrows by Example](https://perso.crans.org/vanille/treebor/)
