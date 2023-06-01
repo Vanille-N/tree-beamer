@@ -28,14 +28,15 @@
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
+let y = &mut ...;
 // x: Reserved
 *x = 42; // (optimization: move down ?)
 // x: Active
-opaque(/* maybe foreign read/write */);
-// x: Active|Frozen|Disabled -> UB
+*y = 19; // is this a foreign write ?
+// x: Active|Disabled -> UB
 
 *x = 57;
-// x: Active (Frozen|Disabled -> UB)
+// x: Active (Disabled -> UB)
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
@@ -43,10 +44,11 @@ opaque(/* maybe foreign read/write */);
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
+let y = &mut ...;
 // x: Reserved
 
 
-opaque(/* assume no foreign read/write */);
+*y = 19; // assumed not to be a foreign write
 // x: Reserved|Frozen|Disabled
 *x = 42;
 *x = 57;
@@ -61,7 +63,7 @@ let x = &mut ...;
 // x: Reserved
 
 
-opaque(/* assume no foreign read/write */);
+*y = 19; // assumed not to be a foreign write
 // x: Reserved|Frozen|Disabled
 
 *x = 57;

@@ -10,34 +10,35 @@
 #[test]
 pub fn main() {
     let x: &mut u64 = untrusted::init();
+    let y: &mut u64 = untrusted::other();
     *x = 42;
-    untrusted::opaque();
+    *y = 19;
     *x = 57;
     let _v = *x;
 }
 
 #[allow(dead_code)]
 mod untrusted {
-    enum Rw { Read, Write, Nothing }
+    enum Alias { Bad, No }
     // Parametrize the test by modifying this const
-    const MODE: Rw = Rw::Write;
+    const MODE: Alias = Alias::Bad;
 
     static mut X: u64 = 0;
+    static mut Y: u64 = 1;
 
     pub fn init() -> &'static mut u64 {
         unsafe { &mut X }
     }
 
-    // Depending on `MODE`, this function may perform
-    // one or none of a foreign read or a foreign write relative
-    // to any data handed by `init`.
-    pub fn opaque() { unsafe {
+    // Depending on MODE, the returned reference
+    // may or may not be foreign for the one returned by
+    // `init`.
+    pub fn other() -> &'static mut u64 {
         match MODE {
-            Rw::Nothing => (),
-            Rw::Read => { let _val = X; },
-            Rw::Write => { X = 31; },
+            Alias::Bad => unsafe { &mut X },
+            Alias::No => unsafe { &mut Y },
         }
-    } }
+    }
 }
 
 
