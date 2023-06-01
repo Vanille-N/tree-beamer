@@ -10,12 +10,10 @@
 #[test]
 pub fn main() {
     let x: &mut u64 = untrusted::init();
-    write(&mut *x);
-}
-
-fn write(x: &mut u64) {
     *x = 42;
     untrusted::opaque();
+    *x = 57;
+    let _v = *x;
 }
 
 #[allow(dead_code)]
@@ -37,7 +35,7 @@ mod untrusted {
         match MODE {
             Rw::Nothing => (),
             Rw::Read => { let _val = X; },
-            Rw::Write => { X = 57; },
+            Rw::Write => { X = 31; },
         }
     } }
 }

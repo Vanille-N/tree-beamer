@@ -23,37 +23,53 @@
 \subsection{Possible optimizations}
 
 \begin{frame}[fragile, t]
-    \frametitle{{\cmark} Reorder write-any (fn args)}
+    \frametitle{{\cmark} Reorder write-any}
     \begin{onlyenv}<1>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
-fn write(x: &mut u64) {
-    // x: [P] Reserved
-    *x = 42; // (optimization: move down ?)
-    // x: [P] Active
-    opaque(/* maybe foreign read/write */);
-    // x: [P] Active (Frozen|Disabled -> UB)
+let x = &mut ...;
+// x: Reserved
+*x = 42; // (optimization: move down ?)
+// x: Active
+opaque(/* maybe foreign read/write */);
+// x: Active|Frozen|Disabled -> UB
 
-
-}
+*x = 57;
+// x: Active (Frozen|Disabled -> UB)
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
     \begin{onlyenv}<2>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
-fn write(x: &mut u64) {
-    // x: [P] Reserved
+let x = &mut ...;
+// x: Reserved
 
 
-    opaque(/* assume no foreign read/write */);
-    // x: [P] Reserved
-    *x = 42;
-    // x: [P] Active
-}
+opaque(/* assume no foreign read/write */);
+// x: Reserved|Frozen|Disabled
+*x = 42;
+*x = 57;
+// x: Active (Frozen|Disabled -> UB)
             \end{lstlisting}
         \end{block}
     \end{onlyenv}
+    \begin{onlyenv}<3>
+        \begin{block}{}
+            \begin{lstlisting}[language=rust, escapechar=@]
+let x = &mut ...;
+// x: Reserved
+
+
+opaque(/* assume no foreign read/write */);
+// x: Reserved|Frozen|Disabled
+
+*x = 57;
+// x: Active (Frozen|Disabled -> UB)
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
 \end{frame}
 
 \begin{frame}[fragile, t]

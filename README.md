@@ -12,8 +12,8 @@ Related:
 ## Branches
 
 - `rfmig` is for the
-[RFMIG](https://www.eventbrite.com/o/rust-formal-methods-interest-group-34404947509)
-(_Rust Formal Methods Interest Group_) session of Monday, May 29th 2023 (7PM CEST).
+[_Rust Formal Methods Interest Group_](https://www.youtube.com/watch?v=zQ76zLXesxA)
+session of Monday, May 29th 2023 (7PM CEST).
 
 ## Pre-rendered PDF
 
