@@ -1,10 +1,7 @@
-all: main.pdf commithash
+all: rfmig.pdf
 
-commithash:
-	@git log -n1 | head -n1 | cut -d' ' -f2 > main.hash
-	@date '+%Y--%m--%d' > main.time
-
-.PHONY: commithash
+rfmig.pdf: main.pdf
+	cp $< $@
 
 # All .tex source files
 override SRC = $(wildcard src/*.tex)

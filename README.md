@@ -36,7 +36,7 @@ Requires:
 From the root directory, execute `$ make`.
 
 Source files will be fetched from `src/` into `build/`, compiled locally
-inside `build/`, and the beamer `main.pdf` will be moved back to the root directory.
+inside `build/`, and the beamer `rfmig.pdf` will be moved back to the root directory.
 To delete all build artifacts, run either `$ rm -rf build/` or `$ make clean`.
 See `Makefile` for details.
 
