@@ -24,84 +24,79 @@
 
 \begin{frame}[fragile, t]
     \frametitle{{\cmark} Reorder write-any}
-    \begin{onlyenv}<1>
+    \begin{onlyenv}<1-3>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
 let y = &mut ...;
-// x: Reserved
 *x = 42; // (optimization: move down ?)
-// x: Active
 *y = 19; // is this a foreign write ?
-// x: Active|Disabled -> UB
 
 *x = 57;
-// x: Active (Disabled -> UB)
             \end{lstlisting}
         \end{block}
+        \includegraphics<1>{sm-baseline-blank.pdf}
+        \includegraphics<2>{sm-path-res+act+act.pdf}
+        \includegraphics<3>{sm-path-res+act+dis+ub.pdf}
     \end{onlyenv}
-    \begin{onlyenv}<2>
+    \begin{onlyenv}<4>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
 let y = &mut ...;
-// x: Reserved
-
 
 *y = 19; // assumed not to be a foreign write
-// x: Reserved|Frozen|Disabled
 *x = 42;
 *x = 57;
-// x: Active (Frozen|Disabled -> UB)
             \end{lstlisting}
         \end{block}
+        \includegraphics{sm-path-res+act+act.pdf}
     \end{onlyenv}
-    \begin{onlyenv}<3>
+    \begin{onlyenv}<5>
         \begin{block}{}
             \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
-// x: Reserved
-
+let y = &mut ...;
 
 *y = 19; // assumed not to be a foreign write
-// x: Reserved|Frozen|Disabled
 
 *x = 57;
-// x: Active (Frozen|Disabled -> UB)
             \end{lstlisting}
         \end{block}
+        \includegraphics{sm-path-res+act.pdf}
     \end{onlyenv}
 
 \end{frame}
 
 \begin{frame}[fragile, t]
     \frametitle{{\cmark} Insert speculative read}
-    \begin{onlyenv}<1>
+    \begin{onlyenv}<1-4>
         \begin{block}{}
             \begin{lstlisting}[language=rust]
 fn read(x: &u64) -> u64 {
-    // x: [P] Frozen
 
     opaque(/* maybe foreign write */);
-    // x: [P] Frozen (Disabled -> UB)
     *x // (optimization: move up ?)
 }
             \end{lstlisting}
         \end{block}
+        \includegraphics<1>{sm-baseline-blank.pdf}
+        \includegraphics<2>{sm-path-pfrz+pfrz.pdf}
+        \includegraphics<3>{sm-path-pfrz+pfrz+pfrz.pdf}
+        \includegraphics<4>{sm-path-pfrz+ub.pdf}
     \end{onlyenv}
 
-    \begin{onlyenv}<2>
+    \begin{onlyenv}<5>
         \begin{block}{}
             \begin{lstlisting}[language=rust]
 fn read(x: &u64) -> u64 {
-    // x: [P] Frozen
     let val = *x;
     opaque(/* assume no foreign write */);
-    // x: [P] Frozen
     val
 }
             \end{lstlisting}
         \end{block}
+        \includegraphics{sm-path-pfrz+pfrz+pfrz.pdf}
     \end{onlyenv}
 \end{frame}
 
@@ -190,6 +185,7 @@ copy_nonoverlapping(shr, raw, 1); // write through Frozen: UB
     \end{exampleblock}
 
 
+    % FIXME: can't use function here, must terminate
     \begin{onlyenv}<1>
         \begin{block}{{\xmark} Base model}
             \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]

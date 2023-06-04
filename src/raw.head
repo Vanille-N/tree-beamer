@@ -1,0 +1,14 @@
+\documentclass[10pt]{standalone}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\pgfplotsset{compat=1.15}
+\usepackage{mathrsfs}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usetikzlibrary{arrows}
+\usepackage{ifthen}
+\pagestyle{empty}
+\usetikzlibrary{calc}
+\begin{document}
+

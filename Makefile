@@ -40,9 +40,93 @@ build/literature.bib: literature.bib |build
 override FIGURES = \
 	#
 
+# Baselines
+override FIGURES += \
+	sm-core \
+	#
+
+# Blanks (transparent elements to guarantee alignment across pauses)
+override FIGURES += \
+	sm-baseline-blank \
+	sm-prot-blank \
+	#
+
+# Step-by-step introduction
+override FIGURES += \
+	sm-intro-cr \
+	sm-intro-cr+cw \
+	sm-intro-cr+cw+fr \
+	sm-intro-cr+cw+fr+fw \
+	#
+
+# Illustrating the need for Reserved
+override FIGURES += \
+	sm-path-act \
+	sm-path-act+frz \
+	sm-path-act+frz+ub \
+	sm-res-add \
+	sm-res-dim \
+	sm-res-same \
+	sm-res-diff \
+	sm-path-res \
+	sm-path-res+res \
+	sm-path-res+res+act \
+	#
+
+
+# Illustrating the need for Protectors
+override FIGURES += \
+	sm-path-res+act+frz \
+	sm-prot-cp \
+	sm-prot-nodis \
+	sm-prot-noalias \
+	sm-path-pres+pact+ub \
+	#
+
+# Optimization: delay write
+override FIGURES += \
+	sm-path-res+act+act \
+	sm-path-res+act+dis+ub \
+	sm-path-res+act \
+	#
+
+# Optimization: speculative read
+override FIGURES += \
+	sm-path-pfrz+pfrz \
+	sm-path-pfrz+pfrz+pfrz \
+	sm-path-pfrz+ub \
+	#
+
+# Strengthening: speculative write
+override FIGURES += \
+	sm-strengthening-act \
+	sm-path-pres+ub \
+	sm-path-pres+pfrz \
+	sm-path-st-pact \
+	sm-path-st-pact+ub \
+	sm-path-st-pact+pact \
+	#
+
+# Strengthening: disable on read
+override FIGURES += \
+	sm-strengthening-dis \
+	sm-path-res+act+actfrz \
+	sm-path-st-res+act+act \
+	sm-path-st-res+act+dis+ub \
+	sm-path-res+act+frz+frz \
+	sm-path-st-res+act+act+dis \
+	sm-path-st-res+act+dis+ub \
+	#
+
 override IMGDIR = img
 override IMG = \
 	#
+
+build/%.pdf: $(IMGDIR)/%.raw src/raw.head src/raw.foot
+	cat src/raw.head $< src/raw.foot > $@
+	cd build && \
+		$(TEXC) $$(basename $@) \
+		| $(FILTER)
 
 build/main.pdf: $(FIGURES:%=build/%.pdf) $(IMG:%=build/%)
 

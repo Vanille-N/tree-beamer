@@ -37,7 +37,10 @@
                 \item \texttt{Disabled} \(\to\) UB
             \end{itemize}
         \end{block}
+        \includegraphics{sm-intro-cr.pdf}
+    \end{onlyenv}
 
+    \begin{onlyenv}<2>
         \begin{block}{Child write: must allow writing}
             \begin{itemize}
                 \item \texttt{Active} \(\to\) \texttt{Active}
@@ -45,9 +48,10 @@
                 \item \texttt{Disabled} \(\to\) UB
             \end{itemize}
         \end{block}
+        \includegraphics{sm-intro-cr+cw.pdf}
     \end{onlyenv}
 
-    \begin{onlyenv}<2>
+    \begin{onlyenv}<3>
         \begin{block}{Foreign read: no longer unique}
             \begin{itemize}
                 \item \texttt{Active} \(\to\) \texttt{Frozen}
@@ -55,7 +59,10 @@
                 \item \texttt{Disabled} \(\to\) \texttt{Disabled}
             \end{itemize}
         \end{block}
+        \includegraphics{sm-intro-cr+cw+fr.pdf}
+    \end{onlyenv}
 
+    \begin{onlyenv}<4>
         \begin{block}{Foreign write: no longer immutable}
             \begin{itemize}
                 \item \texttt{Active} \(\to\) \texttt{Disabled}
@@ -63,6 +70,7 @@
                 \item \texttt{Disabled} \(\to\) \texttt{Disabled}
             \end{itemize}
         \end{block}
+        \includegraphics{sm-intro-cr+cw+fr+fw.pdf}
     \end{onlyenv}
 \end{frame}
 
@@ -133,7 +141,11 @@
                 \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
                 \node<4> at (vert |- nvlen) {\(\gets\) read};
                 \node<5> at (vert |- nvpush) {\(\gets\) write (UB)};
-            \end{tikzpicture}
+            \end{tikzpicture}~\\~\\
+            \includegraphics<1-2>[width=1.4\textwidth]{sm-core.pdf}
+            \includegraphics<3>[width=1.4\textwidth]{sm-path-act.pdf}
+            \includegraphics<4>[width=1.4\textwidth]{sm-path-act+frz.pdf}
+            \includegraphics<5>[width=1.4\textwidth]{sm-path-act+frz+ub.pdf}
         \end{minipage}
     \end{block}
 \end{frame}
@@ -144,15 +156,12 @@
         An \texttt{\&mut} not yet written to is not different from a \texttt{\&}.
     \end{exampleblock}
 
-    A mutable reference not yet written to
-    \begin{itemize}
-        \item \texttt{Reserved} +child read \(\to\) \texttt{Reserved}
-        \item \texttt{Reserved} +foreign read \(\to\) \texttt{Reserved}
-        \item \texttt{Reserved} +foreign write \(\to\) \texttt{Disabled}
-        \item \texttt{Reserved} +child write \(\to\) \texttt{Active}
-    \end{itemize}
-    \(\Rightarrow\) behaves as a \texttt{Frozen} until the first child write\\
+    Mutable references not yet written to\\
+    \(\Rightarrow\) behave like \texttt{Frozen} until the first child write\\
     \(\Rightarrow\) can coexist with each other and with \texttt{Frozen}~\\~\\
+
+    \includegraphics<1>[width=\textwidth]{sm-res-add.pdf}
+    \includegraphics<2>[width=\textwidth]{sm-res-diff.pdf}
 \end{frame}
 
 \begin{frame}[fragile, t]
@@ -195,7 +204,11 @@
                 \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
                 \node<4> at (vert |- nvlen) {\(\gets\) read};
                 \node<5> at (vert |- nvpush) {\(\gets\) write};
-            \end{tikzpicture}
+            \end{tikzpicture}~\\~\\
+            \includegraphics<1-2>[width=1.4\textwidth]{sm-core.pdf}
+            \includegraphics<3>[width=1.4\textwidth]{sm-path-res.pdf}
+            \includegraphics<4>[width=1.4\textwidth]{sm-path-res+res.pdf}
+            \includegraphics<5>[width=1.4\textwidth]{sm-path-res+res+act.pdf}
         \end{minipage}
     \end{block}
 \end{frame}
@@ -203,24 +216,24 @@
 \subsection{Fix unsoundness n°2: justifying \texttt{noalias}}
 
 \begin{frame}[fragile]
-    \frametitle{Protectors lock permissions until the end of the function}
-    \begin{onlyenv}<1>
-        \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
-            No foreign access during the same function call as a child write.
-        \end{alertblock}
-        \begin{block}{Core triplet + \texttt{Reserved}: unsound}
-            \begin{lstlisting}[language=rust, escapechar=@]
+    \frametitle{Loss of permissions too early}
+    \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
+        No foreign access during the same function call as a child write.
+    \end{alertblock}
+    \begin{block}{Core triplet + \texttt{Reserved}: unsound}
+        \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) {
-    *x = 42;   // x: Active
-    opaque(/* foreign read for x */);
-    // x: Frozen
-    // `x` does not satisfy the requirements of `noalias`
+    *x = 42; // activation
+    opaque(/* foreign read for x: noalias violation */);
 }
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
+        \end{lstlisting}
+    \end{block}
+    \includegraphics[width=0.7\textwidth]{sm-path-res+act+frz.pdf}
+\end{frame}
 
-    \begin{onlyenv}<2>
+\begin{frame}[t]
+    \frametitle{Protectors lock permissions}
+    \begin{onlyenv}<1>
         \begin{exampleblock}{Intuition}
             \texttt{noalias} requires exclusive access during the entire
             function call, so we remember the set of all functions that have not yet
@@ -231,33 +244,31 @@ fn write(x: &mut u64) {
         \begin{itemize}
             \item references get a protector on function entry
             \item protector lasts until the end of the call
+            \item protectors strengthen the guarantees
         \end{itemize}
-        ~\\
-        While protected, behavior changes
-        \begin{itemize}
-            \item \(\texttt{Reserved}~\text{+foreign read}\to \cancel{\texttt{Reserved}}~\texttt{Frozen}\)
-            \item \(\texttt{Reserved/Active/Frozen}~\text{+foreign write} \to \cancel{\texttt{Disabled}}~\text{UB}\)
-            \item \(\texttt{Active}~\text{+foreign read}\to \cancel{\texttt{Frozen}}~\text{UB}\)
-        \end{itemize}~\\
     \end{onlyenv}
+    \includegraphics<2>{sm-prot-blank.pdf}
+    \includegraphics<3>{sm-prot-cp.pdf}
+    \includegraphics<4>{sm-prot-nodis.pdf}
+    \includegraphics<5>{sm-prot-noalias.pdf}
+\end{frame}
 
-    \begin{onlyenv}<3>
-        \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
-            No foreign access during the same function call as a child write.
-        \end{alertblock}
 
-        \begin{block}{Core triplet + \texttt{Reserved} + protectors: fixed}
-            \begin{lstlisting}[language=rust, escapechar=@]
-fn write(x: &mut u64) {
-    *x = 42; // x: [P] Active
-    opaque(/* foreign read for x */);
-    // x: [P] Frozen
-    // UB: while x is protected,
-    // Active -> Frozen is forbidden
+\begin{frame}[fragile]
+    \frametitle{Protectors lock permissions}
+    \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
+        No foreign access during the same function call as a child write.
+    \end{alertblock}
+
+    \begin{block}{Core triplet + \texttt{Reserved} + protectors: fixed}
+        \begin{lstlisting}[language=rust, escapechar=@]
+fn write(x: &mut u64) { // with protector
+    *x = 42; // activation
+    opaque(/* foreign read for x: noalias violation */);
 }
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
+        \end{lstlisting}
+    \end{block}
+    \includegraphics[width=0.7\textwidth]{sm-path-pres+pact+ub.pdf}
 \end{frame}
 
 \subsection*{}
