@@ -35,8 +35,6 @@
 \draw [shift={(420,199.94)}, rotate = 270.29] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 %Curve Lines [id:da2758897478627681] 
 \draw    (310,219.94) .. controls (309.7,259.59) and (309.1,260.02) .. (470,259.94) ;
-%Curve Lines [id:da35999909822556864] 
-\draw [color={rgb, 255:red, 189; green, 16; blue, 224 }  ,draw opacity=1 ]   (250,199.94) .. controls (249.1,179.02) and (250.1,179.02) .. (330,179.94) ;
 %Curve Lines [id:da927204474237744] 
 \draw    (170,199.94) .. controls (170.6,159.02) and (170.67,159.57) .. (400,159.94) ;
 %Curve Lines [id:da9589694966586891] 
@@ -71,6 +69,8 @@
 \draw    (240,220) .. controls (240.1,260.07) and (239.6,260.25) .. (260,260) ;
 %Curve Lines [id:da43884158100476034] 
 \draw [color={rgb, 255:red, 189; green, 16; blue, 224 }  ,draw opacity=1 ]   (170,219.94) .. controls (170.1,260.02) and (170.1,260.02) .. (260,259.94) ;
+%Curve Lines [id:da35999909822556864] 
+\draw [color={rgb, 255:red, 189; green, 16; blue, 224 }  ,draw opacity=1 ]   (250,199.94) .. controls (249.1,179.02) and (250.1,179.02) .. (330,179.94) ;
 
 % Text Node
 \draw (176,201.94) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 189; green, 16; blue, 224 }  ,opacity=1 ] [align=left] {Res};

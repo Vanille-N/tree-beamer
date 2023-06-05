@@ -43,6 +43,9 @@ override FIGURES = \
 # Baselines
 override FIGURES += \
 	sm-core \
+	sm-base \
+	sm-prot \
+	sm-full \
 	#
 
 # Blanks (transparent elements to guarantee alignment across pauses)
@@ -85,7 +88,7 @@ override FIGURES += \
 
 # Optimization: delay write
 override FIGURES += \
-	sm-path-res+act+act \
+	sm-path-res+act+Wact \
 	sm-path-res+act+dis+ub \
 	sm-path-res+act \
 	#
@@ -102,6 +105,7 @@ override FIGURES += \
 	sm-strengthening-act \
 	sm-path-pres+ub \
 	sm-path-pres+pfrz \
+	sm-path-pres+pfrz+ub \
 	sm-path-st-pact \
 	sm-path-st-pact+ub \
 	sm-path-st-pact+pact \
@@ -113,9 +117,16 @@ override FIGURES += \
 	sm-path-res+act+actfrz \
 	sm-path-st-res+act+act \
 	sm-path-st-res+act+dis+ub \
+	sm-path-res+act+Ract+frz \
 	sm-path-res+act+frz+frz \
 	sm-path-st-res+act+act+dis \
 	sm-path-st-res+act+dis+ub \
+	#
+
+# Other interesting visual representations
+override FIGURES += \
+	sm-idempotent \
+	sm-readread \
 	#
 
 override IMGDIR = img
