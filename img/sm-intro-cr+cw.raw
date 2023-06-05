@@ -55,6 +55,12 @@
 \draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ]   (390,200.14) .. controls (388.73,179.79) and (390.9,180.56) .. (400,180.14) ;
 %Curve Lines [id:da20731827194063635] 
 \draw [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ]   (240,220) .. controls (240.1,260.07) and (239.6,260.25) .. (260,260) ;
+%Straight Lines [id:da4734655833757918] 
+\draw    (231.54,241) -- (231.54,228)(234.54,241) -- (234.54,228) ;
+\draw [shift={(233.04,220)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da7245137143460174] 
+\draw    (301.54,241.06) -- (301.54,228.06)(304.54,241.06) -- (304.54,228.06) ;
+\draw [shift={(303.04,220.06)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 
 % Text Node
 \draw (248,201.94) node [anchor=north west][inner sep=0.75pt]   [align=left] {Act};
@@ -67,13 +73,17 @@
 % Text Node
 \draw (471,251) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {{\tiny UB}};
 % Text Node
-\draw (111,151) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,opacity=1 ] [align=left] {{\scriptsize foreign write}};
+\draw (91,151) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,opacity=1 ] [align=left] {{\scriptsize foreign write}};
 % Text Node
-\draw (111,171) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,opacity=1 ] [align=left] {{\scriptsize foreign read}};
+\draw (91,171) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,opacity=1 ] [align=left] {{\scriptsize foreign read}};
 % Text Node
-\draw (111,231) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
+\draw (91,231) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
 % Text Node
-\draw (111,251) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {{\scriptsize child write}};
+\draw (91,251) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {{\scriptsize child write}};
+% Text Node
+\draw (221.03,242) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&mut}};
+% Text Node
+\draw (298.03,242.06) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&}};
 
 
 \end{tikzpicture}

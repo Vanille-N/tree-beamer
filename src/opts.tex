@@ -38,7 +38,7 @@ let y = &mut ...;
         \end{block}
         \includegraphics<1>{sm-baseline-blank.pdf}
         \includegraphics<2>{sm-path-res+act+Wact.pdf}
-        \includegraphics<3>{sm-path-res+act+dis+ub.pdf}
+        \includegraphics<3>{sm-path-res+act+dis+Wub.pdf}
     \end{onlyenv}
     \begin{onlyenv}<4>
         \begin{block}{}
@@ -225,8 +225,8 @@ let vy = *y; // maybe foreign read ?
 let vx = *x;
             \end{lstlisting}
         \end{block}
-        \includegraphics<3>{sm-path-st-res+act+act.pdf}
-        \includegraphics<4>{sm-path-st-res+act+dis+ub.pdf}
+        \includegraphics<3>{sm-path-st-res+act+Ract.pdf}
+        \includegraphics<4>{sm-path-st-res+act+dis+Rub.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<5>
@@ -240,7 +240,7 @@ let vy = *y; // assumed not foreign
 let vx = *x;
             \end{lstlisting}
         \end{block}
-        \includegraphics{sm-path-st-res+act+act.pdf}
+        \includegraphics{sm-path-st-res+act+Ract.pdf}
     \end{onlyenv}
 \end{frame}
 
@@ -282,7 +282,7 @@ let vx = *x; // foreign read
 @@
             \end{lstlisting}
         \end{block}
-        \includegraphics{sm-path-st-res+act+act+dis.pdf}
+        \includegraphics{sm-path-st-res+act+Ract+dis.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<4>
@@ -295,7 +295,7 @@ let vx = *x; // foreign read
 let vy = *y;
             \end{lstlisting}
         \end{block}
-        \includegraphics{sm-path-st-res+act+dis+ub.pdf}
+        \includegraphics{sm-path-st-res+act+dis+Rub.pdf}
     \end{onlyenv}
 \end{frame}
 

@@ -130,6 +130,18 @@
 \draw [shift={(201,60.06)}, rotate = 269.21] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 %Curve Lines [id:da15622371662233558] 
 \draw    (241,80.06) .. controls (241.1,120.13) and (240.6,120.31) .. (261,120.06) ;
+%Straight Lines [id:da4587551274800816] 
+\draw    (161.54,100.94) -- (161.54,87.94)(164.54,100.94) -- (164.54,87.94) ;
+\draw [shift={(163.04,79.94)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da6403123284193603] 
+\draw    (161.58,260.94) -- (161.58,247.94)(164.58,260.94) -- (164.58,247.94) ;
+\draw [shift={(163.08,239.94)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da09827889789446631] 
+\draw    (302.54,100.88) -- (302.54,87.88)(305.54,100.88) -- (305.54,87.88) ;
+\draw [shift={(304.04,79.88)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da5287274513734797] 
+\draw    (301.54,260.94) -- (301.54,247.94)(304.54,260.94) -- (304.54,247.94) ;
+\draw [shift={(303.04,239.94)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 
 % Text Node
 \draw (176,221.94) node [anchor=north west][inner sep=0.75pt]   [align=left] {Res};
@@ -144,23 +156,23 @@
 % Text Node
 \draw (471,271) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\tiny UB}};
 % Text Node
-\draw (111,171) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
+\draw (91,171) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
 % Text Node
-\draw (111,191) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
+\draw (91,191) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
 % Text Node
-\draw (111,251) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
+\draw (91,251) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
 % Text Node
-\draw (111,271) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
+\draw (91,271) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
 % Text Node
-\draw (111,11) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
+\draw (91,11) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
 % Text Node
-\draw (111,31) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
+\draw (91,31) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
 % Text Node
-\draw (111,91) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
+\draw (91,91) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
 % Text Node
-\draw (111,111) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
+\draw (91,111) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
 % Text Node
-\draw (111,141) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize function exit}};
+\draw (91,141) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize function exit}};
 % Text Node
 \draw (167,62) node [anchor=north west][inner sep=0.75pt]   [align=left] {[P]Res};
 % Text Node
@@ -171,6 +183,14 @@
 \draw (472,111.06) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\tiny UB}};
 % Text Node
 \draw (401,12) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {{\tiny UB}};
+% Text Node
+\draw (151.03,101.94) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&mut}};
+% Text Node
+\draw (151.07,261.94) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&mut}};
+% Text Node
+\draw (298.03,101.94) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&}};
+% Text Node
+\draw (298.03,261.94) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&}};
 
 
 \end{tikzpicture}

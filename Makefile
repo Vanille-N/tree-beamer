@@ -89,7 +89,7 @@ override FIGURES += \
 # Optimization: delay write
 override FIGURES += \
 	sm-path-res+act+Wact \
-	sm-path-res+act+dis+ub \
+	sm-path-res+act+dis+Wub \
 	sm-path-res+act \
 	#
 
@@ -115,12 +115,11 @@ override FIGURES += \
 override FIGURES += \
 	sm-strengthening-dis \
 	sm-path-res+act+actfrz \
-	sm-path-st-res+act+act \
-	sm-path-st-res+act+dis+ub \
+	sm-path-st-res+act+Ract \
+	sm-path-st-res+act+dis+Rub \
 	sm-path-res+act+Ract+frz \
 	sm-path-res+act+frz+frz \
-	sm-path-st-res+act+act+dis \
-	sm-path-st-res+act+dis+ub \
+	sm-path-st-res+act+Ract+dis \
 	#
 
 # Other interesting visual representations

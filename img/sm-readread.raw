@@ -128,6 +128,18 @@
 \draw [shift={(355,219.94)}, rotate = 270] [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 %Curve Lines [id:da30042211399683694] 
 \draw [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ]   (180,59.94) .. controls (178.73,39.59) and (178.24,39.84) .. (330,40) ;
+%Straight Lines [id:da21105138731578288] 
+\draw [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ]   (161.5,101) -- (161.5,88)(164.5,101) -- (164.5,88) ;
+\draw [shift={(163,80)}, rotate = 90] [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da004920763285730767] 
+\draw [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ]   (161.54,261) -- (161.54,248)(164.54,261) -- (164.54,248) ;
+\draw [shift={(163.04,240)}, rotate = 90] [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da9075774406999298] 
+\draw [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ]   (302.5,100.94) -- (302.5,87.94)(305.5,100.94) -- (305.5,87.94) ;
+\draw [shift={(304,79.94)}, rotate = 90] [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da3199514304145572] 
+\draw [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ]   (301.5,261) -- (301.5,248)(304.5,261) -- (304.5,248) ;
+\draw [shift={(303,240)}, rotate = 90] [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 
 % Text Node
 \draw (176,221.94) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,opacity=1 ] [align=left] {Res};
@@ -142,13 +154,13 @@
 % Text Node
 \draw (471,271) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 155; green, 155; blue, 155 }  ,opacity=1 ] [align=left] {{\tiny UB}};
 % Text Node
-\draw (111,171) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
+\draw (92,171) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
 % Text Node
-\draw (111,191) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
+\draw (92,191) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
 % Text Node
-\draw (111,251) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
+\draw (92,251) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
 % Text Node
-\draw (111,271) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
+\draw (92,271) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
 % Text Node
 \draw (167,61.94) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,opacity=1 ] [align=left] {[P]Res};
 % Text Node
@@ -158,19 +170,27 @@
 % Text Node
 \draw (471,111) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 155; green, 155; blue, 155 }  ,opacity=1 ] [align=left] {{\tiny UB}};
 % Text Node
-\draw (111,11) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
+\draw (92,11) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign write}};
 % Text Node
-\draw (111,31) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
+\draw (92,31) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize foreign read}};
 % Text Node
-\draw (111,91) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
+\draw (92,91) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child read}};
 % Text Node
-\draw (111,111) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
+\draw (92,111) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize child write}};
 % Text Node
-\draw (111,141) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize function exit}};
+\draw (92,141) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize function exit}};
 % Text Node
 \draw (401,12) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 155; green, 155; blue, 155 }  ,opacity=1 ] [align=left] {{\tiny UB}};
 % Text Node
 \draw (281,41) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {{\tiny UB}};
+% Text Node
+\draw (151,102) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,color={rgb, 255:red, 74; green, 144; blue, 226 }  ,opacity=1 ,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&mut}};
+% Text Node
+\draw (151.03,262) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,color={rgb, 255:red, 74; green, 144; blue, 226 }  ,opacity=1 ,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&mut}};
+% Text Node
+\draw (298,102) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,color={rgb, 255:red, 74; green, 144; blue, 226 }  ,opacity=1 ,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&}};
+% Text Node
+\draw (298,262) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,color={rgb, 255:red, 74; green, 144; blue, 226 }  ,opacity=1 ,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&}};
 
 
 \end{tikzpicture}
