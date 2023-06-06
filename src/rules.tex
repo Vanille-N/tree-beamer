@@ -30,13 +30,14 @@
     \end{itemize}
 
     \begin{onlyenv}<1>
-        \begin{block}{Child read: must allow reading}
+        \begin{block}{Child \textover{read}{write}: must allow reading}
             \begin{itemize}
                 \item \texttt{Active} \(\to\) \texttt{Active}
                 \item \texttt{Frozen} \(\to\) \texttt{Frozen}
                 \item \texttt{Disabled} \(\to\) UB
             \end{itemize}
         \end{block}
+        % FIXME: blanks not at the front
         \includegraphics{sm-intro-cr.pdf}
     \end{onlyenv}
 
@@ -52,7 +53,7 @@
     \end{onlyenv}
 
     \begin{onlyenv}<3>
-        \begin{block}{Foreign read: no longer unique}
+        \begin{block}{Foreign \textover{read}{write}: no longer unique}
             \begin{itemize}
                 \item \texttt{Active} \(\to\) \texttt{Frozen}
                 \item \texttt{Frozen} \(\to\) \texttt{Frozen}
@@ -128,17 +129,13 @@
                 grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
                 edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
                 ]
-                \node (nv) at (0,0) {\texttt{v:}}
-                        child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
-                        child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
+                \node (nv) at (0,0) {\texttt{v:} {\visible<2->{\textover{\texttt{Active}}{}}}}
+                        child {node (nvpush) {\texttt{v\textsubscript{push}:} {\visible<3>{\textover{\texttt{Active}}{}}}{\visible<4->{\textover{\texttt{Frozen}}{}}}}}
+                        child {node (nvlen) {\texttt{v\textsubscript{len}:} {\visible<4->{\textover{\texttt{Frozen}}{}}}}}
+                        ;
 
-                \node<2->[right of=nv] {\texttt{Active}};
-                \node<3>[right of=nvpush] {~~\texttt{Active}};
-                \node<4->[right of=nvpush] {~~\texttt{Frozen}};
-                \node<4->[right of=nvlen] {~~\texttt{Frozen}};
-
-                \node (vert) at (3,0 |- nv) {};
-                \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
+                \node (vert) at (4,0 |- nv) {};
+                \node at (vert |- nv) {{\visible<3,4>{\(\gets\) reborrow}}};
                 \node<4> at (vert |- nvlen) {\(\gets\) read};
                 \node<5> at (vert |- nvpush) {\(\gets\) write (UB)};
             \end{tikzpicture}~\\~\\
@@ -146,11 +143,12 @@
             \includegraphics<3>[width=1.4\textwidth]{sm-path-act.pdf}
             \includegraphics<4>[width=1.4\textwidth]{sm-path-act+frz.pdf}
             \includegraphics<5>[width=1.4\textwidth]{sm-path-act+frz+ub.pdf}
+            {}
         \end{minipage}
     \end{block}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[t]
     \frametitle{New permission: \texttt{Reserved}}
     \begin{exampleblock}{Intuition}
         An \texttt{\&mut} not yet written to is not different from a \texttt{\&}.
@@ -190,18 +188,13 @@
                 grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
                 edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
                 ]
-                \node (nv) at (0,0) {\texttt{v:}}
-                        child {node (nvpush) {\texttt{v\textsubscript{push}:}}}
-                        child {node (nvlen) {\texttt{v\textsubscript{len}:}}};
-
-                \node<2->[right of=nv] {\texttt{Active}};
-                \node<3,4>[right of=nvpush] {~~~~~\texttt{Reserved}};
-                \node<5>[right of=nvpush] {~~\texttt{Active}};
-                \node<4>[right of=nvlen] {~~\texttt{Frozen}};
-                \node<5>[right of=nvlen] {~~~~\texttt{Disabled}};
+                \node (nv) at (0,0) {\texttt{v:} {\visible<2->{\textover{\texttt{Active}}{}}}}
+                        child {node (nvpush) {\texttt{v\textsubscript{push}:} {\visible<3,4>{\textover{\texttt{Reserved}}{}}}{\visible<5>{\textover{\texttt{Active}}{}}}}}
+                        child {node (nvlen) {\texttt{v\textsubscript{len}:} {\visible<4>{\textover{\texttt{Frozen}}{}}}{\visible<5>{\textover{\texttt{Disabled}}{}}}}}
+                        ;
 
                 \node (vert) at (4,0 |- nv) {};
-                \node<3,4> at (vert |- nv) {\(\gets\) reborrow};
+                \node at (vert |- nv) {{\visible<3,4>{\(\gets\) reborrow}}};
                 \node<4> at (vert |- nvlen) {\(\gets\) read};
                 \node<5> at (vert |- nvpush) {\(\gets\) write};
             \end{tikzpicture}~\\~\\
@@ -209,6 +202,7 @@
             \includegraphics<3>[width=1.4\textwidth]{sm-path-res.pdf}
             \includegraphics<4>[width=1.4\textwidth]{sm-path-res+res.pdf}
             \includegraphics<5>[width=1.4\textwidth]{sm-path-res+res+act.pdf}
+            {}
         \end{minipage}
     \end{block}
 \end{frame}

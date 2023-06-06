@@ -91,5 +91,12 @@ splitbottomskip=6pt,splittopskip=12pt]
     \end{block}%
 }
 
-\newcommand{\cmark}{\color{darkgreen}{\ding{51}}} % check mark
-\newcommand{\xmark}{\color{red}{\ding{55}}} % cross mark
+\newcommand{\cmark}{\color{darkgreen}{\ding{51}\vphantom{\ding{55}}}} % check mark
+\newcommand{\xmark}{\color{red}{\ding{55}\vphantom{\ding{51}}}} % cross mark
+
+\newcommand{\textover}[3][l]{%
+ % #1 is the alignment, default l
+ % #2 is the text to be printed
+ % #3 is the text for setting the width
+ \makebox[\widthof{#3}][#1]{#2}%
+ }
