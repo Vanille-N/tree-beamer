@@ -38,7 +38,7 @@
             \end{itemize}
         \end{block}
         % FIXME: blanks not at the front
-        \includegraphics{sm-intro-cr.pdf}
+        \includegraphics{steps.core.cr.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<2>
@@ -49,7 +49,7 @@
                 \item \texttt{Disabled} \(\to\) UB
             \end{itemize}
         \end{block}
-        \includegraphics{sm-intro-cr+cw.pdf}
+        \includegraphics{steps.core.cr+cw.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<3>
@@ -60,7 +60,7 @@
                 \item \texttt{Disabled} \(\to\) \texttt{Disabled}
             \end{itemize}
         \end{block}
-        \includegraphics{sm-intro-cr+cw+fr.pdf}
+        \includegraphics{steps.core.cr+cw+fr.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<4>
@@ -71,7 +71,7 @@
                 \item \texttt{Disabled} \(\to\) \texttt{Disabled}
             \end{itemize}
         \end{block}
-        \includegraphics{sm-intro-cr+cw+fr+fw.pdf}
+        \includegraphics{steps.core.cr+cw+fr+fw.pdf}
     \end{onlyenv}
 \end{frame}
 
@@ -139,10 +139,10 @@
                 \node<4> at (vert |- nvlen) {\(\gets\) read};
                 \node<5> at (vert |- nvpush) {\(\gets\) write (UB)};
             \end{tikzpicture}~\\~\\
-            \includegraphics<1-2>[width=1.4\textwidth]{sm-core.pdf}
-            \includegraphics<3>[width=1.4\textwidth]{sm-path-act.pdf}
-            \includegraphics<4>[width=1.4\textwidth]{sm-path-act+frz.pdf}
-            \includegraphics<5>[width=1.4\textwidth]{sm-path-act+frz+ub.pdf}
+            \includegraphics<1-2>[width=1.4\textwidth]{mod.core.pdf}
+            \includegraphics<3>[width=1.4\textwidth]{path.core.mut.pdf}
+            \includegraphics<4>[width=1.4\textwidth]{path.core.mut+fr.pdf}
+            \includegraphics<5>[width=1.4\textwidth]{path.core.mut+fr+cw.pdf}
             {}
         \end{minipage}
     \end{block}
@@ -158,8 +158,8 @@
     \(\Rightarrow\) behave like \texttt{Frozen} until the first child write\\
     \(\Rightarrow\) can coexist with each other and with \texttt{Frozen}~\\~\\
 
-    \includegraphics<1>[width=\textwidth]{sm-res-add.pdf}
-    \includegraphics<2>[width=\textwidth]{sm-res-diff.pdf}
+    \includegraphics<1>[width=\textwidth]{steps.base.pdf}
+    \includegraphics<2>[width=\textwidth]{steps.base.diff.pdf}
 \end{frame}
 
 \begin{frame}[fragile, t]
@@ -198,10 +198,10 @@
                 \node<4> at (vert |- nvlen) {\(\gets\) read};
                 \node<5> at (vert |- nvpush) {\(\gets\) write};
             \end{tikzpicture}~\\~\\
-            \includegraphics<1-2>[width=1.4\textwidth]{sm-base.pdf}
-            \includegraphics<3>[width=1.4\textwidth]{sm-path-res.pdf}
-            \includegraphics<4>[width=1.4\textwidth]{sm-path-res+res.pdf}
-            \includegraphics<5>[width=1.4\textwidth]{sm-path-res+res+act.pdf}
+            \includegraphics<1-2>[width=1.4\textwidth]{mod.base.pdf}
+            \includegraphics<3>[width=1.4\textwidth]{path.base.mut.pdf}
+            \includegraphics<4>[width=1.4\textwidth]{path.base.mut+fr.pdf}
+            \includegraphics<5>[width=1.4\textwidth]{path.base.mut+fr+cw.pdf}
             {}
         \end{minipage}
     \end{block}
@@ -222,7 +222,7 @@ fn write(x: &mut u64) {
 }
         \end{lstlisting}
     \end{block}
-    \includegraphics[width=0.7\textwidth]{sm-path-res+act+frz.pdf}
+    \includegraphics[width=0.7\textwidth]{path.base.mut+cw+fr.pdf}
 \end{frame}
 
 \begin{frame}[t]
@@ -241,10 +241,10 @@ fn write(x: &mut u64) {
             \item protectors strengthen the guarantees
         \end{itemize}
     \end{onlyenv}
-    \includegraphics<2>{sm-prot-blank.pdf}
-    \includegraphics<3>{sm-prot-cp.pdf}
-    \includegraphics<4>{sm-prot-nodis.pdf}
-    \includegraphics<5>{sm-prot-noalias.pdf}
+    \includegraphics<2>{blank.prot.pdf}
+    \includegraphics<3>{steps.prot.cp.pdf}
+    \includegraphics<4>{steps.prot.nodis.pdf}
+    \includegraphics<5>{steps.prot.noalias.pdf}
 \end{frame}
 
 
@@ -262,7 +262,7 @@ fn write(x: &mut u64) { // with protector
 }
         \end{lstlisting}
     \end{block}
-    \includegraphics[width=0.7\textwidth]{sm-path-pres+pact+ub.pdf}
+    \includegraphics[width=0.7\textwidth]{path.prot.mut+cw+fr.pdf}
 \end{frame}
 
 \subsection*{}
