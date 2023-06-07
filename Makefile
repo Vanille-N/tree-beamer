@@ -42,84 +42,81 @@ override FIGURES = \
 
 # Baselines
 override FIGURES += \
-	sm-core \
-	sm-base \
-	sm-prot \
-	sm-full \
+	mod.core \
+	mod.base \
+	mod.prot \
+	mod.full \
 	#
 
 # Blanks (transparent elements to guarantee alignment across pauses)
 override FIGURES += \
-	sm-baseline-blank \
-	sm-prot-blank \
+	blank.base \
+	blank.prot \
 	#
 
 # Step-by-step introduction
 override FIGURES += \
-	sm-intro-cr \
-	sm-intro-cr+cw \
-	sm-intro-cr+cw+fr \
-	sm-intro-cr+cw+fr+fw \
+	steps.core.cr \
+	steps.core.cr+cw \
+	steps.core.cr+cw+fr \
+	steps.core.cr+cw+fr+fw \
 	#
 
 # Illustrating the need for Reserved
 override FIGURES += \
-	sm-path-act \
-	sm-path-act+frz \
-	sm-path-act+frz+ub \
-	sm-res-add \
-	sm-res-dim \
-	sm-res-same \
-	sm-res-diff \
-	sm-path-res \
-	sm-path-res+res \
-	sm-path-res+res+act \
+	path.core.mut \
+	path.core.mut+fr \
+	path.core.mut+fr+cw \
+	steps.base \
+	steps.base.diff \
+	path.base.mut \
+	path.base.mut+fr \
+	path.base.mut+fr+cw \
 	#
 
 
 # Illustrating the need for Protectors
 override FIGURES += \
-	sm-path-res+act+frz \
-	sm-prot-cp \
-	sm-prot-nodis \
-	sm-prot-noalias \
-	sm-path-pres+pact+ub \
+	path.base.mut+cw+fr \
+	steps.prot.cp \
+	steps.prot.nodis \
+	steps.prot.noalias \
+	path.prot.mut+cw+fr \
 	#
 
 # Optimization: delay write
 override FIGURES += \
-	sm-path-res+act+Wact \
-	sm-path-res+act+dis+Wub \
-	sm-path-res+act \
+	path.base.mut+cw+cw \
+	path.base.mut+cw+fw+cw \
+	path.base.mut+cw \
 	#
 
 # Optimization: speculative read
 override FIGURES += \
-	sm-path-pfrz+pfrz \
-	sm-path-pfrz+pfrz+pfrz \
-	sm-path-pfrz+ub \
+	path.prot.shr+cr \
+	path.prot.shr+cr+fr \
+	path.prot.shr+fw \
 	#
 
 # Strengthening: speculative write
 override FIGURES += \
-	sm-strengthening-act \
-	sm-path-pres+ub \
-	sm-path-pres+pfrz \
-	sm-path-pres+pfrz+ub \
-	sm-path-st-pact \
-	sm-path-st-pact+ub \
-	sm-path-st-pact+pact \
+	path.prot.mut+fw \
+	path.prot.mut+fr \
+	path.prot.mut+fr+cw \
+	steps.prot+w \
+	path.prot+w.mut \
+	path.prot+w.mut+cw \
+	path.prot+w.mut+fr-fw \
 	#
 
 # Strengthening: disable on read
 override FIGURES += \
-	sm-strengthening-dis \
-	sm-path-res+act+actfrz \
-	sm-path-st-res+act+Ract \
-	sm-path-st-res+act+dis+Rub \
-	sm-path-res+act+Ract+frz \
-	sm-path-res+act+frz+frz \
-	sm-path-st-res+act+Ract+dis \
+	steps.base+d \
+	path.base.mut+cw+cr+fr \
+	path.base.mut+cw+fr-o+cr \
+	path.base+d.mut+cw+cr \
+	path.base+d.mut+cw+fr+cr \
+	path.base+d.mut+cw+cr+fr \
 	#
 
 # Other interesting visual representations
