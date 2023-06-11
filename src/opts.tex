@@ -1,7 +1,6 @@
 \section{Optimizations}
 
 \begin{frame}
-    % FIXME: change to read-call
     \frametitle{Some standard optimizations}
     \newcommand{\asterisk}{\textsuperscript{*}}
     \newcommand{\noasterisk}{\phantom{\asterisk}}
@@ -188,7 +187,6 @@ fn foo(x: &mut u64) {
     \end{onlyenv}
 \end{frame}
 
-% FIXME: more space here
 \begin{frame}[fragile, t]
     \frametitle{Insert speculative write: blocker}
 
@@ -199,7 +197,7 @@ fn foo(x: &mut u64) {
         \end{itemize}
     \end{exampleblock}
 
-    \begin{block}{{\cmark} Common pattern}
+    \begin{block}{\textover{\visible<1-3>{\cmark}}{}\textover{\visible<4-5>{\xmark}}{}\phantom{\xmark} Common pattern}
         \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
 let raw = buf.as_mut_ptr();
 let shr = buf.as_ptr().add(1);
