@@ -6,7 +6,7 @@ Slides and sources for presentations of Tree Borrows.
 
 This branch (`rfmig`) is specific to the
 [_Rust Formal Methods Interest Group_](https://www.youtube.com/watch?v=zQ76zLXesxA)
-session of Monday, May 29th 2023 (7PM CEST) and the contents of the slides are frozen as of May 31st 2023.
+session of Monday, May 29th 2023 (7PM CEST) and the contents of the slides are frozen except for typos.
 
 Other branches may contain material not presented here.
 
