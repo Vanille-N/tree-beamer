@@ -3,28 +3,55 @@
 \begin{frame}
     % FIXME: change to read-call
     \frametitle{Some standard optimizations}
+    \newcommand{\asterisk}{\textsuperscript{*}}
+    \newcommand{\noasterisk}{\phantom{\asterisk}}
     \begin{tabular}{|l|c|c|l}
-        Possible in...                     & SB     & TB \\
-        Insert speculative read            & \cmark & \cmark &\\
-        Insert speculative write           & \cmark & \xmark &\visible<2>{\(\gets\)}\\
-        Remove redundant read              & \cmark & \cmark &\\
-        Remove redundant write             & \cmark & \cmark &\\
-        Reorder read-write                 & \cmark & \xmark &\visible<2>{\(\gets\)}\\
-        Reorder read-write (fn args)       & \cmark & \cmark &\\
-        Reorder read-read                  & \xmark & \cmark &\visible<3>{\(\gets\)}\\
-        Reorder read-read (fn args)        & \cmark & \cmark &\\
-        Reorder write-write                & \cmark & \cmark &\\
-        Reorder write-write (fn args)      & \cmark & \cmark &\\
-        Reorder write-read                 & \cmark & \cmark &\\
-        Reorder write-read (fn args)       & \cmark & \cmark &\\
-        Reorder reborrow-reborrow          & \xmark & \cmark &\visible<3>{\(\gets\)}\\
-    \end{tabular}
+        \cline{1-3}
+        Possible in...                     & SB     & TB &\\
+        \cline{1-3}
+        Swap call-read \(\to\) read-call (speculative)
+            & \cmark\noasterisk
+            & \cmark\noasterisk
+            &\\
+        \cline{1-3}
+        Swap read-call \(\to\) call-read
+            & \cmark\asterisk
+            & \cmark\asterisk
+            &\\
+        \(\triangleright\)\scriptsize~ Swap read-read' \(\to\) read'-read
+            & \scriptsize \cmark\asterisk
+            & \scriptsize \cmark\noasterisk
+            & \visible<3>{\(\gets\) TB only}\\
+        \cline{1-3}
+        Swap call-write \(\to\) write-call (speculative)
+            & \cmark\asterisk
+            & \xmark\noasterisk
+            & \visible<2>{\(\gets\) SB only}\\
+        \(\triangleright\)\scriptsize~ Swap write-call-write \(\to\) write-write-call
+            & \scriptsize \cmark\asterisk
+            & \scriptsize \cmark\asterisk
+            &\\
+        \cline{1-3}
+        Swap write-call \(\to\) call-write
+            & \cmark\asterisk
+            & \cmark\asterisk
+            &\\
+        \(\triangleright\)\scriptsize~ Swap write-write'-read \(\to\) write'-write-read
+            & \scriptsize \cmark\noasterisk
+            & \scriptsize \cmark\asterisk
+            & \visible<2>{\(\gets\) SB only}\\
+        \cline{1-3}
+    \end{tabular}~\\~\\
+
+    \asterisk: only for protected references
 \end{frame}
 
 \subsection{Possible optimizations}
 
+\newcommand{\assumepath}[2]{\textover{\visible<#1>{\color{magenta}{#2}}}{}}
+
 \begin{frame}[fragile, t]
-    \frametitle{Reorder write-write}
+    \frametitle{Swap write-write}
 
     \begin{onlyenv}<1-3>
         \begin{block}{{\cmark} Base model}
@@ -32,7 +59,7 @@
 let x = &mut ...;
 let y = &mut ...;
 *x = 42; // (optimization: move down ?)
-*y = 19; // is this a foreign write ?
+*y = 19; // is this a foreign write ? @\assumepath{2}{if yes}\assumepath{3}{if not}@
 
 *x = 57;
             \end{lstlisting}
@@ -75,10 +102,10 @@ let y = &mut ...;
     \frametitle{Insert speculative read}
     \begin{onlyenv}<1-4>
         \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, escapechar=@]
 fn read(x: &u64) -> u64 {
 
-    opaque(/* maybe foreign write */);
+    opaque(/* contains foreign access ? @\assumepath{2}{if none}\assumepath{3}{if read}\assumepath{4}{if write}\phantom{........}@ */);
     *x // (optimization: move up ?)
 }
             \end{lstlisting}
@@ -91,7 +118,7 @@ fn read(x: &u64) -> u64 {
 
     \begin{onlyenv}<5>
         \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, escapechar=@]
 fn read(x: &u64) -> u64 {
     let val = *x;
     opaque(/* assume no foreign write */);
@@ -108,20 +135,19 @@ fn read(x: &u64) -> u64 {
 \begin{frame}[fragile, t]
     \frametitle{Insert speculative write}
 
-    \begin{onlyenv}<1-3>
-        \begin{block}{{\xmark} Base model}
-            \begin{lstlisting}[language=rust]
+    \begin{block}{{\xmark} Base model}
+        \begin{lstlisting}[language=rust, escapechar=@]
 fn foo(x: &mut u64) {
 
-    opaque(/* maybe foreign read/write */);
+    opaque(/* contains foreign access ? @\assumepath{2}{if write}\assumepath{3}{if read}\assumepath{4}{if read+loop}\phantom{............}@ */);
     *x = 42; // (optimization: move up ?)
 }
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<1>{path.prot.mut+fw.pdf}
-        \includegraphics<2>{path.prot.mut+fr+cw.pdf}
-        \includegraphics<3>{path.prot.mut+fr.pdf}
-    \end{onlyenv}
+        \end{lstlisting}
+    \end{block}
+    \includegraphics<1>{blank.base.pdf}
+    \includegraphics<2>{path.prot.mut+fw.pdf}
+    \includegraphics<3>{path.prot.mut+fr+cw.pdf}
+    \includegraphics<4>{path.prot.mut+fr.pdf}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -136,10 +162,10 @@ fn foo(x: &mut u64) {
 
     \begin{onlyenv}<3-4>
         \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, escapechar=@]
 fn foo(x: &mut u64) {
 
-    opaque(/* maybe foreign read/write */);
+    opaque(/* contains foreign access ? @\assumepath{3}{if none}\assumepath{4}{if any}\phantom{.......}@ */);
     *x = 42;
 }
             \end{lstlisting}
@@ -150,10 +176,10 @@ fn foo(x: &mut u64) {
 
     \begin{onlyenv}<5>
         \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, escapechar=@]
 fn foo(x: &mut u64) {
     *x = 42;
-    opaque(/* assume no foreign read/write */);
+    opaque(/* assume no foreign access */);
 
 }
             \end{lstlisting}
@@ -163,41 +189,109 @@ fn foo(x: &mut u64) {
 \end{frame}
 
 % FIXME: more space here
-\begin{frame}[fragile]
+\begin{frame}[fragile, t]
     \frametitle{Insert speculative write: blocker}
-    \begin{onlyenv}<1>
-        \begin{block}{{\cmark} ``\texttt{as\_mut\_ptr}'' pattern}
-            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-// as_mut_ptr: &mut [T] -> *mut T (does not actually write)
-let raw = buffer.as_mut_ptr(); // creates raw: Reserved
-let shr = buffer.as_ptr().add(1); // creates shr: Frozen
-                             // raw stays Reserved (foreign read)
-copy_nonoverlapping(shr, raw, 1); // raw gets activated
-            \end{lstlisting}
-        \end{block}
+
+    \begin{exampleblock}{\texttt{as\_mut\_ptr}: \textover{\visible<1-3>{base model}}{}\textover{\visible<4-5>{strengthened}}{}}
+        \begin{itemize}
+            \item \texttt{\&mut [T] -> *mut T}
+            \item returns \textover{\visible<1-3>{a \texttt{Reserved}}}{}\textover{\visible<4-5>{an \texttt{Active}}}{}\phantom{aaaaaaaaaa.} child of the input
+        \end{itemize}
+    \end{exampleblock}
+
+    \begin{block}{{\cmark} Common pattern}
+        \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
+let raw = buf.as_mut_ptr();
+let shr = buf.as_ptr().add(1);
+copy_nonoverlapping(shr, raw, 1);
+        \end{lstlisting}
+    \end{block}
+
+    \begin{onlyenv}<1-3>
+        \begin{onlyenv}<1>
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
+                        child {node {\texttt{...}}
+                            child {node (nraw) {\texttt{raw: Reserved}}}}
+                        ;
+            \end{tikzpicture}
+        \end{onlyenv}
+        \begin{onlyenv}<2>
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
+                        child {node {\texttt{...}}
+                            child {node (nraw) {\texttt{raw: Reserved}}}}
+                        child[missing] {}
+                        child {node {\texttt{...}}
+                            child {node (nshr) {\texttt{shr: Frozen}}}}
+                        ;
+            \end{tikzpicture}
+        \end{onlyenv}
+        \begin{onlyenv}<3>
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
+                        child {node {\texttt{...}}
+                            child {node (nraw) {\texttt{raw: Active}}}}
+                        child[missing] {}
+                        child {node {\texttt{...}}
+                            child {node (nshr) {\texttt{shr: Disabled}}}}
+                        ;
+            \end{tikzpicture}
+        \end{onlyenv}
+
     \end{onlyenv}
 
-    \begin{onlyenv}<2>
-        \begin{block}{{\xmark} ``\texttt{as\_mut\_ptr}'' pattern: strengthened model}
-            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-// as_mut_ptr: &mut [T] -> *mut T (may speculatively write)
-let raw = buffer.as_mut_ptr(); // creates raw: Active
-let shr = buffer.as_ptr().add(1); // creates shr: Frozen
-                             // raw becomes Frozen (foreign read)
-copy_nonoverlapping(shr, raw, 1); // write through Frozen: UB
-            \end{lstlisting}
-        \end{block}
+    \begin{onlyenv}<4-5>
+        \begin{onlyenv}<4>
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
+                        child {node {\texttt{...}}
+                            child {node (nraw) {\texttt{raw: Active}}}}
+                        ;
+            \end{tikzpicture}
+        \end{onlyenv}
+        \begin{onlyenv}<5>
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+                ]
+                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
+                        child {node {\texttt{...}}
+                            child {node (nraw) {\texttt{raw: Frozen}}}}
+                        child[missing] {}
+                        child {node {\texttt{...}}
+                            child {node (nshr) {\texttt{shr: Frozen}}}}
+                        ;
+            \end{tikzpicture}
+        \end{onlyenv}
     \end{onlyenv}
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Reorder write-read}
+    \frametitle{Swap write-read'-read \(\to\) write-read-read'}
     \begin{block}{{\xmark} Base model}
-        \begin{lstlisting}[language=rust]
+        \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
 *x = 42; // (optimization: move down ?)
 let y = &...;
-let vy = *y; // maybe foreign read ?
+let vy = *y; // is this read foreign ? @\assumepath{1}{maybe}@
 
 let vx = *x;
         \end{lstlisting}
@@ -206,7 +300,7 @@ let vx = *x;
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Reorder write-read: strengthening}
+    \frametitle{Swap write-read'-read \(\to\) write-read-read': strengthening}
     \begin{onlyenv}<1-2>
         \begin{exampleblock}{Possible strengthening}
             Foreign read makes \texttt{Active} become \texttt{Disabled}
@@ -218,11 +312,11 @@ let vx = *x;
 
     \begin{onlyenv}<3-4>
         \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
 *x = 42; // (optimization: move down ?)
 let y = &...;
-let vy = *y; // maybe foreign read ?
+let vy = *y; // is this read foreign ? @\assumepath{3}{if not}\assumepath{4}{if yes}@
 
 let vx = *x;
             \end{lstlisting}
@@ -233,11 +327,11 @@ let vx = *x;
 
     \begin{onlyenv}<5>
         \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust]
+            \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
 
 let y = &...;
-let vy = *y; // assumed not foreign
+let vy = *y; // read assumed not foreign
 *x = 42;
 let vx = *x;
             \end{lstlisting}
@@ -247,9 +341,9 @@ let vx = *x;
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Reorder write-read: blocker}
+    \frametitle{Swap write-read'-read \(\to\) write-read-read': blocker}
     \begin{onlyenv}<1>
-        \begin{block}{{\cmark} Reorder read-read\vphantom{gh}}
+        \begin{block}{{\cmark} Swap read-read\vphantom{gh}}
             \begin{lstlisting}[language=rust, escapechar=@]
 let y = &mut *x;
 *y = 42;
@@ -262,8 +356,8 @@ let vx = *x; // foreign read
     \end{onlyenv}
 
     \begin{onlyenv}<2>
-        \begin{block}{{\cmark} Reorder read-read\vphantom{gh}}
-            \begin{lstlisting}[language=rust]
+        \begin{block}{{\cmark} Swap read-read\vphantom{gh}}
+            \begin{lstlisting}[language=rust, escapechar=@]
 let y = &mut *x;
 *y = 42;
 
@@ -275,11 +369,11 @@ let vy = *y;
     \end{onlyenv}
 
     \begin{onlyenv}<3>
-        \begin{block}{{\xmark} Reorder read-read: strengthened model}
+        \begin{block}{{\xmark} Swap read-read: strengthened model}
             \begin{lstlisting}[language=rust, escapechar=@]
 let y = &mut *x;
 *y = 42;
-let vy = *y;
+let vy = *y; // (optimization: move down ?)
 let vx = *x; // foreign read
 @@
             \end{lstlisting}
@@ -288,8 +382,8 @@ let vx = *x; // foreign read
     \end{onlyenv}
 
     \begin{onlyenv}<4>
-        \begin{block}{{\xmark} Reorder read-read: strengthened model}
-            \begin{lstlisting}[language=rust]
+        \begin{block}{{\xmark} Swap read-read: strengthened model}
+            \begin{lstlisting}[language=rust, escapechar=@]
 let y = &mut *x;
 *y = 42;
 

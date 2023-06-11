@@ -37,7 +37,6 @@
                 \item \texttt{Disabled} \(\to\) UB
             \end{itemize}
         \end{block}
-        % FIXME: blanks not at the front
         \includegraphics{steps.core.cr.pdf}
     \end{onlyenv}
 
@@ -93,11 +92,12 @@
         \item[\xmark] several \texttt{Active} (\texttt{\&mut}) can coexist if never written to
     \end{description}~\\
 
-    Unsoundness (two following subsections fix them)
+    Unsoundness (following subsections fix them)
     \hspace{-5em}
     \begin{description}
         \item[\xmark] two-phase borrows not handled yet
         \item[\xmark] too permissive for \texttt{noalias} and \texttt{dereferenceable}
+        \item[\xmark] \texttt{UnsafeCell} needs special handling
     \end{description}~\\
 
 \end{frame}
@@ -134,7 +134,7 @@
                         child {node (nvlen) {\texttt{v\textsubscript{len}:} {\visible<4->{\textover{\texttt{Frozen}}{}}}}}
                         ;
 
-                \node (vert) at (4,0 |- nv) {};
+                \node (vert) at (3.5,0 |- nv) {};
                 \node at (vert |- nv) {{\visible<3,4>{\(\gets\) reborrow}}};
                 \node<4> at (vert |- nvlen) {\(\gets\) read};
                 \node<5> at (vert |- nvpush) {\(\gets\) write (UB)};

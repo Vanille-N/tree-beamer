@@ -114,6 +114,7 @@ override FIGURES += \
 	steps.base+d \
 	path.base.mut+cw+cr+fr \
 	path.base.mut+cw+fr-o+cr \
+	path.base.mut+cw+fr+cr \
 	path.base+d.mut+cw+cr \
 	path.base+d.mut+cw+fr+cr \
 	path.base+d.mut+cw+cr+fr \
