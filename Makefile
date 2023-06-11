@@ -1,4 +1,7 @@
-all: main.pdf
+all: eth.pdf
+
+eth.pdf: main.pdf
+	cp $< $@
 
 # All .tex source files
 override SRC = $(wildcard src/*.tex)
@@ -46,6 +49,7 @@ override FIGURES += \
 	mod.base \
 	mod.prot \
 	mod.full \
+	mod.cell \
 	#
 
 # Blanks (transparent elements to guarantee alignment across pauses)
@@ -122,8 +126,8 @@ override FIGURES += \
 
 # Other interesting visual representations
 override FIGURES += \
-	sm-idempotent \
-	sm-readread \
+	intuition.idempotent \
+	intuition.read+read \
 	#
 
 override IMGDIR = img

@@ -74,7 +74,42 @@
     \end{itemize}~\\~\\
     \vfill
 
-    Don't hesitate to test your code with Miri and send us your interesting/unexpected cases of UB!\\
-    Slides and examples on \href{https://github.com/Vanille-N/tree-beamer}{\texttt{github:Vanille-N/tree-beamer}}\\
+    Slides and examples on \href{https://github.com/Vanille-N/tree-beamer}{\texttt{github:Vanille-N/tree-beamer/tree/eth}}\\
     Complementary material: \href{https://perso.crans.org/vanille/treebor}{\texttt{perso.crans.org/vanille/treebor}}\\
+\end{frame}
+
+\appendix
+
+\section{Model versions}
+
+\begin{frame}
+    \frametitle{Core}
+    \includegraphics{mod.core.pdf}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Base}
+    \includegraphics{mod.base.pdf}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Base + protected}
+    \includegraphics{mod.full.pdf}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Base + cell}
+    \includegraphics[width=\textwidth]{mod.cell.pdf}
+\end{frame}
+
+\section{Intuition}
+
+\begin{frame}
+    \frametitle{Intuition: all accesses are idempotent}
+    \includegraphics{intuition.idempotent.pdf}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Intuition: reordering of reads}
+    \includegraphics{intuition.read+read.pdf}
 \end{frame}
