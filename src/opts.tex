@@ -35,14 +35,18 @@
             & \cmark\asterisk
             & \cmark\asterisk
             &\\
-        \(\triangleright\)\scriptsize~ Swap write-write'-read \(\to\) write'-write-read
+        \(\triangleright\)\scriptsize~ Swap write-read'-read \(\to\) read'-write-read
             & \scriptsize \cmark\noasterisk
             & \scriptsize \cmark\asterisk
             & \visible<2>{\(\gets\) SB only}\\
         \cline{1-3}
     \end{tabular}~\\~\\
 
-    \asterisk: only for protected references
+    {\footnotesize
+    all are possible for references without interior mutability\\
+    (\texttt{\&mut} if a write is involved, both \texttt{\&} and \texttt{\&mut} if read-only)\\
+    \asterisk: only for protected references\\
+    }
 \end{frame}
 
 \subsection{Possible optimizations}
@@ -58,7 +62,7 @@
 let x = &mut ...;
 let y = &mut ...;
 *x = 42; // (optimization: move down ?)
-*y = 19; // is this a foreign write ? @\assumepath{2}{if yes}\assumepath{3}{if not}@
+*y = 19; // is this a foreign write ? @\assumepath{2}{if not}\assumepath{3}{if yes}@
 
 *x = 57;
             \end{lstlisting}
@@ -283,7 +287,7 @@ copy_nonoverlapping(shr, raw, 1);
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Swap write-read'-read \(\to\) write-read-read'}
+    \frametitle{Swap write-read'-read \(\to\) read'-write-read}
     \begin{block}{{\xmark} Base model}
         \begin{lstlisting}[language=rust, escapechar=@]
 let x = &mut ...;
