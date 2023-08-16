@@ -1,6 +1,6 @@
-all: eth.pdf
+all: ens.pdf
 
-eth.pdf: main.pdf
+ens.pdf: main.pdf
 	cp $< $@
 
 # All .tex source files

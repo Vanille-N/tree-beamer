@@ -4,231 +4,174 @@
 
 \section{Introduction}
 
-% FIXME: explain why the tree is structural; provide intuition why it's also the good structure
+\begin{frame}[fragile,t]
+    \frametitle{Why have UB?}
+    \framesubtitle{A simple(r) example}
+
+    \begin{lstlisting}[language=rust]
+enum bool {
+    true = 1,
+    false = 0,
+}
+    \end{lstlisting}
+
+    \begin{onlyenv}<2>
+        What happens if...
+        \begin{lstlisting}[language=rust]
+let b: bool = 2;
+        \end{lstlisting}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        What happens if...
+        \begin{lstlisting}[language=rust]
+let b: bool = unsafe { std::mem::transmute(2) };
+//             ^^^^^^ remember this
+let notb = !b; // ?
+let notnotb = !notb;
+assert!(b == notnotb); // ???
+        \end{lstlisting}
+        Can the compiler optimize a double negation into the identity ?
+    \end{onlyenv}
+
+    \begin{onlyenv}<4>
+        What happens if...
+        \begin{lstlisting}[language=rust, escapechar=@]
+let b: bool = unsafe { std::mem::transmute(2) };
+// UB: invalid value
+@@
+@@
+@@
+        \end{lstlisting}
+        The compiler \textit{can} optimize a double negation into the identity.\\
+        The compiler can do \textit{anything} once you have constructed an invalid value.
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Rust's type system}
+    \begin{onlyenv}<1>
+        \begin{lstlisting}[language=rust]
+let t: T = v;
+//          ^ value
+//      ^ type
+//  ^ variable
+//  ^^^^^^^^ variable binding
+
+fn incr(n: u8) -> u8 {
+    n + 1
+}
+
+fn main() {
+    let n: u8 = 42;
+    let m: u8 = incr(n);
+    println!("{n} + 1 = {m}");
+}
+        \end{lstlisting}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{lstlisting}[language=rust]
+// Primitives
+f32, f64, u8, i8, u16, i16, u32, i32,
+u64, i64, u128, i128, usize, isize, bool
+// Products
+struct Point {
+    x: f64,
+    y: f64,
+}
+type Triplet = (f64, f64, usize);
+type Array = [f64; 10];
+// Sums
+enum Shape {
+    Circle(Point, f64),
+    Square(Point, f64),
+    Triangle([Point; 3]),
+}
+        \end{lstlisting}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        \begin{lstlisting}[language=rust, escapechar=@]
+// Smart pointers
+Box<T>, Rc<T>, Arc<T>, Cow<T>
+
+// Raw pointers
+*const T
+*mut T
+// (*const T @\(\sqsubset\)@ *mut T)
+
+// References
+@@&'a T // shared and immutable
+@@&'a mut T // unique and mutable
+// (&'a T @\(\sqsubset\)@ &'a mut T)
+// ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a T @\(\sqsubset\)@ &'b T)
+// ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a mut T @\(\sqsubset\)@ &'b mut T)
+        \end{lstlisting}
+    Mutability and uniqueness are part of the type!\\
+    Can we exploit that?
+    \end{onlyenv}
+
+\end{frame}
 
 \begin{frame}[fragile,t]
-    \frametitle{A motivating example}
-    See code example: \texttt{examples/rw-elim}
-
-    \begin{onlyenv}<2>
-        \begin{block}{}
-            optimizations rely on type information\\
-            + \texttt{unsafe} can bypass the type system\\
-            = many optimizations are unsound in the presence of \texttt{unsafe}
-        \end{block}
-        Do we have to give up on all these optimizations ?
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}
-    \frametitle{Is my optimization unsound ?\\No, it's the client that is UB.}
-    UB: ``Undefined Behavior''
+    \frametitle{What is \texttt{unsafe}?}
+    The type system of Rust is a bit too strict for some low-level applications.\\
+    The \texttt{unsafe} keyword gives access to the language \textit{unsafe Rust},
+    superset of Rust, where you can
     \begin{itemize}
-        \item semantics of a program that contains UB: any behavior
-        \item equivalently: the compiler can assume that UB does not occur
-    \end{itemize}~\\~\\
-
-    The compiler is allowed to ``miscompile'' programs that contain UB.~\\~\\
-
-    In this case: pointer aliasing UB.\\
-    (Other kinds: uninitialized memory, data races, dangling pointers, invalid values, ...)
-\end{frame}
-
-\begin{frame}
-    \frametitle{The role of pointer aliasing UB}
-    (Tree|Stacked) Borrows
-    \begin{itemize}
-        \item \textbf{define} an operational semantics with UB of reborrows and memory accesses
-        \item \textbf{detect} violations of the aliasing discipline it dictates
+        \item dereference raw pointers,
+        \item call \texttt{unsafe} functions,
+        \item do ffi.
     \end{itemize}
-    in order to
-    \begin{itemize}
-        \item \textbf{enable compiler optimizations} by ruling out aliasing patterns
-            \begin{itemize}
-                \item remove redundant loads and stores
-                \item permute noninterfering operations
-            \end{itemize}
-        \item \textbf{justify LLVM attributes} on pointers that \texttt{rustc} emits
-            \begin{itemize}
-                \item \texttt{noalias}: added by rustc on references, means that the data
-                    is not being mutated through several different pointers
-                \item \texttt{dereferenceable}: added by rustc on references, means that
-                    the pointer is not null or dangling or otherwise invalid to dereference
-            \end{itemize}
-    \end{itemize}~\\
-\end{frame}
 
-\begin{frame}[fragile]
-    \frametitle{Motivating example: with Miri}
-    Miri (\href{https://github.com/rust-lang/miri}{\texttt{github:rust-lang/miri}}) is
-    \begin{itemize}
-        \item a Rust interpreter
-        \item that detects UB
-    \end{itemize}~\\
-
-    Back to \texttt{examples/rw-elim}: run with Miri
-\end{frame}
-
-\begin{frame}
-    \frametitle{Basics of Stacked Borrows (SB)}
-    \begin{block}{Starting observation}
-        Proper usage of mutable references follows a stack discipline.
-    \end{block}
-    \begin{block}{Key ideas}
-        \begin{itemize}
-            \item per-location tracking of pointers
-            \item use a stack to store pointer identifiers
-            \item on each reborrow a new identifier is pushed to the stack
-            \item a pointer can be used if its identifier is in the stack
-            \item using of a pointer pops everything above it (more recent)
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{An example SB execution}
-    \begin{block}{}
-        \begin{lstlisting}[language=rust]
-let x = &mut 0; // [x]
-let y = &mut *x; // [x, y] (reborrow of x into y)
-let z = &mut *x; // [x, z] (usage of x pops y)
-                   // (reborrow of x into z)
-*y = 42; // y is not in the stack, UB !
-*z = 57;
-        \end{lstlisting}
-    \end{block}
-\end{frame}
-
-\begin{frame}[t]
-    \frametitle{SB too strict ?}
-    Many optimizations are possible again, but...~\\
-
-    UB in \texttt{tokio}, \texttt{pyo3}, \texttt{rkyv}, \texttt{eyre},
-    \texttt{ndarray}, \texttt{arrayvec}, \texttt{slotmap}, \texttt{nalgebra},
-    \texttt{json}, ...~\\~\\
-
-    Enforcing SB would break too much backwards compatibility,
-    so right now the compiler cannot apply any SB-enabled optimizations.
-
-    \begin{onlyenv}<2>
-        \begin{block}{Essential tradeoff}
-            More UB is...
-            \begin{itemize}
-                \item more optimizations (stronger assumptions)
-                \item less safety (especially if rules are vague)
-            \end{itemize}
-        \end{block}
-        \begin{block}{}
-            UB is the responsibility of the user, so\\
-            \textbf{too much UB makes users unhappy}.
-        \end{block}
-    \end{onlyenv}
+    This has the effect of making \texttt{unsafe} an escape hatch to locally bypass the type checker.
+    \begin{exampleblock}{On the \texttt{bool} example}
+        \texttt{std::mem::transmute} is an \texttt{unsafe} function, thus the
+        use of \texttt{unsafe \{ std::mem::transmute(2) \}}.
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Information loss in the stack}
-    \begin{block}{}
-        \[[..., a, b, c, d]\]
-    \end{block}
-    \begin{minipage}{0.3\textwidth}
-        \begin{block}{}
-            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let a = &...;
-let b = &*a;
-let c = &*b;
-let d = &*a;
-            \end{lstlisting}
-
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
-                \node {...}
-                    child {node[draw] {\(a\)}
-                        child {node[draw] {\(b\)}
-                            child {node[draw] {\(c\)}}}
-                        child [missing] {}
-                        child[draw] {node[draw] {\(d\)}}};
-            \end{tikzpicture}
-        \end{block}
-    \end{minipage}
-    ~
-    \begin{minipage}{0.3\textwidth}
-        \begin{block}{}
-            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let a = &...;
-let b = &*a;
-let c = &*a;
-let d = &*a;
-            \end{lstlisting}
-
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
-                \node {...}
-                    child {node[draw] {\(a\)}
-                        child {node[draw] {\(b\)}}
-                        child {node[draw] {\(c\)}}
-                        child {node[draw] {\(d\)}}};
-            \end{tikzpicture}
-        \end{block}
-    \end{minipage}
-    ~
-    \begin{minipage}{0.32\textwidth}
-        \begin{block}{}
-            \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let a = &...;
-let b = &*a;
-let c = &*b;
-let d = &*c;
-            \end{lstlisting}
-
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
-                \node {...}
-                    child {node[draw] {\(a\)}
-                        child {node[draw] {\(b\)}
-                            child {node[draw] {\(c\)}
-                                child {node[draw] {\(d\)}}}}};
-            \end{tikzpicture}
-        \end{block}
-    \end{minipage}
+    \frametitle{A motivating example for Aliasing UB}
+    \begin{lstlisting}[language=rust]
+fn foo(x: &mut u64) {
+    let val = *x;
+    opaque();
+    *x = val;
+}
+    \end{lstlisting}
+    optimized into
+    \begin{lstlisting}[language=rust]
+fn foo(x: &mut u64) {
+    opaque();
+}
+    \end{lstlisting}
+    Well-typedness of any program that calls \texttt{foo} implies uniqueness
+    of \texttt{x} during the execution of \texttt{foo}: \texttt{opaque} cannot mutate \texttt{x}!\\
+    \begin{onlyenv}<2->
+    ...except if the user uses \texttt{unsafe} to bypass the uniqueness check\\
+    \end{onlyenv}
+    \begin{onlyenv}<3>
+    ...which we are going to assume does not happen: we will declare it to be UB
+    to use \texttt{unsafe} to violate the requirement of uniqueness on mutable references.
+    \end{onlyenv}
 \end{frame}
 
 \begin{frame}[t]
-    \frametitle{\cancel{Stacked} Tree Borrows (TB)}
-    \begin{onlyenv}<1>
-        \begin{block}{Starting observation}
-            Proper usage of mutable references follows a stack discipline.
-        \end{block}
-        \begin{block}{Key ideas}
-            \begin{itemize}
-                \item per-location tracking of pointers
-                \item use a stack to store pointer identifiers
-                \item on each reborrow a new identifier is pushed to the top of the stack
-                \item a pointer can be used if its identifier is in the stack
-                \item using of a pointer pops everything above it (more recent)
-            \end{itemize}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<2>
-        \begin{block}{Starting observation}
-            Proper usage of {\color{red}all pointers} follows a {\color{red}tree} discipline.
-        \end{block}
-        \begin{block}{Key ideas}
-            \begin{itemize}
-                \item per-location tracking of pointers
-                \item use a {\color{red}tree} to store pointer identifiers
-                \item on each reborrow a new identifier is {\color{red}added as a leaf of the tree}
-                \item {\color{red}each pointer has permissions}
-                \item a pointer can be used {\color{red}if its permission allows it (to be defined)}
-                \item using a pointer {\color{red}makes incompatible (to be defined) pointers lose permissions}
-            \end{itemize}
-        \end{block}
-    \end{onlyenv}
+    \frametitle{Tree Borrows: specification and detection of pointer aliasing UB}
+    \begin{alertblock}{Starting observation}
+        Proper usage of pointers (lifetime inclusion and inheritance of mutability) follows a tree discipline.
+    \end{alertblock}
+    \begin{block}{Key ideas}
+        \begin{itemize}
+            \item per-location tracking of pointers
+            \item use a tree to store pointer identifiers
+            \item on each reborrow a new identifier is added as a leaf of the tree
+            \item each pointer has permissions
+            \item a pointer can be used if its permission allows it (to be defined)
+            \item using a pointer makes incompatible (to be defined) pointers lose permissions
+        \end{itemize}
+    \end{block}
 \end{frame}
 
