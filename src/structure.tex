@@ -15,18 +15,18 @@
 struct Pointer {
     address: usize,
     size: usize,
-    tag: usize, // <- added specifically for TB/SB
+    tag: usize, // <- added specifically for TB
 }
         \end{lstlisting}~\\
 
-        Two pointers to the same data are not equal for TB/SB
+        Two pointers to the same data are not equal for TB
         if they have different tags.
     \end{onlyenv}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{A Tree of pointers}
-    \begin{minipage}{0.45\textwidth}
+    \begin{minipage}{0.27\textwidth}
         \begin{block}{}
             \begin{tikzpicture}[
                 every node/.append style = {anchor = west},
@@ -44,18 +44,18 @@ struct Pointer {
         \end{block}
     \end{minipage}
     ~\ ~\
-    \begin{minipage}{0.45\textwidth}
+    \begin{minipage}{0.65\textwidth}
         \begin{block}{}
             \begin{lstlisting}[language=rust]
-let x = &mut 0u64;
+let x = &mut 0u64; // initial borrow
 
-let y1 = &mut *x;
-let y2 = &*y1;
+let y1 = &mut *x; // mutable reborrow
+let y2 = &*y1; // shared reborrow
 
 let z1 = &*x;
-let z2 = z1 as *const u64;
+let z2 = z1 as *const u64; // cast
 
-foo(x);
+foo(x); // implicit mutable reborrow
 fn foo(w2: &mut u64) {
     let w3 = &*w2;
 }
@@ -69,7 +69,7 @@ fn foo(w2: &mut u64) {
     \frametitle{What's in the tree ?}
     Each pointer is given a tag~\\~\\
 
-    (Tree|Stacked) Borrows track:
+    Tree Borrows tracks:
     \begin{itemize}
         \item \textbf{permission}: per tag, per location;
         \item \textbf{hierarchy} between tags;

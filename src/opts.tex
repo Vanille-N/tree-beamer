@@ -1,54 +1,5 @@
 \section{Optimizations}
 
-\begin{frame}
-    \frametitle{Some standard optimizations}
-    \newcommand{\asterisk}{\textsuperscript{*}}
-    \newcommand{\noasterisk}{\phantom{\asterisk}}
-    \begin{tabular}{|l|c|c|l}
-        \cline{1-3}
-        Possible in...                     & SB     & TB &\\
-        \cline{1-3}
-        Swap call-read \(\to\) read-call (speculative)
-            & \cmark\noasterisk
-            & \cmark\noasterisk
-            &\\
-        \cline{1-3}
-        Swap read-call \(\to\) call-read
-            & \cmark\asterisk
-            & \cmark\asterisk
-            &\\
-        \(\triangleright\)\scriptsize~ Swap read-read' \(\to\) read'-read
-            & \scriptsize \cmark\asterisk
-            & \scriptsize \cmark\noasterisk
-            & \visible<3>{\(\gets\) TB only}\\
-        \cline{1-3}
-        Swap call-write \(\to\) write-call (speculative)
-            & \cmark\asterisk
-            & \xmark\noasterisk
-            & \visible<2>{\(\gets\) SB only}\\
-        \(\triangleright\)\scriptsize~ Swap write-call-write \(\to\) write-write-call
-            & \scriptsize \cmark\asterisk
-            & \scriptsize \cmark\asterisk
-            &\\
-        \cline{1-3}
-        Swap write-call \(\to\) call-write
-            & \cmark\asterisk
-            & \cmark\asterisk
-            &\\
-        \(\triangleright\)\scriptsize~ Swap write-read'-read \(\to\) read'-write-read
-            & \scriptsize \cmark\noasterisk
-            & \scriptsize \cmark\asterisk
-            & \visible<2>{\(\gets\) SB only}\\
-        \cline{1-3}
-    \end{tabular}~\\~\\
-
-    {\footnotesize
-    all are possible for references without interior mutability\\
-    (\texttt{\&mut} if a write is involved, both \texttt{\&} and \texttt{\&mut} if read-only)\\
-    \asterisk: only for protected references\\
-    }
-\end{frame}
-
 \subsection{Possible optimizations}
 
 \newcommand{\assumepath}[2]{\textover{\visible<#1>{\color{magenta}{#2}}}{}}
@@ -101,311 +52,55 @@ let y = &mut ...;
     \end{onlyenv}
 \end{frame}
 
-\begin{frame}[fragile, t]
-    \frametitle{Insert speculative read}
-    \begin{onlyenv}<1-4>
-        \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-fn read(x: &u64) -> u64 {
-
-    opaque(/* contains foreign access ? @\assumepath{2}{if none}\assumepath{3}{if read}\assumepath{4}{if write}\phantom{........}@ */);
-    *x // (optimization: move up ?)
-}
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<1>{blank.base.pdf}
-        \includegraphics<2>{path.prot.shr+cr.pdf}
-        \includegraphics<3>{path.prot.shr+cr+fr.pdf}
-        \includegraphics<4>{path.prot.shr+fw.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-fn read(x: &u64) -> u64 {
-    let val = *x;
-    opaque(/* assume no foreign write */);
-    val
-}
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.prot.shr+cr+fr.pdf}
-    \end{onlyenv}
-\end{frame}
-
-\subsection{Impossible optimizations}
-
-\begin{frame}[fragile, t]
-    \frametitle{Insert speculative write}
-
-    \begin{block}{{\xmark} Base model}
-        \begin{lstlisting}[language=rust, escapechar=@]
-fn foo(x: &mut u64) {
-
-    opaque(/* contains foreign access ? @\assumepath{2}{if write}\assumepath{3}{if read}\assumepath{4}{if read+loop}\phantom{............}@ */);
-    *x = 42; // (optimization: move up ?)
-}
-        \end{lstlisting}
-    \end{block}
-    \includegraphics<1>{blank.base.pdf}
-    \includegraphics<2>{path.prot.mut+fw.pdf}
-    \includegraphics<3>{path.prot.mut+fr+cw.pdf}
-    \includegraphics<4>{path.prot.mut+fr.pdf}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Insert speculative write: strengthening}
-    \begin{onlyenv}<1-2>
-        \begin{exampleblock}{Possible strengthening}
-            Write to mutable references of function entry
-        \end{exampleblock}
-        \includegraphics<1>[width=0.7\textwidth]{mod.full.pdf}
-        \includegraphics<2>[width=0.7\textwidth]{steps.prot+w.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3-4>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-fn foo(x: &mut u64) {
-
-    opaque(/* contains foreign access ? @\assumepath{3}{if none}\assumepath{4}{if any}\phantom{.......}@ */);
-    *x = 42;
-}
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<3>{path.prot+w.mut.pdf}
-        \includegraphics<4>{path.prot+w.mut+fr-fw.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-fn foo(x: &mut u64) {
-    *x = 42;
-    opaque(/* assume no foreign access */);
-
-}
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<5>{path.prot+w.mut+cw.pdf}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{Insert speculative write: blocker}
-
-    \begin{exampleblock}{\texttt{as\_mut\_ptr}: \textover{\visible<1-3>{base model}}{}\textover{\visible<4-5>{strengthened}}{}}
-        \begin{itemize}
-            \item \texttt{\&mut [T] -> *mut T}
-            \item returns \textover{\visible<1-3>{a \texttt{Reserved}}}{}\textover{\visible<4-5>{an \texttt{Active}}}{}\phantom{aaaaaaaaaa.} child of the input
-        \end{itemize}
-    \end{exampleblock}
-
-    \begin{block}{\textover{\visible<1-3>{\cmark}}{}\textover{\visible<4-5>{\xmark}}{}\phantom{\xmark} Common pattern}
-        \begin{lstlisting}[language=rust, basicstyle=\ttfamily\scriptsize]
-let raw = buf.as_mut_ptr();
-let shr = buf.as_ptr().add(1);
-copy_nonoverlapping(shr, raw, 1);
-        \end{lstlisting}
-    \end{block}
-
-    \begin{onlyenv}<1-3>
-        \begin{onlyenv}<1>
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
-                        child {node {\texttt{...}}
-                            child {node (nraw) {\texttt{raw: Reserved}}}}
-                        ;
-            \end{tikzpicture}
-        \end{onlyenv}
-        \begin{onlyenv}<2>
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
-                        child {node {\texttt{...}}
-                            child {node (nraw) {\texttt{raw: Reserved}}}}
-                        child[missing] {}
-                        child {node {\texttt{...}}
-                            child {node (nshr) {\texttt{shr: Frozen}}}}
-                        ;
-            \end{tikzpicture}
-        \end{onlyenv}
-        \begin{onlyenv}<3>
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
-                        child {node {\texttt{...}}
-                            child {node (nraw) {\texttt{raw: Active}}}}
-                        child[missing] {}
-                        child {node {\texttt{...}}
-                            child {node (nshr) {\texttt{shr: Disabled}}}}
-                        ;
-            \end{tikzpicture}
-        \end{onlyenv}
-
-    \end{onlyenv}
-
-    \begin{onlyenv}<4-5>
-        \begin{onlyenv}<4>
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
-                        child {node {\texttt{...}}
-                            child {node (nraw) {\texttt{raw: Active}}}}
-                        ;
-            \end{tikzpicture}
-        \end{onlyenv}
-        \begin{onlyenv}<5>
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node[anchor=west] (nbuf) at (0,0) {\texttt{buf:\textover{ Active}{}}}
-                        child {node {\texttt{...}}
-                            child {node (nraw) {\texttt{raw: Frozen}}}}
-                        child[missing] {}
-                        child {node {\texttt{...}}
-                            child {node (nshr) {\texttt{shr: Frozen}}}}
-                        ;
-            \end{tikzpicture}
-        \end{onlyenv}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{Swap write-read'-read \(\to\) read'-write-read}
-    \begin{block}{{\xmark} Base model}
-        \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-*x = 42; // (optimization: move down ?)
-let y = &...;
-let vy = *y; // is this read foreign ? @\assumepath{1}{maybe}@
-
-let vx = *x;
-        \end{lstlisting}
-    \end{block}
-    \includegraphics{path.base.mut+cw+fr-o+cr.pdf}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{Swap write-read'-read \(\to\) write-read-read': strengthening}
-    \begin{onlyenv}<1-2>
-        \begin{exampleblock}{Possible strengthening}
-            Foreign read makes \texttt{Active} become \texttt{Disabled}
-            (rather than \texttt{Frozen})
-        \end{exampleblock}
-        \includegraphics<1>{mod.base.pdf}
-        \includegraphics<2>{steps.base+d.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3-4>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-*x = 42; // (optimization: move down ?)
-let y = &...;
-let vy = *y; // is this read foreign ? @\assumepath{3}{if not}\assumepath{4}{if yes}@
-
-let vx = *x;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<3>{path.base+d.mut+cw+cr.pdf}
-        \includegraphics<4>{path.base+d.mut+cw+fr+cr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-
-let y = &...;
-let vy = *y; // read assumed not foreign
-*x = 42;
-let vx = *x;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base+d.mut+cw+cr.pdf}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{Swap write-read'-read \(\to\) write-read-read': blocker}
-    \begin{onlyenv}<1>
-        \begin{block}{{\cmark} Swap read-read\vphantom{gh}}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-let vy = *y; // (optimization: move down ?)
-let vx = *x; // foreign read
-@@
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base.mut+cw+cr+fr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<2>
-        \begin{block}{{\cmark} Swap read-read\vphantom{gh}}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-
-let vx = *x; // foreign read
-let vy = *y;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base.mut+cw+fr+cr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3>
-        \begin{block}{{\xmark} Swap read-read: strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-let vy = *y; // (optimization: move down ?)
-let vx = *x; // foreign read
-@@
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base+d.mut+cw+cr+fr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<4>
-        \begin{block}{{\xmark} Swap read-read: strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-
-let vx = *x; // foreign read
-let vy = *y;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base+d.mut+cw+fr+cr.pdf}
-    \end{onlyenv}
-\end{frame}
-
 \begin{frame}
-    \frametitle{Summary}
-    \begin{itemize}
-        \item TB allows read reorderings (SB does not)
-        \item TB allows speculative reads (SB as well)
-        \item TB forbids speculative writes (SB allows them)
-            \begin{itemize}
-                \item the model can be strengthened to justify these optimizations...
-                \item ...at the cost of common patterns.
-            \end{itemize}
-    \end{itemize}
+    \frametitle{Some standard optimizations}
+    Stacked Borrows (SB): predecessor of TB, has the same purpose
+    but was ruled too strict.\\~\\
+
+    \newcommand{\asterisk}{\textsuperscript{*}}
+    \newcommand{\noasterisk}{\phantom{\asterisk}}
+    \begin{tabular}{|l|c|c|l}
+        \cline{1-3}
+        Possible in...                     & SB     & TB &\\
+        \cline{1-3}
+        Swap call-read \(\to\) read-call (speculative)
+            & \cmark\noasterisk
+            & \cmark\noasterisk
+            &\\
+        \cline{1-3}
+        Swap read-call \(\to\) call-read
+            & \cmark\asterisk
+            & \cmark\asterisk
+            &\\
+        \(\triangleright\)\scriptsize~ Swap read-read' \(\to\) read'-read
+            & \scriptsize \cmark\asterisk
+            & \scriptsize \cmark\noasterisk
+            & \visible<3>{\(\gets\) TB only}\\
+        \cline{1-3}
+        Swap call-write \(\to\) write-call (speculative)
+            & \cmark\asterisk
+            & \xmark\noasterisk
+            & \visible<2>{\(\gets\) SB only}\\
+        \(\triangleright\)\scriptsize~ Swap write-call-write \(\to\) write-write-call
+            & \scriptsize \cmark\asterisk
+            & \scriptsize \cmark\asterisk
+            &\\
+        \cline{1-3}
+        Swap write-call \(\to\) call-write
+            & \cmark\asterisk
+            & \cmark\asterisk
+            &\\
+        \(\triangleright\)\scriptsize~ Swap write-read'-read \(\to\) read'-write-read
+            & \scriptsize \cmark\noasterisk
+            & \scriptsize \cmark\asterisk
+            & \visible<2>{\(\gets\) SB only}\\
+        \cline{1-3}
+    \end{tabular}~\\~\\
+
+    {\footnotesize
+    all are possible for references without interior mutability\\
+    (\texttt{\&mut} if a write is involved, both \texttt{\&} and \texttt{\&mut} if read-only)\\
+    \asterisk: only for protected references\\
+    }
 \end{frame}
+

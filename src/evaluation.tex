@@ -1,39 +1,29 @@
 \section{Evaluation}
 
 \begin{frame}
-    \frametitle{Counting crates with UB (1/2)}
-    {\footnotesize
-    Tests run by Ben Kimock using \href{https://github.com/saethlin/miri-tools}{\texttt{github:saethlin/miri-tools}}\\
-    }
+    \frametitle{Counting crates with UB}
     \begin{figure}
-        \includegraphics[width=0.8\textwidth]{../img/ub-count.png}
+        \begin{tikzpicture}
+            \begin{axis}[
+                    ybar,
+                    ymin=0,
+                    width=11cm,
+                    height=7cm,
+                    bar width=15pt,
+                    ylabel={Number of crates with UB},
+                    nodes near coords,
+             %      nodes near coords align=below, % places labels inside bars
+                    symbolic x coords={Aliasing, Uninit, Dangle, Align, Race, Layout, Invalid},
+                    xtick = data,
+                    enlarge y limits={value=0.2,upper},
+                    legend pos=north east
+                ]
+                \addplot[fill=blue] coordinates {(Aliasing, 1234) (Uninit, 830) (Dangle, 754) (Align, 155) (Race, 63) (Layout, 43) (Invalid, 27)};
+                \addplot[fill=red] coordinates {(Aliasing, 514) (Uninit, 870) (Dangle, 847) (Align, 168) (Race, 73) (Layout, 50) (Invalid, 34)};
+                \legend{Miri+SB,Miri+TB}
+            \end{axis}
+        \end{tikzpicture}
     \end{figure}
-    {\footnotesize Number of crates on \texttt{crates.io} with at least one test
-    that contains UB, for each kind of UB detected by Miri. (100k most recently downloaded)}\\~\\
-\end{frame}
-
-\begin{frame}
-    \frametitle{Counting crates with UB (2/2)}
-    \begin{tabular}{|l|c|c|l|}
-        \hline
-        Kind                         &  SB &  TB & Notes\\
-        \hline
-        Protector invalidations      &  70 &  58 & \tiny(1) \\
-        Protector deallocations      &  12 &  12 & \\
-        Accesses without permissions & 998 & 545 & \tiny(2) \\
-        Accesses outside range       & 903 &   0 & \tiny(3) \\
-        Wildcard pointers            & 213 & --- & \tiny(4) \\
-        \hline
-    \end{tabular}\\
-    Number of crates that contain UB, for subclasses of UB defined by SB and TB.
-    From 97~851 crates, of which 3~808 contain UB of any kind~\\~\\
-
-    {\footnotesize
-    \(^{(1)}\) now allowed: \texttt{Reserved -> Frozen}\\
-    \(^{(2)}\) see: \texttt{as\_mut\_ptr}\\
-    \(^{(3)}\) not included: accesses in wrong allocation\\
-    \(^{(4)}\) not handled by TB\\
-    }
 \end{frame}
 
 \begin{frame}
@@ -74,7 +64,7 @@
     \end{itemize}~\\~\\
     \vfill
 
-    Slides and examples on \href{https://github.com/Vanille-N/tree-beamer}{\texttt{github:Vanille-N/tree-beamer/tree/eth}}\\
+    Slides and examples on \href{https://github.com/Vanille-N/tree-beamer/tree/ens}{\texttt{github:Vanille-N/tree-beamer/tree/ens}}\\
     Complementary material: \href{https://perso.crans.org/vanille/treebor}{\texttt{perso.crans.org/vanille/treebor}}\\
 \end{frame}
 

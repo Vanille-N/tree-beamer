@@ -108,8 +108,29 @@ Box<T>, Rc<T>, Arc<T>, Cow<T>
 // ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a T @\(\sqsubset\)@ &'b T)
 // ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a mut T @\(\sqsubset\)@ &'b mut T)
         \end{lstlisting}
-    Mutability and uniqueness are part of the type!\\
-    Can we exploit that?
+    \end{onlyenv}
+
+    \begin{onlyenv}<4>
+        Just like
+        \begin{lstlisting}[language=rust]
+// x: &mut bool
+*x = 4;
+        \end{lstlisting}
+        is a type error (mismatched types \texttt{bool} and \texttt{u8}),
+        \begin{lstlisting}[language=rust]
+// x: &u8
+*x = 4;
+        \end{lstlisting}
+        is also a type error (\texttt{\&\_} does not support assignment),
+        and so is
+        \begin{lstlisting}[language=rust]
+// n: u8
+let p = (&mut n, &mut n);
+        \end{lstlisting}
+        (impossible to satisfy lifetime constraints).\\
+
+        Mutability and uniqueness are part of the type!\\
+        Can we exploit that?
     \end{onlyenv}
 
 \end{frame}
@@ -126,7 +147,7 @@ Box<T>, Rc<T>, Arc<T>, Cow<T>
     \end{itemize}
 
     This has the effect of making \texttt{unsafe} an escape hatch to locally bypass the type checker.
-    \begin{exampleblock}{On the \texttt{bool} example}
+    \begin{exampleblock}{From the previous example}
         \texttt{std::mem::transmute} is an \texttt{unsafe} function, thus the
         use of \texttt{unsafe \{ std::mem::transmute(2) \}}.
     \end{exampleblock}

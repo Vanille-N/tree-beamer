@@ -75,34 +75,16 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{Parallel to the borrow checker}
-    Similarities
-    \hspace{-5em}
+    \frametitle{This already enforces}
     \begin{description}
         \item[\cmark] \texttt{Active} (\texttt{\&mut}) readable and writeable
         \item[\cmark] \texttt{Frozen} (\texttt{\&}) and all their children are only readable
         \item[\cmark] data behind \texttt{Active} (\texttt{\&mut}) is owned exclusively
         \item[\cmark] data behind \texttt{Frozen} (\texttt{\&}) is immutable
-    \end{description}~\\
-
-    Differences (OK to be more permissive than the borrow checker)
-    \hspace{-5em}
-    \begin{description}
-        \item[\xmark] \texttt{Active} (\texttt{\&mut}) demoted to \texttt{Frozen} (\texttt{\&})
-        \item[\xmark] several \texttt{Active} (\texttt{\&mut}) can coexist if never written to
-    \end{description}~\\
-
-    Unsoundness (following subsections fix them)
-    \hspace{-5em}
-    \begin{description}
-        \item[\xmark] two-phase borrows not handled yet
-        \item[\xmark] too permissive for \texttt{noalias} and \texttt{dereferenceable}
-        \item[\xmark] \texttt{UnsafeCell} needs special handling
-    \end{description}~\\
-
+    \end{description}
 \end{frame}
 
-\subsection{Fix unsoundness n°1: two-phase borrows}
+\subsection{Fix unsoundness: two-phase borrows}
 
 \begin{frame}[fragile, t]
     \frametitle{Not all mutable references can be \texttt{Active}}
@@ -158,8 +140,7 @@
     \(\Rightarrow\) behave like \texttt{Frozen} until the first child write\\
     \(\Rightarrow\) can coexist with each other and with \texttt{Frozen}~\\~\\
 
-    \includegraphics<1>[width=\textwidth]{steps.base.pdf}
-    \includegraphics<2>[width=\textwidth]{steps.base.diff.pdf}
+    \includegraphics[width=\textwidth]{steps.base.pdf}
 \end{frame}
 
 \begin{frame}[fragile, t]
@@ -207,64 +188,6 @@
     \end{block}
 \end{frame}
 
-\subsection{Fix unsoundness n°2: justifying \texttt{noalias}}
-
-\begin{frame}[fragile]
-    \frametitle{Loss of permissions too early}
-    \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
-        No foreign access during the same function call as a child write.
-    \end{alertblock}
-    \begin{block}{Core triplet + \texttt{Reserved}: unsound}
-        \begin{lstlisting}[language=rust, escapechar=@]
-fn write(x: &mut u64) {
-    *x = 42; // activation
-    opaque(/* foreign read for x: noalias violation */);
-}
-        \end{lstlisting}
-    \end{block}
-    \includegraphics[width=0.7\textwidth]{path.base.mut+cw+fr.pdf}
-\end{frame}
-
-\begin{frame}[t]
-    \frametitle{Protectors lock permissions}
-    \begin{onlyenv}<1>
-        \begin{exampleblock}{Intuition}
-            \texttt{noalias} requires exclusive access during the entire
-            function call, so we remember the set of all functions that have not yet
-            returned and enforce exclusivity for their arguments.
-        \end{exampleblock}
-
-        Concept adapted from Stacked Borrows: protectors.
-        \begin{itemize}
-            \item references get a protector on function entry
-            \item protector lasts until the end of the call
-            \item protectors strengthen the guarantees
-        \end{itemize}
-    \end{onlyenv}
-    \includegraphics<2>{blank.prot.pdf}
-    \includegraphics<3>{steps.prot.cp.pdf}
-    \includegraphics<4>{steps.prot.nodis.pdf}
-    \includegraphics<5>{steps.prot.noalias.pdf}
-\end{frame}
-
-
-\begin{frame}[fragile]
-    \frametitle{Protectors lock permissions}
-    \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
-        No foreign access during the same function call as a child write.
-    \end{alertblock}
-
-    \begin{block}{Core triplet + \texttt{Reserved} + protectors: fixed}
-        \begin{lstlisting}[language=rust, escapechar=@]
-fn write(x: &mut u64) { // with protector
-    *x = 42; // activation
-    opaque(/* foreign read for x: noalias violation */);
-}
-        \end{lstlisting}
-    \end{block}
-    \includegraphics[width=0.7\textwidth]{path.prot.mut+cw+fr.pdf}
-\end{frame}
-
 \subsection*{}
 
 \begin{frame}
@@ -273,7 +196,5 @@ fn write(x: &mut u64) { // with protector
         \item \texttt{Reserved}, \texttt{Active}, \texttt{Frozen}, \texttt{Disabled}
             represent different possible states of pointers.\\
         \item Interactions with child and foreign accesses enforce uniqueness/immutability guarantees.
-        \item Protectors are added on function entry to strengthen these guarantees up to the
-            requirements of \texttt{noalias}.\\
     \end{itemize}
 \end{frame}
