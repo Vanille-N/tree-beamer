@@ -55,12 +55,13 @@
     TB also has...
     \begin{itemize}
         \item tweaked rules for interactions between interior mutability and protectors/\texttt{Reserved}
+        \item implementation in Miri (\href{https://github.com/rust-lang/miri}{\texttt{github:rust-lang/miri}})
         \item performance improvements compared to the naive implementation
             \begin{itemize}
                 \item many tricks to trim tree traversals
                 \item lazy initialization for out-of-range accesses
             \end{itemize}
-        \item ongoing attempt at formalization in Coq
+        \item formalization in Coq, with many optimizations proven
     \end{itemize}~\\~\\
     \vfill
 
