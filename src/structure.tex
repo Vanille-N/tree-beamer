@@ -1,29 +1,5 @@
 \section{Tree Structure}
 
-% VERB: Are you also keeping track of the well-formedness of the tree somehow? 
-% VERB: Is it an assumption or do you throw an error if you somehow detect a cycle?
-
-\begin{frame}[fragile, t]
-    \frametitle{When are pointers different ?}
-    LLVM and Rust specifications: ``other references/pointers''
-
-    Suggests that two pointers to the same data are ``different''.\\~\\
-
-    \begin{onlyenv}<2>
-        A pointer in our semantics is:
-        \begin{lstlisting}[language=rust]
-struct Pointer {
-    address: usize,
-    size: usize,
-    tag: usize, // <- added specifically for TB
-}
-        \end{lstlisting}~\\
-
-        Two pointers to the same data are not equal for TB
-        if they have different tags.
-    \end{onlyenv}
-\end{frame}
-
 \begin{frame}[fragile]
     \frametitle{A Tree of pointers}
     \begin{minipage}{0.27\textwidth}
@@ -115,10 +91,6 @@ fn foo(w2: &mut u64) {
         ~\\
         each \textit{read} or \textit{write}.
     \end{block}
-    \begin{block}{``pointers based on...''}
-        LLVM specification: ``pointer \texttt{y} is based on pointer \texttt{x}''\\
-        \(\simeq\) TB: ``\texttt{y} is a child of \texttt{x}''.
-    \end{block}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -143,23 +115,4 @@ let _ = *y; // Read access; child for y; child for x.
                     child {node {\texttt{y}}}};
         \end{tikzpicture}
     \end{block}
-\end{frame}
-
-\begin{frame}
-    \frametitle{Summary}
-    \begin{itemize}
-        \item pointers identified by a tag;
-        \item tags are stored in a tree structure;
-            \begin{itemize}
-                \item reborrows create fresh tags,
-                \item new tag is a child of the reborrowed tag
-            \end{itemize}
-        \item each tag has per-location permissions;
-            \begin{itemize}
-                \item permissions allow or reject \textit{child accesses}\\
-                    (done through child tags)
-                \item permissions evolve in response to \textit{foreign accesses}\\
-                    (done through non-child tags).
-            \end{itemize}
-    \end{itemize}
 \end{frame}

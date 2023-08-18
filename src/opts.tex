@@ -1,7 +1,5 @@
 \section{Optimizations}
 
-\subsection{Possible optimizations}
-
 \newcommand{\assumepath}[2]{\textover{\visible<#1>{\color{magenta}{#2}}}{}}
 
 \begin{frame}[fragile, t]
@@ -19,8 +17,8 @@ let y = &mut ...;
             \end{lstlisting}
         \end{block}%
         \includegraphics<1>{blank.base.pdf}%
-        \includegraphics<2>{path.base.mut+cw+cw.pdf}%
-        \includegraphics<3>{path.base.mut+cw+fw+cw.pdf}%
+        \includegraphics<2>{path.core.mut+cw+cw.pdf}%
+        \includegraphics<3>{path.core.mut+cw+fw+cw.pdf}%
     \end{onlyenv}
 
     \begin{onlyenv}<4>
@@ -34,29 +32,12 @@ let y = &mut ...;
 *x = 57;
             \end{lstlisting}
         \end{block}
-        \includegraphics{path.base.mut+cw+cw.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-let y = &mut ...;
-
-*y = 19; // assumed not to be a foreign write
-
-*x = 57;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base.mut+cw.pdf}
+        \includegraphics{path.core.mut+cw+cw.pdf}
     \end{onlyenv}
 \end{frame}
 
 \begin{frame}
     \frametitle{Some standard optimizations}
-    Stacked Borrows (SB): predecessor of TB, has the same purpose
-    but was ruled too strict.\\~\\
-
     \newcommand{\asterisk}{\textsuperscript{*}}
     \newcommand{\noasterisk}{\phantom{\asterisk}}
     \begin{tabular}{|l|c|c|l}
@@ -98,9 +79,7 @@ let y = &mut ...;
     \end{tabular}~\\~\\
 
     {\footnotesize
-    all are possible for references without interior mutability\\
-    (\texttt{\&mut} if a write is involved, both \texttt{\&} and \texttt{\&mut} if read-only)\\
-    \asterisk: only for protected references\\
+    \asterisk: only for function arguments (stronger semantics not presented here)\\
     }
 \end{frame}
 

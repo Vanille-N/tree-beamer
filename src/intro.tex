@@ -4,8 +4,72 @@
 
 \section{Introduction}
 
+\begin{frame}
+    \includegraphics[width=\textwidth]{ecosystem.pdf}
+\end{frame}
+
 \begin{frame}[fragile,t]
-    \frametitle{Why have UB?}
+    \frametitle{What is UB?}
+    \begin{onlyenv}<1>
+        Undefined Behavior (UB) arises
+        \begin{itemize}
+            \item in languages that have both high- and low-level components\\
+                (C, C++, OCaml, Java, Rust: yes)\\
+                (Assembly, Python: no)
+            \item as a necessity from the existence of
+                \begin{itemize}
+                    \item functions that bypass type systems\\
+                        (\texttt{Obj.magic}, \texttt{std::mem::transmute}, \texttt{void*})
+                    \item unpredictable interaction between language primitives\\
+                        (multithreading, pointer arithmetic)
+                    \item interaction with other languages\\
+                        (FFI, inline assembly)
+                \end{itemize}
+        \end{itemize}~\\
+        Fundamental tradeoff: more UB = more optimizations = less predictability\\
+        Why not Stacked Borrows? Too much UB.\\
+        For Tree Borrows: try less UB, even at the cost of some optimizations.
+    \end{onlyenv}
+
+    \begin{onlyenv}<2->
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+                       & Programmer & Compiler    & Performance & Risk \\
+                       & control    & assumptions & comes from  & of conflict \\
+            \hline
+            High-level & low        & many        & compiler    & no \\
+            \hline
+            Low-level  & high       & none        & programmer  & no \\
+            \hline
+            Both       & high       & many        & both        & yes \\
+            \hline
+        \end{tabular}~\\~\\
+
+        UB occurs when the programmer uses their low-level control
+        to violate the compiler's high-level assumptions.\\
+    \end{onlyenv}
+
+    \begin{onlyenv}<4>
+        \begin{exampleblock}{UB formally}
+            A program that contains UB has \textbf{any semantics},
+            so the compiler is free to compile it in any way.\\
+            This means that compiler optimizations can be proven valid
+            while \textbf{assuming that UB does not occur}.
+        \end{exampleblock}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        \begin{block}{Rust's selling point}
+            High- and low-level modes are segregated by the \texttt{unsafe} keyword.\\~\\
+
+            Conceptually: two languages in one, you use high-level most of the time
+            and drop down to low-level when absolutely necessary.
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile,t]
+    \frametitle{UB as a tool for optimizations}
     \framesubtitle{A simple(r) example}
 
     \begin{lstlisting}[language=rust]
@@ -48,6 +112,24 @@ let b: bool = unsafe { std::mem::transmute(2) };
     \end{onlyenv}
 \end{frame}
 
+\begin{frame}[fragile,t]
+    \frametitle{What is \texttt{unsafe}?}
+    The type system of Rust is a bit too strict for some low-level applications.\\
+    The \texttt{unsafe} keyword gives access to the language \textit{unsafe Rust},
+    superset of Rust, where you can
+    \begin{itemize}
+        \item dereference raw pointers,
+        \item call \texttt{unsafe} functions,
+        \item do ffi.
+    \end{itemize}
+
+    This has the effect of making \texttt{unsafe} an escape hatch to locally bypass the type checker.
+    \begin{exampleblock}{From the previous example}
+        \texttt{std::mem::transmute} is an \texttt{unsafe} function, thus the
+        use of \texttt{unsafe \{ std::mem::transmute(2) \}}.
+    \end{exampleblock}
+\end{frame}
+
 \begin{frame}[fragile]
     \frametitle{Rust's type system}
     \begin{onlyenv}<1>
@@ -58,14 +140,14 @@ let t: T = v;
 //  ^ variable
 //  ^^^^^^^^ variable binding
 
-fn incr(n: u8) -> u8 {
-    n + 1
+fn pow2(n: u8) -> u128 {
+    2.ipow(n)
 }
 
 fn main() {
     let n: u8 = 42;
-    let m: u8 = incr(n);
-    println!("{n} + 1 = {m}");
+    let m: u128 = pow2(n);
+    println!("2^{n} = {m}");
 }
         \end{lstlisting}
     \end{onlyenv}
@@ -79,29 +161,27 @@ u64, i64, u128, i128, usize, isize, bool
 struct Point {
     x: f64,
     y: f64,
-}
-type Triplet = (f64, f64, usize);
-type Array = [f64; 10];
+
+type Triplet<T> = (T, T, T);
+type Array3<T> = [T; 3];
 // Sums
-enum Shape {
+enum Shape<T> {
     Circle(Point, f64),
     Square(Point, f64),
-    Triangle([Point; 3]),
+    Triangle(Array3<Point>),
+    Other(T),
 }
         \end{lstlisting}
     \end{onlyenv}
 
     \begin{onlyenv}<3>
         \begin{lstlisting}[language=rust, escapechar=@]
-// Smart pointers
-Box<T>, Rc<T>, Arc<T>, Cow<T>
-
-// Raw pointers
+// Raw pointers (unsafe)
 *const T
 *mut T
 // (*const T @\(\sqsubset\)@ *mut T)
 
-// References
+// References (safe)
 @@&'a T // shared and immutable
 @@&'a mut T // unique and mutable
 // (&'a T @\(\sqsubset\)@ &'a mut T)
@@ -135,24 +215,6 @@ let p = (&mut n, &mut n);
 
 \end{frame}
 
-\begin{frame}[fragile,t]
-    \frametitle{What is \texttt{unsafe}?}
-    The type system of Rust is a bit too strict for some low-level applications.\\
-    The \texttt{unsafe} keyword gives access to the language \textit{unsafe Rust},
-    superset of Rust, where you can
-    \begin{itemize}
-        \item dereference raw pointers,
-        \item call \texttt{unsafe} functions,
-        \item do ffi.
-    \end{itemize}
-
-    This has the effect of making \texttt{unsafe} an escape hatch to locally bypass the type checker.
-    \begin{exampleblock}{From the previous example}
-        \texttt{std::mem::transmute} is an \texttt{unsafe} function, thus the
-        use of \texttt{unsafe \{ std::mem::transmute(2) \}}.
-    \end{exampleblock}
-\end{frame}
-
 \begin{frame}[fragile, t]
     \frametitle{A motivating example for Aliasing UB}
     \begin{lstlisting}[language=rust]
@@ -171,11 +233,10 @@ fn foo(x: &mut u64) {
     Well-typedness of any program that calls \texttt{foo} implies uniqueness
     of \texttt{x} during the execution of \texttt{foo}: \texttt{opaque} cannot mutate \texttt{x}!\\
     \begin{onlyenv}<2->
-    ...except if the user uses \texttt{unsafe} to bypass the uniqueness check\\
+    ...except if the user uses \texttt{unsafe} to violate uniqueness \\
     \end{onlyenv}
     \begin{onlyenv}<3>
-    ...which we are going to assume does not happen: we will declare it to be UB
-    to use \texttt{unsafe} to violate the requirement of uniqueness on mutable references.
+    ...which we are going to assume does not happen: violating uniqueness is UB!
     \end{onlyenv}
 \end{frame}
 
@@ -183,15 +244,18 @@ fn foo(x: &mut u64) {
     \frametitle{Tree Borrows: specification and detection of pointer aliasing UB}
     \begin{alertblock}{Starting observation}
         Proper usage of pointers (lifetime inclusion and inheritance of mutability) follows a tree discipline.
+        \begin{itemize}
+            \item when pointer dies, so do its children
+            \item when pointer requires uniqueness, remove branches
+        \end{itemize}
     \end{alertblock}
     \begin{block}{Key ideas}
         \begin{itemize}
             \item per-location tracking of pointers
-            \item use a tree to store pointer identifiers
-            \item on each reborrow a new identifier is added as a leaf of the tree
             \item each pointer has permissions
+            \item on each reborrow a new identifier is added as a leaf of the tree
             \item a pointer can be used if its permission allows it (to be defined)
-            \item using a pointer makes incompatible (to be defined) pointers lose permissions
+            \item using a pointer kills incompatible (to be defined) pointers
         \end{itemize}
     \end{block}
 \end{frame}

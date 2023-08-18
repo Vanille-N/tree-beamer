@@ -41,6 +41,7 @@ build/literature.bib: literature.bib |build
 
 # These need to be built before the main document
 override FIGURES = \
+	ecosystem \
 	#
 
 # Baselines
@@ -91,7 +92,9 @@ override FIGURES += \
 # Optimization: delay write
 override FIGURES += \
 	path.base.mut+cw+cw \
+	path.core.mut+cw+cw \
 	path.base.mut+cw+fw+cw \
+	path.core.mut+cw+fw+cw \
 	path.base.mut+cw \
 	#
 
@@ -132,15 +135,16 @@ override FIGURES += \
 
 override IMGDIR = img
 override IMG = \
+	Rust_programming_language_black_logo.png \
 	#
 
 build/%.pdf: $(IMGDIR)/%.raw src/raw.head src/raw.foot
-	cat src/raw.head $< src/raw.foot > $@
+	cat src/raw.head $< src/raw.foot > build/$$(basename $@ .pdf).tex
 	cd build && \
-		$(TEXC) $$(basename $@) \
+		$(TEXC) $$(basename $@ .pdf) \
 		| $(FILTER)
 
-build/main.pdf: $(FIGURES:%=build/%.pdf) $(IMG:%=build/%)
+build/main.pdf: $(IMG:%=build/%) $(FIGURES:%=build/%.pdf)
 
 build/%: $(IMGDIR)/%
 	cp $< $@

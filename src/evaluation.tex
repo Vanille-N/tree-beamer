@@ -27,25 +27,16 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{Notable examples}
-    \begin{block}{Accesses outside range}
-        UB in \texttt{tokio}, \texttt{pyo3}, \texttt{rkyv}, \texttt{eyre}, \texttt{ndarray}, ...\\
-        according to SB but not TB
-    \end{block}
-    \begin{block}{Invalidations by mutable reborrows (``\texttt{as\_mut\_ptr}'' pattern)}
-        UB in \texttt{arrayvec}, \texttt{slotmap}, \texttt{nalgebra}, \texttt{json}, ...\\
-        according to SB but not TB
-    \end{block}
-\end{frame}
-
-\begin{frame}
     \frametitle{Summary}
     \begin{itemize}
         \item Tree Borrows UB is much less common on \texttt{crates.io} than Stacked Borrows UB\\
             \(\qquad\Rightarrow\) fulfills goal of being more permissive
-        \item elimination of out-of-bounds UB\\
-            \(\qquad\Rightarrow\) blocker in SB for many popular crates
-        \item patterns allowed by Stacked Borrows but forbidden by Tree Borrows are rare
+            \begin{block}{Notable examples}
+                \texttt{tokio}, \texttt{pyo3}, \texttt{rkyv}, \texttt{eyre}, \texttt{ndarray}, ...\\
+                \texttt{arrayvec}, \texttt{slotmap}, \texttt{nalgebra}, \texttt{json}, ...\\
+            \end{block}
+        \item patterns allowed by Stacked Borrows but forbidden by Tree Borrows are theoretically
+            possible but rare
     \end{itemize}
 \end{frame}
 
@@ -54,7 +45,6 @@
 
     TB also has...
     \begin{itemize}
-        \item tweaked rules for interactions between interior mutability and protectors/\texttt{Reserved}
         \item implementation in Miri (\href{https://github.com/rust-lang/miri}{\texttt{github:rust-lang/miri}})
         \item performance improvements compared to the naive implementation
             \begin{itemize}
@@ -65,7 +55,7 @@
     \end{itemize}~\\~\\
     \vfill
 
-    Slides and examples on \href{https://github.com/Vanille-N/tree-beamer/tree/ens}{\texttt{github:Vanille-N/tree-beamer/tree/ens}}\\
+    Slides: \href{https://github.com/Vanille-N/tree-beamer/tree/ens}{\texttt{github:Vanille-N/tree-beamer/tree/ens}}\\
     Complementary material: \href{https://perso.crans.org/vanille/treebor}{\texttt{perso.crans.org/vanille/treebor}}\\
 \end{frame}
 
