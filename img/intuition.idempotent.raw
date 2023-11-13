@@ -120,8 +120,6 @@
 %Straight Lines [id:da12091185390095238] 
 \draw [color={rgb, 255:red, 245; green, 166; blue, 35 }  ,draw opacity=1 ]   (355,79.94) -- (355,217.94) ;
 \draw [shift={(355,219.94)}, rotate = 270] [color={rgb, 255:red, 245; green, 166; blue, 35 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-%Curve Lines [id:da8686234582353412] 
-\draw [color={rgb, 255:red, 155; green, 155; blue, 155 }  ,draw opacity=1 ]   (180,59.94) .. controls (178.73,39.59) and (178.24,39.84) .. (330,40) ;
 %Curve Lines [id:da16524038048915834] 
 \draw [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ]   (320,60) .. controls (318.73,39.65) and (320.9,40.43) .. (330,40) ;
 %Straight Lines [id:da6715256721787114] 
@@ -136,6 +134,11 @@
 %Straight Lines [id:da2620096235004764] 
 \draw [color={rgb, 255:red, 155; green, 155; blue, 155 }  ,draw opacity=1 ]   (301.5,261) -- (301.5,248)(304.5,261) -- (304.5,248) ;
 \draw [shift={(303,240)}, rotate = 90] [color={rgb, 255:red, 155; green, 155; blue, 155 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Curve Lines [id:da7985914532801024] 
+\draw [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ]   (180,60.02) .. controls (178.73,39.67) and (180.9,40.45) .. (190,40.02) ;
+%Curve Lines [id:da0880645961733102] 
+\draw [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ]   (190,40.08) .. controls (198.83,39.67) and (199.68,40.2) .. (199.97,58.34) ;
+\draw [shift={(200,60.08)}, rotate = 269.21] [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 
 % Text Node
 \draw (176,221.94) node [anchor=north west][inner sep=0.75pt]   [align=left] {Res};
@@ -189,6 +192,14 @@
 \draw (298,102) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,color={rgb, 255:red, 155; green, 155; blue, 155 }  ,opacity=1 ,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&}};
 % Text Node
 \draw (298,262) node [anchor=north west][inner sep=0.75pt]  [font=\footnotesize,color={rgb, 255:red, 155; green, 155; blue, 155 }  ,opacity=1 ,rotate=-0.12] [align=left] {{\fontfamily{pcr}\selectfont \&}};
+% Text Node
+\draw (401,51) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize (1) set conflicted}};
+% Text Node
+\draw (401,62) node [anchor=north west][inner sep=0.75pt]   [align=left] {{\scriptsize (2) check !conflicted}};
+% Text Node
+\draw (181,41) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {{\scriptsize (1)}};
+% Text Node
+\draw (225,121) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 155; green, 155; blue, 155 }  ,opacity=1 ] [align=left] {{\scriptsize (2)}};
 
 
 \end{tikzpicture}
