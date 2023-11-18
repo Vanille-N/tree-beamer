@@ -14,6 +14,11 @@ Related:
 - `rfmig` is for the
 [_Rust Formal Methods Interest Group_](https://www.youtube.com/watch?v=zQ76zLXesxA)
 session of Monday, May 29th 2023 (7PM CEST).
+- `eth` was presented at ETH Zürich on June 13th 2023
+- `ens` was used for my internship defense in front of a jury of teachers
+  at ENS Paris-Saclay
+- [upcoming] `lmf` is to be presented at the Laboratoire Méthodes Formelles
+  in December 2023
 
 ## Pre-rendered PDF
 
