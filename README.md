@@ -4,27 +4,20 @@ by Neven Villani
 
 Slides and sources for presentations of Tree Borrows.
 
+This branch is specific to the presentation of Tree Borrows to be given
+at the Toccata meetup in December 2023 at the LMF. Other branches may
+contain material not presented here.
+
 Related:
 - [Tree Borrows by Example](https://perso.crans.org/vanille/treebor/)
 - [Implementation](https://github.com/rust-lang/miri/tree/master/src/borrow_tracker/tree_borrows)
 - [The model in detail](https://github.com/Vanille-N/tree-borrows)
 
-## Branches
-
-- `rfmig` is for the
-[_Rust Formal Methods Interest Group_](https://www.youtube.com/watch?v=zQ76zLXesxA)
-session of Monday, May 29th 2023 (7PM CEST).
 
 ## Pre-rendered PDF
 
-A PDF version of the slides can be downloaded from
-[my homepage](https://perso.crans.org/vanille/share/satge/arpe/rfmig.pdf),
-but it is not guaranteed to be up to date with recent changes to the source
-code.
-
-It also does not include executable examples (see `examples/` which contains
-all code examples shown in the beamer, and associated documentation).
-
+A precompiled PDF is not yet available for this branch.
+It will soon be on [my homepage](https://perso.crans.org/vanille/share/satge/arpe).
 
 ## Building the beamer from source
 
