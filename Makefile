@@ -122,8 +122,8 @@ override FIGURES += \
 
 # Other interesting visual representations
 override FIGURES += \
-	sm-idempotent \
-	sm-readread \
+	#intuition.idempotent \
+	#intuition.readread \
 	#
 
 override IMGDIR = img
