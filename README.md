@@ -4,8 +4,8 @@ by Neven Villani
 
 Slides and sources for presentations of Tree Borrows.
 
-This branch (eth) is specific to the talk to be given at ETH Zürich, June 13th 2023.
-Other branches may contain material not presented here.
+This branch (ens) is specific to the internship defense at ENS Paris-Saclay
+for my diploma. Other branches may contain material not presented here.
 
 Related:
 - [Tree Borrows by Example](https://perso.crans.org/vanille/treebor/)
@@ -15,7 +15,7 @@ Related:
 ## Pre-rendered PDF
 
 A PDF version of the slides can be downloaded from
-[my homepage](https://perso.crans.org/vanille/share/satge/arpe/eth.pdf).
+[my homepage](https://perso.crans.org/vanille/share/satge/arpe/ens.pdf).
 
 It does not include executable examples (see `examples/` which contains
 all code examples shown in the beamer, and associated documentation).
