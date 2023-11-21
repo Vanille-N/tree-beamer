@@ -1,0 +1,118 @@
+
+\tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
+
+\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]
+%uncomment if require: \path (0,473); %set diagram left start at 0, and has height of 473
+
+%Rounded Rect [id:dp7984625234262893] 
+\draw  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ][fill={rgb, 255:red, 208; green, 2; blue, 27 }  ,fill opacity=0.19 ] (320,118) .. controls (320,102.54) and (332.54,90) .. (348,90) -- (442,90) .. controls (457.46,90) and (470,102.54) .. (470,118) -- (470,202) .. controls (470,217.46) and (457.46,230) .. (442,230) -- (348,230) .. controls (332.54,230) and (320,217.46) .. (320,202) -- cycle ;
+%Image [id:dp9425753845862507] 
+\draw (116,55) node  {\includegraphics[width=37.5pt,height=37.5pt]{Rust_programming_language_black_logo.png}};
+%Straight Lines [id:da4442801668723596] 
+\draw [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ] [dash pattern={on 4.5pt off 4.5pt}]  (320.01,158.5) -- (470.01,159.5)(319.99,161.5) -- (469.99,162.5) ;
+%Rounded Rect [id:dp8376513569259115] 
+\draw  [color={rgb, 255:red, 245; green, 166; blue, 35 }  ,draw opacity=1 ][fill={rgb, 255:red, 245; green, 166; blue, 35 }  ,fill opacity=0.21 ] (500,118) .. controls (500,102.54) and (512.54,90) .. (528,90) -- (612,90) .. controls (627.46,90) and (640,102.54) .. (640,118) -- (640,202) .. controls (640,217.46) and (627.46,230) .. (612,230) -- (528,230) .. controls (512.54,230) and (500,217.46) .. (500,202) -- cycle ;
+%Straight Lines [id:da558891815815537] 
+\draw    (470,140) -- (518.04,130.39) ;
+\draw [shift={(520,130)}, rotate = 168.69] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da42937213191026646] 
+\draw    (470,140) -- (518.14,159.26) ;
+\draw [shift={(520,160)}, rotate = 201.8] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da6087221150217264] 
+\draw    (470,180) -- (518.04,170.39) ;
+\draw [shift={(520,170)}, rotate = 168.69] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da001537982409003713] 
+\draw    (470,180) -- (518.14,199.26) ;
+\draw [shift={(520,200)}, rotate = 201.8] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Rounded Rect [id:dp3946212981189241] 
+\draw  [color={rgb, 255:red, 74; green, 144; blue, 226 }  ,draw opacity=1 ][fill={rgb, 255:red, 74; green, 144; blue, 226 }  ,fill opacity=0.21 ] (20,118) .. controls (20,102.54) and (32.54,90) .. (48,90) -- (272,90) .. controls (287.46,90) and (300,102.54) .. (300,118) -- (300,202) .. controls (300,217.46) and (287.46,230) .. (272,230) -- (48,230) .. controls (32.54,230) and (20,217.46) .. (20,202) -- cycle ;
+%Rounded Rect [id:dp27708379985255416] 
+\draw  [color={rgb, 255:red, 65; green, 117; blue, 5 }  ,draw opacity=1 ][fill={rgb, 255:red, 126; green, 211; blue, 33 }  ,fill opacity=0.24 ] (20,282) .. controls (20,258.8) and (38.8,240) .. (62,240) -- (598,240) .. controls (621.2,240) and (640,258.8) .. (640,282) -- (640,408) .. controls (640,431.2) and (621.2,450) .. (598,450) -- (62,450) .. controls (38.8,450) and (20,431.2) .. (20,408) -- cycle ;
+%Rounded Rect [id:dp9340363632966183] 
+\draw  [color={rgb, 255:red, 65; green, 117; blue, 5 }  ,draw opacity=1 ][fill={rgb, 255:red, 126; green, 211; blue, 33 }  ,fill opacity=0.24 ] (30,302) .. controls (30,284.33) and (44.33,270) .. (62,270) -- (158,270) .. controls (175.67,270) and (190,284.33) .. (190,302) -- (190,408) .. controls (190,425.67) and (175.67,440) .. (158,440) -- (62,440) .. controls (44.33,440) and (30,425.67) .. (30,408) -- cycle ;
+%Rounded Rect [id:dp2988979601948617] 
+\draw  [color={rgb, 255:red, 65; green, 117; blue, 5 }  ,draw opacity=1 ][fill={rgb, 255:red, 126; green, 211; blue, 33 }  ,fill opacity=0.24 ] (240,288) .. controls (240,267.01) and (257.01,250) .. (278,250) -- (592,250) .. controls (612.99,250) and (630,267.01) .. (630,288) -- (630,402) .. controls (630,422.99) and (612.99,440) .. (592,440) -- (278,440) .. controls (257.01,440) and (240,422.99) .. (240,402) -- cycle ;
+%Rounded Rect [id:dp6031988743681855] 
+\draw  [color={rgb, 255:red, 65; green, 117; blue, 5 }  ,draw opacity=1 ][fill={rgb, 255:red, 126; green, 211; blue, 33 }  ,fill opacity=0.24 ] (250,300) .. controls (250,288.95) and (258.95,280) .. (270,280) -- (330,280) .. controls (341.05,280) and (350,288.95) .. (350,300) -- (350,410) .. controls (350,421.05) and (341.05,430) .. (330,430) -- (270,430) .. controls (258.95,430) and (250,421.05) .. (250,410) -- cycle ;
+%Rounded Rect [id:dp03830836799520232] 
+\draw  [color={rgb, 255:red, 65; green, 117; blue, 5 }  ,draw opacity=1 ][fill={rgb, 255:red, 126; green, 211; blue, 33 }  ,fill opacity=0.24 ] (360,310) .. controls (360,293.43) and (373.43,280) .. (390,280) -- (590,280) .. controls (606.57,280) and (620,293.43) .. (620,310) -- (620,400) .. controls (620,416.57) and (606.57,430) .. (590,430) -- (390,430) .. controls (373.43,430) and (360,416.57) .. (360,400) -- cycle ;
+%Straight Lines [id:da8009564401322166] 
+\draw [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,draw opacity=1 ]   (195,410) -- (238,410) ;
+\draw [shift={(240,410)}, rotate = 180] [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+\draw [shift={(193,410)}, rotate = 0] [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Straight Lines [id:da4353031372379992] 
+\draw [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,draw opacity=1 ]   (192,280) -- (235,280) ;
+\draw [shift={(237,280)}, rotate = 180] [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+\draw [shift={(190,280)}, rotate = 0] [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+%Shape: Ellipse [id:dp4818520720706909] 
+\draw  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,draw opacity=1 ][line width=1.5]  (511,384) .. controls (511,378.48) and (516.82,374) .. (524,374) .. controls (531.18,374) and (537,378.48) .. (537,384) .. controls (537,389.52) and (531.18,394) .. (524,394) .. controls (516.82,394) and (511,389.52) .. (511,384) -- cycle ;
+
+% Text Node
+\draw (144,32) node [anchor=north west][inner sep=0.75pt]  [font=\fontsize{3.33em}{4em}\selectfont] [align=left] {{\Huge \textbf{Rust}}};
+% Text Node
+\draw (351,93) node [anchor=north west][inner sep=0.75pt]  [font=\Large,color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {\textbf{Features}};
+% Text Node
+\draw (328,115) node [anchor=north west][inner sep=0.75pt]   [align=left] {Rich type system\\$\displaystyle \rightarrow $ Safety \& Speed};
+% Text Node
+\draw (326,180) node [anchor=north west][inner sep=0.75pt]   [align=left] {Low-level primitives\\$\displaystyle \rightarrow $ Control};
+% Text Node
+\draw (343,160) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 208; green, 2; blue, 27 }  ,opacity=1 ] [align=left] {{\fontfamily{pcr}\selectfont \textbf{\textcolor[rgb]{0.82,0.01,0.11}{unsafe}}}};
+% Text Node
+\draw (522,93) node [anchor=north west][inner sep=0.75pt]  [font=\Large,color={rgb, 255:red, 245; green, 166; blue, 35 }  ,opacity=1 ] [align=left] {\textbf{Purposes}};
+% Text Node
+\draw (525,119) node [anchor=north west][inner sep=0.75pt]   [align=left] {Applications};
+% Text Node
+\draw (531,152) node [anchor=north west][inner sep=0.75pt]   [align=left] {Libraries};
+% Text Node
+\draw (529,191) node [anchor=north west][inner sep=0.75pt]   [align=left] {Systems};
+% Text Node
+\draw (42,107) node [anchor=north west][inner sep=0.75pt]   [align=left] {v1.0 2018\\General-purpose\\Safety- and performance-oriented\\\\Not standardized, ongoing efforts};
+% Text Node
+\draw (71,242) node [anchor=north west][inner sep=0.75pt]  [font=\Large,color={rgb, 255:red, 126; green, 211; blue, 33 }  ,opacity=1 ] [align=left] {\textbf{\textcolor[rgb]{0.25,0.46,0.02}{Tools}}};
+% Text Node
+\draw (369,256) node [anchor=north west][inner sep=0.75pt]  [font=\large,color={rgb, 255:red, 126; green, 211; blue, 33 }  ,opacity=1 ] [align=left] {\textbf{\textcolor[rgb]{0.25,0.46,0.02}{Compilers}}};
+% Text Node
+\draw (71,276) node [anchor=north west][inner sep=0.75pt]  [font=\large,color={rgb, 255:red, 126; green, 211; blue, 33 }  ,opacity=1 ] [align=left] {\textbf{\textcolor[rgb]{0.25,0.46,0.02}{Libraries}}};
+% Text Node
+\draw (272,283) node [anchor=north west][inner sep=0.75pt]  [font=\large,color={rgb, 255:red, 126; green, 211; blue, 33 }  ,opacity=1 ] [align=left] {\textbf{\textcolor[rgb]{0.25,0.46,0.02}{Rustc}}};
+% Text Node
+\draw (455,282) node [anchor=north west][inner sep=0.75pt]  [font=\large,color={rgb, 255:red, 126; green, 211; blue, 33 }  ,opacity=1 ] [align=left] {\textbf{\textcolor[rgb]{0.25,0.46,0.02}{Miri}}};
+% Text Node
+\draw (33,306) node [anchor=north west][inner sep=0.75pt]  [font=\small,color={rgb, 255:red, 74; green, 74; blue, 74 }  ,opacity=1 ] [align=left] {Async, Algebra, UI,\\Cryptography, Datetime\\Data Structures, Parsing,\\Filesystem, Web, ...};
+% Text Node
+\draw (41,390) node [anchor=north west][inner sep=0.75pt]   [align=left] {\textbf{Repo: {\fontfamily{pcr}\selectfont crates.io}}};
+% Text Node
+\draw (274,302) node [anchor=north west][inner sep=0.75pt]   [align=left] {Official};
+% Text Node
+\draw (441,300) node [anchor=north west][inner sep=0.75pt]   [align=left] {Sanitizer};
+% Text Node
+\draw (251,332) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 74; green, 74; blue, 74 }  ,opacity=1 ] [align=left] {{\small Fast, optimizing}\\{\small compiler.}};
+% Text Node
+\draw (399,410) node [anchor=north west][inner sep=0.75pt]   [align=left] {\textcolor[rgb]{0.74,0.06,0.88}{\textit{Specifies and detects UB}}};
+% Text Node
+\draw (261,410) node [anchor=north west][inner sep=0.75pt]   [align=left] {\textcolor[rgb]{0.74,0.06,0.88}{\textit{Ignores UB}}};
+% Text Node
+\draw (198,368) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,opacity=1 ,rotate=-270.08] [align=left] {{\fontfamily{pcr}\selectfont cargo}};
+% Text Node
+\draw (210.92,398.99) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 139; green, 87; blue, 42 }  ,opacity=1 ,rotate=-270.04] [align=left] {{\footnotesize Package manager}};
+% Text Node
+\draw (375,344) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 74; green, 74; blue, 74 }  ,opacity=1 ] [align=left] {{\small Uninitialized memory}};
+% Text Node
+\draw (365,318) node [anchor=north west][inner sep=0.75pt]  [font=\small,color={rgb, 255:red, 74; green, 74; blue, 74 }  ,opacity=1 ] [align=left] {Data races};
+% Text Node
+\draw (519,319) node [anchor=north west][inner sep=0.75pt]  [font=\small,color={rgb, 255:red, 74; green, 74; blue, 74 }  ,opacity=1 ] [align=left] {Out of bounds};
+% Text Node
+\draw (530,350) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 74; green, 74; blue, 74 }  ,opacity=1 ] [align=left] {{\small Invalid layout}};
+% Text Node
+\draw (371,378) node [anchor=north west][inner sep=0.75pt]  [color={rgb, 255:red, 74; green, 74; blue, 74 }  ,opacity=1 ] [align=left] {{\small Aliasing conflicts: SB \ or \ TB}};
+% Text Node
+\draw (542,388) node [anchor=north west][inner sep=0.75pt]   [align=left] {\textbf{\textit{\textcolor[rgb]{0.82,0.01,0.11}{new!}}}};
+% Text Node
+\draw (428,146) node [anchor=north west][inner sep=0.75pt]   [align=left] {\textcolor[rgb]{0.74,0.06,0.88}{{\footnotesize ML-like}}};
+% Text Node
+\draw (436,166) node [anchor=north west][inner sep=0.75pt]   [align=left] {\textcolor[rgb]{0.74,0.06,0.88}{{\footnotesize C-like}}};
+% Text Node
+\draw (59,421) node [anchor=north west][inner sep=0.75pt]   [align=left] {\textcolor[rgb]{0.74,0.06,0.88}{\textit{Must avoid UB}}};
+
+
+\end{tikzpicture}

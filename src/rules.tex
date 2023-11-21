@@ -21,9 +21,10 @@
 \end{frame}
 
 \begin{frame}[t]
-    \frametitle{Active, Frozen, Disabled}
-    Core triplet of permissions to represent
+    \frametitle{Reserved, Active, Frozen, Disabled}
+    Basic permissions to represent
     \begin{itemize}
+        \item two phase borrowed (mutable in the future): \texttt{Reserved},
         \item unique mutable references: \texttt{Active},
         \item shared immutable references: \texttt{Frozen},
         \item lifetime ended: \texttt{Disabled}.
@@ -31,46 +32,26 @@
 
     \begin{onlyenv}<1>
         \begin{block}{Child \textover{read}{write}: must allow reading}
-            \begin{itemize}
-                \item \texttt{Active} \(\to\) \texttt{Active}
-                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
-                \item \texttt{Disabled} \(\to\) UB
-            \end{itemize}
+        \includegraphics{steps.base.cr.pdf}
         \end{block}
-        \includegraphics{steps.core.cr.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<2>
         \begin{block}{Child write: must allow writing}
-            \begin{itemize}
-                \item \texttt{Active} \(\to\) \texttt{Active}
-                \item \texttt{Frozen} \(\to\) UB
-                \item \texttt{Disabled} \(\to\) UB
-            \end{itemize}
+        \includegraphics{steps.base.cr+cw.pdf}
         \end{block}
-        \includegraphics{steps.core.cr+cw.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<3>
         \begin{block}{Foreign \textover{read}{write}: no longer unique}
-            \begin{itemize}
-                \item \texttt{Active} \(\to\) \texttt{Frozen}
-                \item \texttt{Frozen} \(\to\) \texttt{Frozen}
-                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
-            \end{itemize}
+        \includegraphics{steps.base.cr+cw+fr.pdf}
         \end{block}
-        \includegraphics{steps.core.cr+cw+fr.pdf}
     \end{onlyenv}
 
     \begin{onlyenv}<4>
         \begin{block}{Foreign write: no longer immutable}
-            \begin{itemize}
-                \item \texttt{Active} \(\to\) \texttt{Disabled}
-                \item \texttt{Frozen} \(\to\) \texttt{Disabled}
-                \item \texttt{Disabled} \(\to\) \texttt{Disabled}
-            \end{itemize}
+        \includegraphics{steps.base.cr+cw+fr+fw.pdf}
         \end{block}
-        \includegraphics{steps.core.cr+cw+fr+fw.pdf}
     \end{onlyenv}
 \end{frame}
 

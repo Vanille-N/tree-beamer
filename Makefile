@@ -57,9 +57,13 @@ override FIGURES += \
 # Step-by-step introduction
 override FIGURES += \
 	steps.core.cr \
+	steps.base.cr \
 	steps.core.cr+cw \
+	steps.base.cr+cw \
 	steps.core.cr+cw+fr \
+	steps.base.cr+cw+fr \
 	steps.core.cr+cw+fr+fw \
+	steps.base.cr+cw+fr+fw \
 	#
 
 # Illustrating the need for Reserved
@@ -122,21 +126,23 @@ override FIGURES += \
 
 # Other interesting visual representations
 override FIGURES += \
+	ecosystem \
 	#intuition.idempotent \
 	#intuition.readread \
 	#
 
 override IMGDIR = img
 override IMG = \
+	Rust_programming_language_black_logo.png \
 	#
 
 build/%.pdf: $(IMGDIR)/%.raw src/raw.head src/raw.foot
-	cat src/raw.head $< src/raw.foot > $@
+	cat src/raw.head $< src/raw.foot > build/$$(basename $@ .pdf).tex
 	cd build && \
-		$(TEXC) $$(basename $@) \
+		$(TEXC) $$(basename $@ .pdf) \
 		| $(FILTER)
 
-build/main.pdf: $(FIGURES:%=build/%.pdf) $(IMG:%=build/%)
+build/main.pdf: $(IMG:%=build/%) $(FIGURES:%=build/%.pdf)
 
 build/%: $(IMGDIR)/%
 	cp $< $@
@@ -144,7 +150,7 @@ build/%: $(IMGDIR)/%
 # Drop the difficult work on latexmk
 build/%.pdf: build/%.tex $(CP) |build
 	cd build && \
-		$(TEXC) $$(basename $<) \
+		$(TEXC) $$(basename $< .tex) \
 		| $(FILTER)
 
 # Easy clean thanks to the separate build directory
