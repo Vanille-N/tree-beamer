@@ -1,3 +1,7 @@
+
+
+\tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
+
 \begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]
 %uncomment if require: \path (0,300); %set diagram left start at 0, and has height of 300
 
@@ -26,7 +30,7 @@
 \draw [color={rgb, 255:red, 0; green, 0; blue, 0 }  ,draw opacity=1 ]   (310,79.94) .. controls (309.7,119.59) and (309.1,120.02) .. (470,119.94) ;
 \draw [shift={(470,119.94)}, rotate = 179.97] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 %Curve Lines [id:da046685025788372636] 
-\draw    (170,79.94) .. controls (170.1,120.02) and (170.1,120.02) .. (260,119.94) ;
+\draw [color={rgb, 255:red, 189; green, 16; blue, 224 }  ,draw opacity=1 ]   (170,79.94) .. controls (170.1,120.02) and (170.1,120.02) .. (260,119.94) ;
 %Curve Lines [id:da37149822754526585] 
 \draw [color={rgb, 255:red, 0; green, 0; blue, 0 }  ,draw opacity=1 ]   (250,59.94) .. controls (248.93,50.05) and (250.19,49.85) .. (278.25,49.99) ;
 \draw [shift={(280,50)}, rotate = 180.3] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
@@ -96,3 +100,4 @@
 
 
 \end{tikzpicture}
+

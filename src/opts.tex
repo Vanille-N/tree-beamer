@@ -45,7 +45,7 @@
     \asterisk: only for protected references
 \end{frame}
 
-\subsection{Possible optimizations}
+\subsection{Possible optimizations: intuition}
 
 \newcommand{\assumepath}[2]{\textover{\visible<#1>{\color{magenta}{#2}}}{}}
 
@@ -149,48 +149,10 @@ fn foo(x: &mut u64) {
     \includegraphics<4>{path.prot.mut+fr.pdf}
 \end{frame}
 
-\begin{frame}[fragile]
-    \frametitle{Insert speculative write: strengthening}
-    \begin{onlyenv}<1-2>
-        \begin{exampleblock}{Possible strengthening}
-            Write to mutable references of function entry
-        \end{exampleblock}
-        \includegraphics<1>[width=0.7\textwidth]{mod.full.pdf}
-        \includegraphics<2>[width=0.7\textwidth]{steps.prot+w.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3-4>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-fn foo(x: &mut u64) {
-
-    opaque(/* contains foreign access ? @\assumepath{3}{if none}\assumepath{4}{if any}\phantom{.......}@ */);
-    *x = 42;
-}
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<3>{path.prot+w.mut.pdf}
-        \includegraphics<4>{path.prot+w.mut+fr-fw.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-fn foo(x: &mut u64) {
-    *x = 42;
-    opaque(/* assume no foreign access */);
-
-}
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<5>{path.prot+w.mut+cw.pdf}
-    \end{onlyenv}
-\end{frame}
-
 \begin{frame}[fragile, t]
     \frametitle{Insert speculative write: blocker}
 
-    \begin{exampleblock}{\texttt{as\_mut\_ptr}: \textover{\visible<1-3>{base model}}{}\textover{\visible<4-5>{strengthened}}{}}
+    \begin{exampleblock}{\texttt{as\_mut\_ptr}: \textover{\visible<1-3>{base model}}{}\textover{\visible<4-5>{strengthened with speculative writes}}{}}
         \begin{itemize}
             \item \texttt{\&mut [T] -> *mut T}
             \item returns \textover{\visible<1-3>{a \texttt{Reserved}}}{}\textover{\visible<4-5>{an \texttt{Active}}}{}\phantom{aaaaaaaaaa.} child of the input
@@ -283,115 +245,11 @@ copy_nonoverlapping(shr, raw, 1);
 \end{frame}
 
 \begin{frame}[fragile, t]
-    \frametitle{Swap write-read'-read \(\to\) write-read-read'}
-    \begin{block}{{\xmark} Base model}
-        \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-*x = 42; // (optimization: move down ?)
-let y = &...;
-let vy = *y; // is this read foreign ? @\assumepath{1}{maybe}@
-
-let vx = *x;
-        \end{lstlisting}
-    \end{block}
-    \includegraphics{path.base.mut+cw+fr-o+cr.pdf}
+    \frametitle{A more formal approach}
+    TODO
 \end{frame}
 
-\begin{frame}[fragile, t]
-    \frametitle{Swap write-read'-read \(\to\) write-read-read': strengthening}
-    \begin{onlyenv}<1-2>
-        \begin{exampleblock}{Possible strengthening}
-            Foreign read makes \texttt{Active} become \texttt{Disabled}
-            (rather than \texttt{Frozen})
-        \end{exampleblock}
-        \includegraphics<1>{mod.base.pdf}
-        \includegraphics<2>{steps.base+d.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3-4>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-*x = 42; // (optimization: move down ?)
-let y = &...;
-let vy = *y; // is this read foreign ? @\assumepath{3}{if not}\assumepath{4}{if yes}@
-
-let vx = *x;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics<3>{path.base+d.mut+cw+cr.pdf}
-        \includegraphics<4>{path.base+d.mut+cw+fr+cr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-
-let y = &...;
-let vy = *y; // read assumed not foreign
-*x = 42;
-let vx = *x;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base+d.mut+cw+cr.pdf}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{Swap write-read'-read \(\to\) write-read-read': blocker}
-    \begin{onlyenv}<1>
-        \begin{block}{{\cmark} Swap read-read\vphantom{gh}}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-let vy = *y; // (optimization: move down ?)
-let vx = *x; // foreign read
-@@
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base.mut+cw+cr+fr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<2>
-        \begin{block}{{\cmark} Swap read-read\vphantom{gh}}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-
-let vx = *x; // foreign read
-let vy = *y;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base.mut+cw+fr+cr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3>
-        \begin{block}{{\xmark} Swap read-read: strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-let vy = *y; // (optimization: move down ?)
-let vx = *x; // foreign read
-@@
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base+d.mut+cw+cr+fr.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<4>
-        \begin{block}{{\xmark} Swap read-read: strengthened model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let y = &mut *x;
-*y = 42;
-
-let vx = *x; // foreign read
-let vy = *y;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base+d.mut+cw+fr+cr.pdf}
-    \end{onlyenv}
-\end{frame}
+\subsection*{}
 
 \begin{frame}
     \frametitle{Summary}
