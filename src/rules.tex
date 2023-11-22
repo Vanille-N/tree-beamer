@@ -55,102 +55,14 @@
     \end{onlyenv}
 \end{frame}
 
-\begin{frame}
-    \frametitle{Parallel to the borrow checker}
-    Similarities
-    \hspace{-5em}
-    \begin{description}
-        \item[\cmark] \texttt{Active} (\texttt{\&mut}) readable and writeable
-        \item[\cmark] \texttt{Frozen} (\texttt{\&}) and all their children are only readable
-        \item[\cmark] data behind \texttt{Active} (\texttt{\&mut}) is owned exclusively
-        \item[\cmark] data behind \texttt{Frozen} (\texttt{\&}) is immutable
-    \end{description}~\\
-
-    Differences (OK to be more permissive than the borrow checker)
-    \hspace{-5em}
-    \begin{description}
-        \item[\xmark] \texttt{Active} (\texttt{\&mut}) demoted to \texttt{Frozen} (\texttt{\&})
-        \item[\xmark] several \texttt{Active} (\texttt{\&mut}) can coexist if never written to
-    \end{description}~\\
-
-    Unsoundness (following subsections fix them)
-    \hspace{-5em}
-    \begin{description}
-        \item[\xmark] two-phase borrows not handled yet
-        \item[\xmark] too permissive for \texttt{noalias} and \texttt{dereferenceable}
-        \item[\xmark] \texttt{UnsafeCell} needs special handling
-    \end{description}~\\
-
-\end{frame}
-
-\subsection{Fix unsoundness n°1: two-phase borrows}
-
 \begin{frame}[fragile, t]
-    \frametitle{Not all mutable references can be \texttt{Active}}
-    \begin{alertblock}{Two-phase borrows}
-        Mutable reborrows in function arguments tolerate shared reborrows
-        until function entry.
-    \end{alertblock}
-    \begin{block}{Core triplet: unsound}
-        \begin{minipage}{0.40\textwidth}
-            \begin{lstlisting}[language=rust, escapechar=\@]
-@              @fn main() {
-@\visible<2>{\color{red}>}@    let mut v =
-@\visible<2>{\color{red}>}@        vec![1usize];
-@\visible<3,5>{\color{red}>}@    v.push(
-@\visible<4,5>{\color{red}>}@        v.len()
-@\visible<5>{\color{red}>}@    );
-@              @}
-            \end{lstlisting}
-        \end{minipage}
-        \vline
-        \begin{minipage}{0.40\textwidth}
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node (nv) at (0,0) {\texttt{v:} {\visible<2->{\textover{\texttt{Active}}{}}}}
-                        child {node (nvpush) {\texttt{v\textsubscript{push}:} {\visible<3>{\textover{\texttt{Active}}{}}}{\visible<4->{\textover{\texttt{Frozen}}{}}}}}
-                        child {node (nvlen) {\texttt{v\textsubscript{len}:} {\visible<4->{\textover{\texttt{Frozen}}{}}}}}
-                        ;
-
-                \node (vert) at (3.5,0 |- nv) {};
-                \node at (vert |- nv) {{\visible<3,4>{\(\gets\) reborrow}}};
-                \node<4> at (vert |- nvlen) {\(\gets\) read};
-                \node<5> at (vert |- nvpush) {\(\gets\) write (UB)};
-            \end{tikzpicture}~\\~\\
-            \includegraphics<1-2>[width=1.4\textwidth]{mod.core.pdf}
-            \includegraphics<3>[width=1.4\textwidth]{path.core.mut.pdf}
-            \includegraphics<4>[width=1.4\textwidth]{path.core.mut+fr.pdf}
-            \includegraphics<5>[width=1.4\textwidth]{path.core.mut+fr+cw.pdf}
-            {}
-        \end{minipage}
-    \end{block}
-\end{frame}
-
-\begin{frame}[t]
-    \frametitle{New permission: \texttt{Reserved}}
-    \begin{exampleblock}{Intuition}
-        An \texttt{\&mut} not yet written to is not different from a \texttt{\&}.
-    \end{exampleblock}
-
-    Mutable references not yet written to\\
-    \(\Rightarrow\) behave like \texttt{Frozen} until the first child write\\
-    \(\Rightarrow\) can coexist with each other and with \texttt{Frozen}~\\~\\
-
-    \includegraphics<1>[width=\textwidth]{steps.base.pdf}
-    \includegraphics<2>[width=\textwidth]{steps.base.diff.pdf}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{\texttt{Reserved} in action}
+    \frametitle{Example: \texttt{Reserved} in action}
     \begin{alertblock}{Two-phase borrows}
         Mutable reborrows in function arguments tolerate shared reborrows
         until function entry.
     \end{alertblock}
 
-    \begin{block}{Core triplet + \texttt{Reserved}: fixed}
+    \begin{block}{}
         \begin{minipage}{0.4\textwidth}
             \begin{lstlisting}[language=rust, escapechar=\@]
 @              @fn main() {
@@ -188,14 +100,14 @@
     \end{block}
 \end{frame}
 
-\subsection{Fix unsoundness n°2: justifying \texttt{noalias}}
+\subsection{Justifying \texttt{noalias}}
 
 \begin{frame}[fragile]
     \frametitle{Loss of permissions too early}
     \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
         No foreign access during the same function call as a child write.
     \end{alertblock}
-    \begin{block}{Core triplet + \texttt{Reserved}: unsound}
+    \begin{block}{Previous model: unsound}
         \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) {
     *x = 42; // activation
@@ -221,6 +133,25 @@ fn write(x: &mut u64) {
             \item protector lasts until the end of the call
             \item protectors strengthen the guarantees
         \end{itemize}
+
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+            \(\downarrow\)1 \(\backslash\) 2 \(\rightarrow\) & \(\uparrow\)R & \(\uparrow\)W & \(\downarrow\)R & \(\downarrow\)W \\
+            \hline
+            \(\uparrow\)R & / & / & / & \(\times\) \\
+            \hline
+            \(\uparrow\)W & / & / & \(\approx\) & \(\approx\) \\
+            \hline
+            \(\downarrow\)R & / & \(\times\) & / & / \\
+            \hline
+            \(\downarrow\)W & \(\times\) & \(\times\) & / & / \\
+            \hline
+        \end{tabular}
+        \begin{tabular}{l}
+            /: not UB \\
+            \(\times\): should be UB \\
+            \(\approx\): should be UB earlier \\
+        \end{tabular}
     \end{onlyenv}
     \includegraphics<2>{blank.prot.pdf}
     \includegraphics<3>{steps.prot.cp.pdf}
@@ -228,14 +159,13 @@ fn write(x: &mut u64) {
     \includegraphics<5>{steps.prot.noalias.pdf}
 \end{frame}
 
-
 \begin{frame}[fragile]
     \frametitle{Protectors lock permissions}
     \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
         No foreign access during the same function call as a child write.
     \end{alertblock}
 
-    \begin{block}{Core triplet + \texttt{Reserved} + protectors: fixed}
+    \begin{block}{With protectors: fixed}
         \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) { // with protector
     *x = 42; // activation
@@ -245,6 +175,29 @@ fn write(x: &mut u64) { // with protector
     \end{block}
     \includegraphics[width=0.7\textwidth]{path.prot.mut+cw+fr.pdf}
 \end{frame}
+
+\begin{frame}[fragile, t]
+    \frametitle{Why not just...}
+    \begin{block}{...insert an implicit read/write on function exit ?}
+        \begin{lstlisting}[language=rust, escapechar=@]
+fn write(x: &mut u64) { // with protector
+    *x = 42; // activation
+    opaque(/* foreign read for x: noalias violation */);
+    // implicit write through x ?
+}
+        \end{lstlisting}
+    \end{block}
+    \begin{onlyenv}<1>
+        \includegraphics[width=0.7\textwidth]{path.base.mut+cw+fr.pdf}
+    \end{onlyenv}
+    \begin{onlyenv}<2>
+        \begin{itemize}
+            \item what if \texttt{opaque} doesn't terminate ?
+            \item should we insert a read or a write ?
+        \end{itemize}
+    \end{onlyenv}
+\end{frame}
+
 
 \subsection*{}
 
