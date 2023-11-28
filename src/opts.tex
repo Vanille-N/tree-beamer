@@ -246,7 +246,29 @@ copy_nonoverlapping(shr, raw, 1);
 
 \begin{frame}[fragile, t]
     \frametitle{A more formal approach}
-    TODO
+    \begin{onlyenv}<1>
+        One big invariant:
+        \begin{itemize}
+            \item must be preserved by any step of the program that does not cause UB
+            \item must provide sufficient hypotheses for the optimizations we want
+        \end{itemize}
+    \end{onlyenv}
+    \begin{onlyenv}<2>
+        An excerpt from the invariant for protected activated mutable references:
+        \begin{align*}
+            \forall t \in T, l \in L . 
+            & \exists p, c . (p, t, c) \in \sigma_t.TREES(l). \\
+            & p \ne \textsf{Disabled} \Rightarrow \\
+            & \sigma_s.MEM(l) \sim \sigma_t.MEM(l) \\
+            & \wedge p = \textsf{Active} \\
+            & \wedge \forall (\_, p', \_) \in \textsf{Children}_{\sigma_t, l}(t) . p' = \textsf{Disabled} \\
+            & \wedge \forall (\_, p', \_) \in \textsf{Parents}_{\sigma_t, l}(t) . p' = \textsf{Active} \\
+            & \wedge \forall (\_, p', \_) \in \textsf{Uncles}_{\sigma_t, l}(t) . p' \in \{\textsf{Disabled, Res InMut}\}
+        \end{align*}
+        What happens to this property when we do ... \\
+        \( \qquad \) ...a foreign read ? a foreign write ? a reborrow ? \\
+        What does this allow ? \( \to \) arbitrary child accesses
+    \end{onlyenv}
 \end{frame}
 
 \subsection*{}
