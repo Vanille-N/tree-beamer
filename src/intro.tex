@@ -10,32 +10,32 @@
     \includegraphics[width=\textwidth]{ecosystem.pdf}
 \end{frame}
 
-\begin{frame}[fragile,t]
-    \frametitle{What is UB?}
-    \begin{onlyenv}<1>
-        Undefined Behavior (UB) arises
-        \begin{itemize}
-            \item in languages that have both high- and low-level components\\
-                (C, C++, OCaml, Java, Rust: yes)\\
-                (Assembly, Python: no)
-            \item as a necessity from the existence of
-                \begin{itemize}
-                    \item functions that bypass type systems\\
-                        (\texttt{Obj.magic}, \texttt{std::mem::transmute}, \texttt{void*})
-                    \item unpredictable interaction between language primitives\\
-                        (multithreading, pointer arithmetic)
-                    \item interaction with other languages\\
-                        (FFI, inline assembly)
-                \end{itemize}
-        \end{itemize}~\\
-        Fundamental tradeoff: more UB = more optimizations = less predictability\\
-        Why not Stacked Borrows? Too much UB.\\
-        For Tree Borrows: try less UB, even at the cost of some optimizations.
-    \end{onlyenv}
-\end{frame}
-
+%\begin{frame}[fragile,t]
+%    \frametitle{What is UB?}
+%    \begin{onlyenv}<1>
+%        Undefined Behavior (UB) arises
+%        \begin{itemize}
+%            \item in languages that have both high- and low-level components\\
+%                (C, C++, OCaml, Java, Rust: yes)\\
+%                (Assembly, Python: no)
+%            \item as a necessity from the existence of
+%                \begin{itemize}
+%                    \item functions that bypass type systems\\
+%                        (\texttt{Obj.magic}, \texttt{std::mem::transmute}, \texttt{void*})
+%                    \item unpredictable interaction between language primitives\\
+%                        (multithreading, pointer arithmetic)
+%                    \item interaction with other languages\\
+%                        (FFI, inline assembly)
+%                \end{itemize}
+%        \end{itemize}~\\
+%        Fundamental tradeoff: more UB = more optimizations = less predictability\\
+%        Why not Stacked Borrows? Too much UB.\\
+%        For Tree Borrows: try less UB, even at the cost of some optimizations.
+%    \end{onlyenv}
+%\end{frame}
 
 \begin{frame}[fragile, t]
+    \frametitle{Pointer types in Rust}
     \begin{onlyenv}<1>
         \begin{lstlisting}[language=rust, escapechar=@]
 // Raw pointers (unsafe)
@@ -77,10 +77,33 @@ let p = (&mut n, &mut n);
 \end{frame}
 
 \begin{frame}[fragile, t]
+    \frametitle{Is \texttt{\&mut} really unique ?}
+    \begin{lstlisting}[language=rust]
+let data: u64 = 0;
+let r0: &mut u64 = &mut x;
+
+let x: &mut u64 = unsafe { &mut *(r0 as *mut u64) };
+let y: &mut u64 = unsafe { &mut *(r0 as *mut u64) };
+*x += 1;
+*y += 1;
+    \end{lstlisting}
+    Clearly \texttt{x} and \texttt{y} alias, even though they
+    are both unrelated \texttt{\&mut}.
+
+    \begin{onlyenv}<2->
+        \begin{block}{\texttt{unsafe} can violate compiler invariants}
+            \texttt{unsafe} code can violate uniqueness (and well-formedness)
+            guarantees, so the compiler cannot rely on them for optimizations.
+        \end{block}
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile, t]
     \frametitle{A motivating example for Aliasing UB}
     \begin{lstlisting}[language=rust]
 fn foo(x: &mut u64) {
     let val = *x;
+    *x = 42;
     opaque();
     *x = val;
 }
@@ -99,6 +122,16 @@ fn foo(x: &mut u64) {
     \begin{onlyenv}<3>
     ...which we are going to assume does not happen: violating uniqueness is UB!
     \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile, t]
+    \frametitle{How much UB is enough ? Too much ?}
+    \vspace{-1em}
+    \begin{figure}
+        \makebox[\textwidth][c]{
+            \includegraphics[width=13cm]{how-much-ub.png}
+        }
+    \end{figure}
 \end{frame}
 
 \begin{frame}[t]

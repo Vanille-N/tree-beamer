@@ -134,12 +134,13 @@ override FIGURES += \
 override IMGDIR = img
 override IMG = \
 	Rust_programming_language_black_logo.png \
+	how-much-ub.png \
 	#
 
 build/%.pdf: $(IMGDIR)/%.raw src/raw.head src/raw.foot
 	cat src/raw.head $< src/raw.foot > build/$$(basename $@ .pdf).tex
 	cd build && \
-		$(TEXC) $$(basename $@ .pdf) \
+		$(TEXC) $$(basename $@ .pdf).tex \
 		| $(FILTER)
 
 build/main.pdf: $(IMG:%=build/%) $(FIGURES:%=build/%.pdf)

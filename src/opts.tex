@@ -259,11 +259,11 @@ copy_nonoverlapping(shr, raw, 1);
             \forall t \in T, l \in L . 
             & \exists p, c . (p, t, c) \in \sigma_t.TREES(l). \\
             & p \ne \textsf{Disabled} \Rightarrow \\
-            & \sigma_s.MEM(l) \sim \sigma_t.MEM(l) \\
+            & \sigma_s.\textsf{MEM}(l) \sim \sigma_t.\textsf{MEM}(l) \\
             & \wedge p = \textsf{Active} \\
-            & \wedge \forall (\_, p', \_) \in \textsf{Children}_{\sigma_t, l}(t) . p' = \textsf{Disabled} \\
-            & \wedge \forall (\_, p', \_) \in \textsf{Parents}_{\sigma_t, l}(t) . p' = \textsf{Active} \\
-            & \wedge \forall (\_, p', \_) \in \textsf{Uncles}_{\sigma_t, l}(t) . p' \in \{\textsf{Disabled, Res InMut}\}
+            & \wedge \forall t' \in \textsf{Children}_{\sigma_t}(t)\ .\ t'.\textsf{PERM}[l] = \textsf{Disabled} \\
+            & \wedge \forall t' \in \textsf{Parents}_{\sigma_t}(t)\ .\ t'.\textsf{PERM}[l] = \textsf{Active} \\
+            & \wedge \forall t' \in \textsf{Uncles}_{\sigma_t}(t)\ .\ t'.\textsf{PERM}[l] \in \{\textsf{Disabled, Res InMut}\}
         \end{align*}
         What happens to this property when we do ... \\
         \( \qquad \) ...a foreign read ? a foreign write ? a reborrow ? \\
