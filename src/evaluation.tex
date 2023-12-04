@@ -3,6 +3,8 @@
 \begin{frame}
     \frametitle{Counting crates with UB}
     \begin{figure}
+        {\footnotesize Data obtained with the help of Ben Kimock using
+        \href{https://github.com/saethlin/miri-tools}{github:saethlin/miri-tools}}
         \begin{tikzpicture}
             \begin{axis}[
                     ybar,
@@ -32,26 +34,24 @@
         \item Tree Borrows UB is much less common on \texttt{crates.io} than Stacked Borrows UB\\
             \(\qquad\Rightarrow\) fulfills goal of being more permissive
             \begin{block}{Notable examples}
-                \texttt{tokio}, \texttt{pyo3}, \texttt{rkyv}, \texttt{eyre}, \texttt{ndarray}, ...\\
-                \texttt{arrayvec}, \texttt{slotmap}, \texttt{nalgebra}, \texttt{json}, ...\\
+                \texttt{tokio}, \texttt{pyo3}, \texttt{rkyv}, \texttt{eyre}, \texttt{ndarray},
+                \texttt{arrayvec}, \texttt{slotmap}, \texttt{nalgebra}, \texttt{json}.
             \end{block}
         \item patterns allowed by Stacked Borrows but forbidden by Tree Borrows are theoretically
-            possible but rare
-            \begin{itemize}
-                \item TB has existed for one year, no complaint about those yet.
-                \item There are complaints about the granularity of interior mutability.
-            \end{itemize}
+            possible but have not been found in actual code
     \end{itemize}
 \end{frame}
 
 \begin{frame}
-    \frametitle{Summary}
+    \frametitle{Reception}
+    TB has existed for one year
     \begin{itemize}
-        \item Tree Borrows UB is much less common on \texttt{crates.io} than Stacked Borrows UB\\
-            \(\qquad\Rightarrow\) fulfills goal of being more permissive
-        \item elimination of out-of-bounds UB\\
-            \(\qquad\Rightarrow\) blocker in SB for many popular crates
-        \item patterns allowed by Stacked Borrows but forbidden by Tree Borrows are rare
+        \item[$\oplus$] consensus that TB is simpler and more predictable than SB,
+        \item[$\oplus$] cases where TB is more permissive than SB are welcome \\ (e.g. \texttt{\&Header} pattern),
+        \item[$\oplus$] cases where TB is less permissive are rare \\ (no complaints yet),
+        \item[$\ominus$] fewer optimizations (expected),
+        \item[$\ominus$] controversial granularity of interior mutability,
+        \item[$\ominus$] slight performance regression in Miri.
     \end{itemize}
 \end{frame}
 
@@ -67,10 +67,12 @@
                 \item lazy initialization for out-of-range accesses
             \end{itemize}
         \item ongoing attempt at formalization in Coq
-    \end{itemize}~\\~\\
+    \end{itemize}~\\
     \vfill
 
-    Don't hesitate to test your code with Miri and send us your interesting/unexpected cases of UB!\\
-    Slides and examples on \href{https://github.com/Vanille-N/tree-beamer/tree/lmf}{\texttt{github:Vanille-N/tree-beamer/tree/lmf}}\\
+    Don't hesitate to test your code with Miri and send us your interesting/unexpected cases of UB!\\~\\
+    \vfill
+
+    \href{https://github.com/Vanille-N/tree-beamer/tree/lmf}{\texttt{github:Vanille-N/tree-beamer/tree/lmf}}\\
     Complementary material: \href{https://perso.crans.org/vanille/treebor}{\texttt{perso.crans.org/vanille/treebor}}\\
 \end{frame}

@@ -10,29 +10,110 @@
     \includegraphics[width=\textwidth]{ecosystem.pdf}
 \end{frame}
 
-%\begin{frame}[fragile,t]
-%    \frametitle{What is UB?}
-%    \begin{onlyenv}<1>
-%        Undefined Behavior (UB) arises
-%        \begin{itemize}
-%            \item in languages that have both high- and low-level components\\
-%                (C, C++, OCaml, Java, Rust: yes)\\
-%                (Assembly, Python: no)
-%            \item as a necessity from the existence of
-%                \begin{itemize}
-%                    \item functions that bypass type systems\\
-%                        (\texttt{Obj.magic}, \texttt{std::mem::transmute}, \texttt{void*})
-%                    \item unpredictable interaction between language primitives\\
-%                        (multithreading, pointer arithmetic)
-%                    \item interaction with other languages\\
-%                        (FFI, inline assembly)
-%                \end{itemize}
-%        \end{itemize}~\\
-%        Fundamental tradeoff: more UB = more optimizations = less predictability\\
-%        Why not Stacked Borrows? Too much UB.\\
-%        For Tree Borrows: try less UB, even at the cost of some optimizations.
-%    \end{onlyenv}
-%\end{frame}
+\begin{frame}[fragile, t]
+    \frametitle{What is Undefined Behavior ?}
+
+    \begin{onlyenv}<1>
+        Common pattern:
+        \begin{itemize}
+            \item for expressivity and performance the language introduces low level primitives \\
+                (\texttt{std::mem::transmute}, pointer arithmetic, \texttt{Obj.magic}, ...),
+            \item misuse of these primitives can interfere with compiler invariants \\
+                (garbage collection, well-formedness of typed values, uniqueness, ...),
+            \item guaranteeing deterministic behavior is
+                \begin{itemize}
+                    \item too expensive
+                        (runtime bounds checks, type markers, ...)
+                    \item not feasible
+                        (undecidable at compile time)
+                    \item or otherwise undesirable
+                        (wasted optimization potential)
+                \end{itemize}
+        \end{itemize}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{alertblock}{Solution}
+            Make it UB to misuse these constructs.\\
+            If a compiler invariant is violated by a language primitive, the compiler can do literally anything.
+        \end{alertblock}
+        \begin{block}{UB as a contract}
+            Deal between the programmer and the compiler: these primitives are
+            dangerous, only use them if you really know what you are doing.
+        \end{block}
+        \begin{exampleblock}{\texttt{unsafe}}
+            Already a selling point of Rust: \texttt{unsafe} is explicit.\\
+            UB can only occur as a result of well-delimited blocks.
+        \end{exampleblock}
+    \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile, t]
+    \frametitle{Common examples}
+
+    \begin{onlyenv}<1>
+        Unchecked out-of-bounds accesses
+        \begin{block}{Rust}
+            \begin{lstlisting}[language=rust]
+let v = { let x = [0]; unsafe { x.get_unchecked(1) } };
+            \end{lstlisting}
+        \end{block}
+
+        \begin{block}{C}
+            \begin{lstlisting}[language=c]
+int* x = malloc(sizeof(int)); int v = x[1];
+            \end{lstlisting}
+        \end{block}
+
+        \begin{block}{OCaml}
+            \begin{lstlisting}[language=ml]
+let v = (let x = [| 0 |] in Array.unsafe_get x 1)
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        Dereferencing null
+        \begin{block}{Rust}
+            \begin{lstlisting}[language=rust]
+let v = unsafe { *(0 as *const usize as *mut usize) }
+            \end{lstlisting}
+        \end{block}
+
+        \begin{block}{C}
+            \begin{lstlisting}[language=c]
+int v = *(int*)0
+            \end{lstlisting}
+        \end{block}
+
+        \begin{block}{OCaml}
+            \begin{lstlisting}[language=ml]
+let v = (let x: int ref = Obj.magic 0 in !x)
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+
+    \begin{onlyenv}<3>
+        Constructing an invalid value
+        \begin{block}{Rust}
+            \begin{lstlisting}[language=rust]
+let x: bool = unsafe { std::mem::transmute(2) };
+            \end{lstlisting}
+        \end{block}
+
+        \begin{block}{C}
+            \begin{lstlisting}[language=c]
+bool x = ((union { int i; bool b }){ .i = 2 }).b;
+            \end{lstlisting}
+        \end{block}
+
+        \begin{block}{OCaml}
+            \begin{lstlisting}[language=ml]
+let x: bool = Obj.magic 2
+            \end{lstlisting}
+        \end{block}
+    \end{onlyenv}
+\end{frame}
 
 \begin{frame}[fragile, t]
     \frametitle{Pointer types in Rust}
@@ -44,11 +125,14 @@
 // (*const T @\(\sqsubset\)@ *mut T)
 
 // References (safe)
-@@&'a T // shared and immutable
-@@&'a mut T // unique and mutable
+&'a T // shared and immutable
+&'a mut T // unique and mutable
 // (&'a T @\(\sqsubset\)@ &'a mut T)
 // ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a T @\(\sqsubset\)@ &'b T)
 // ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a mut T @\(\sqsubset\)@ &'b mut T)
+
+// Wrappers
+UnsafeCell, Box, Unique, ...
         \end{lstlisting}
     \end{onlyenv}
 
@@ -124,6 +208,7 @@ fn foo(x: &mut u64) {
     \end{onlyenv}
 \end{frame}
 
+
 \begin{frame}[fragile, t]
     \frametitle{How much UB is enough ? Too much ?}
     \vspace{-1em}
@@ -140,7 +225,7 @@ fn foo(x: &mut u64) {
         Proper usage of pointers (lifetime inclusion and inheritance of mutability) follows a tree discipline.
         \begin{itemize}
             \item when pointer dies, so do its children
-            \item when pointer requires uniqueness, remove branches
+            \item when pointer requires uniqueness, remove other branches
         \end{itemize}
     \end{alertblock}
     \begin{block}{Key ideas}

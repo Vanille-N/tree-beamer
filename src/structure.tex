@@ -122,10 +122,11 @@ fn foo(w2: &mut u64) {
     \begin{block}{}
         \begin{lstlisting}[language=rust]
 let x = &mut ...;
-let y = &mut *x;
+let y = &*x;
+let z = &*x;
 
-*x = 1; // Write access; foreign for y; child for x.
-let _ = *y; // Read access; child for y; child for x.
+let _ = *y; // Read access; foreign for z; child for y, x.
+*x = 1; // Write access; foreign for y, z; child for x.
         \end{lstlisting}
     \end{block}
     \begin{block}{}
@@ -136,7 +137,8 @@ let _ = *y; // Read access; child for y; child for x.
             edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
             \node {...}
                 child {node {\texttt{x}}
-                    child {node {\texttt{y}}}};
+                    child {node {\texttt{y}}}
+                    child {node {\texttt{z}}}};
         \end{tikzpicture}
     \end{block}
 \end{frame}
