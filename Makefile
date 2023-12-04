@@ -1,4 +1,7 @@
-all: main.pdf
+all: lmf.pdf
+
+lmf.pdf: build/main.pdf
+	cp $< $@
 
 # All .tex source files
 override SRC = $(wildcard src/*.tex)
@@ -142,6 +145,7 @@ build/%.pdf: $(IMGDIR)/%.raw src/raw.head src/raw.foot
 	cd build && \
 		$(TEXC) $$(basename $@ .pdf).tex \
 		| $(FILTER)
+	touch $@
 
 build/main.pdf: $(IMG:%=build/%) $(FIGURES:%=build/%.pdf)
 
@@ -153,6 +157,7 @@ build/%.pdf: build/%.tex $(CP) |build
 	cd build && \
 		$(TEXC) $$(basename $< .tex) \
 		| $(FILTER)
+	touch $@
 
 # Easy clean thanks to the separate build directory
 clean:

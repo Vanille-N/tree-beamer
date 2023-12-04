@@ -2,19 +2,19 @@
 %uncomment if require: \path (0,300); %set diagram left start at 0, and has height of 300
 
 %Curve Lines [id:da6583015821983662] 
-\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (180.09,200.07) .. controls (179.29,159.72) and (180.19,159.65) .. (340.09,160.07) ;
+\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (180.09,200.07) .. controls (179.29,159.72) and (180.19,159.65) .. (340.09,160.07) ;
 %Curve Lines [id:da9610303989951854] 
-\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (250.09,200.07) .. controls (249.29,159.72) and (249.19,160.15) .. (340.09,160.07) ;
+\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (250.09,200.07) .. controls (249.29,159.72) and (249.19,160.15) .. (340.09,160.07) ;
 %Curve Lines [id:da47560562928005223] 
-\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (340.09,160.07) .. controls (359.4,160.15) and (360.27,160.22) .. (360.1,198.31) ;
-\draw [shift={(360.09,200.07)}, rotate = 270.29] [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (340.09,160.07) .. controls (359.4,160.15) and (360.27,160.22) .. (360.1,198.31) ;
+\draw [shift={(360.09,200.07)}, rotate = 270.29] [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 %Curve Lines [id:da2796267370722739] 
-\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (320.43,200.13) .. controls (319.63,159.28) and (320.49,160.06) .. (340.09,160.13) ;
+\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ][fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=0 ]   (320.43,200.13) .. controls (319.63,159.28) and (320.49,160.06) .. (340.09,160.13) ;
 %Curve Lines [id:da08275588392642808] 
-\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ]   (190,260) .. controls (210.29,259.58) and (211.03,259.65) .. (210.05,221.76) ;
-\draw [shift={(210,220)}, rotate = 88.48] [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
+\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ]   (190,260) .. controls (210.29,259.58) and (211.03,259.65) .. (210.05,221.76) ;
+\draw [shift={(210,220)}, rotate = 88.48] [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
 %Curve Lines [id:da3721571355235256] 
-\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=1 ]   (170,220.06) .. controls (170.1,260.13) and (169.6,260.31) .. (190,260.06) ;
+\draw [color={rgb, 255:red, 255; green, 255; blue, 255 }  ,draw opacity=0 ]   (170,220.06) .. controls (170.1,260.13) and (169.6,260.31) .. (190,260.06) ;
 %Rounded Rect [id:dp6083418306469913] 
 \draw  [color={rgb, 255:red, 0; green, 0; blue, 0 }  ,draw opacity=1 ] (160,203.94) .. controls (160,201.73) and (161.79,199.94) .. (164,199.94) -- (216,199.94) .. controls (218.21,199.94) and (220,201.73) .. (220,203.94) -- (220,215.94) .. controls (220,218.15) and (218.21,219.94) .. (216,219.94) -- (164,219.94) .. controls (161.79,219.94) and (160,218.15) .. (160,215.94) -- cycle ;
 %Rounded Rect [id:dp8469540711827016] 
