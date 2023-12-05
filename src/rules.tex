@@ -30,25 +30,25 @@
         \item lifetime ended: \texttt{Disabled}.
     \end{itemize}
 
-    \begin{onlyenv}<1>
+    \begin{onlyenv}<2>
         \begin{block}{Child \textover{read}{write}: must allow reading}
         \includegraphics{steps.base.cr.pdf}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<2>
+    \begin{onlyenv}<3>
         \begin{block}{Child write: must allow writing}
         \includegraphics{steps.base.cr+cw.pdf}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<3>
+    \begin{onlyenv}<4>
         \begin{block}{Foreign \textover{read}{write}: no longer unique}
         \includegraphics{steps.base.cr+cw+fr.pdf}
         \end{block}
     \end{onlyenv}
 
-    \begin{onlyenv}<4>
+    \begin{onlyenv}<5>
         \begin{block}{Foreign write: no longer immutable}
         \includegraphics{steps.base.cr+cw+fr+fw.pdf}
         \end{block}
@@ -143,12 +143,6 @@ fn write(x: &mut u64) {
 \begin{frame}[fragile, t]
     \frametitle{Protectors lock permissions}
     \begin{onlyenv}<1>
-        \begin{exampleblock}{Intuition}
-            \texttt{noalias} requires exclusive access during the entire
-            function call, so we remember the set of all functions that have not yet
-            returned and enforce exclusivity for their arguments.
-        \end{exampleblock}
-
         \begin{center}
             \begin{tabular}{|c|c|c|c|c|}
                 \hline
@@ -168,6 +162,13 @@ fn write(x: &mut u64) {
                 \(\approx\): should be UB earlier \\
             \end{tabular}
         \end{center}
+
+        \begin{exampleblock}{Intuition}
+            \texttt{noalias} requires exclusive access during the entire
+            function call, so we remember the set of all functions that have not yet
+            returned and enforce exclusivity for their arguments.
+        \end{exampleblock}
+
 
         Concept adapted from Stacked Borrows: protectors.
         \begin{itemize}

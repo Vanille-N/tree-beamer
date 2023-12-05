@@ -5,45 +5,21 @@
 
 \begin{frame}[fragile, t]
     \frametitle{When are pointers different ?}
-    LLVM and Rust specifications: ``other references/pointers''
-
-    Suggests that two pointers to the same data are ``different''.\\~\\
-
-    \begin{onlyenv}<2>
-        A pointer in our semantics is:
-        \begin{lstlisting}[language=rust]
+    A pointer in our semantics is:
+    \begin{lstlisting}[language=rust]
 struct Pointer {
     address: usize,
     size: usize,
     tag: usize, // <- added specifically for TB/SB
 }
-        \end{lstlisting}~\\
+    \end{lstlisting}~\\
 
-        Two pointers to the same data are not equal for TB/SB
-        if they have different tags.
-    \end{onlyenv}
+    Two pointers to the same data are not equal for TB/SB
+    if they have different tags.
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{A Tree of pointers}
-    \begin{minipage}{0.45\textwidth}
-        \begin{block}{}
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
-            \node at (0,0) {\texttt{x}}
-                child {node {\texttt{y1}}
-                    child {node {\texttt{y2}}}}
-                child[missing] {}
-                child {node {\texttt{z1}, \texttt{z2}}}
-                child {node {\texttt{w1}}
-                    child {node {\texttt{w2}}
-                        child {node {\texttt{w3}}}}};
-            \end{tikzpicture}
-        \end{block}
-    \end{minipage}
-    ~\ ~\
     \begin{minipage}{0.45\textwidth}
         \begin{block}{}
             \begin{lstlisting}[language=rust]
@@ -61,6 +37,24 @@ fn foo(w2: &mut u64) {
 }
 
             \end{lstlisting}
+        \end{block}
+    \end{minipage}
+    ~\ ~\
+    \begin{minipage}{0.45\textwidth}
+        \begin{block}{}
+            \begin{tikzpicture}[
+                every node/.append style = {anchor = west},
+                grow via three points={one child at (0.5,-0.8) and two children at (0.5,-0.8) and (0.5,-1.6)},
+                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}]
+            \node at (0,0) {\texttt{x}}
+                child {node {\texttt{y1}}
+                    child {node {\texttt{y2}}}}
+                child[missing] {}
+                child {node {\texttt{z1}, \texttt{z2}}}
+                child {node {\texttt{w1}}
+                    child {node {\texttt{w2}}
+                        child {node {\texttt{w3}}}}};
+            \end{tikzpicture}
         \end{block}
     \end{minipage}
 \end{frame}
