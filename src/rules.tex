@@ -55,70 +55,92 @@
     \end{onlyenv}
 \end{frame}
 
-\begin{frame}[fragile, t]
-    \frametitle{Example: \texttt{Reserved} in action}
-    \begin{alertblock}{Two-phase borrows}
-        Mutable reborrows in function arguments tolerate shared reborrows
-        until function entry.
-    \end{alertblock}
-
-    \begin{block}{}
-        \begin{minipage}{0.4\textwidth}
-            \begin{lstlisting}[language=rust, escapechar=\@]
-@              @fn main() {
-@\visible<2>{\color{red}>}@    let mut v =
-@\visible<2>{\color{red}>}@        vec![1usize];
-@\visible<3,5>{\color{red}>}@    v.push(
-@\visible<4,5>{\color{red}>}@        v.len()
-@\visible<5>{\color{red}>}@    );
-@              @}
-            \end{lstlisting}
-        \end{minipage}
-        \vline
-        \begin{minipage}{0.40\textwidth}
-            \begin{tikzpicture}[
-                every node/.append style = {anchor = west},
-                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-                ]
-                \node (nv) at (0,0) {\texttt{v:} {\visible<2->{\textover{\texttt{Active}}{}}}}
-                        child {node (nvpush) {\texttt{v\textsubscript{push}:} {\visible<3,4>{\textover{\texttt{Reserved}}{}}}{\visible<5>{\textover{\texttt{Active}}{}}}}}
-                        child {node (nvlen) {\texttt{v\textsubscript{len}:} {\visible<4>{\textover{\texttt{Frozen}}{}}}{\visible<5>{\textover{\texttt{Disabled}}{}}}}}
-                        ;
-
-                \node (vert) at (4,0 |- nv) {};
-                \node at (vert |- nv) {{\visible<3,4>{\(\gets\) reborrow}}};
-                \node<4> at (vert |- nvlen) {\(\gets\) read};
-                \node<5> at (vert |- nvpush) {\(\gets\) write};
-            \end{tikzpicture}~\\~\\
-            \includegraphics<1-2>[width=1.4\textwidth]{mod.base.pdf}
-            \includegraphics<3>[width=1.4\textwidth]{path.base.mut.pdf}
-            \includegraphics<4>[width=1.4\textwidth]{path.base.mut+fr.pdf}
-            \includegraphics<5>[width=1.4\textwidth]{path.base.mut+fr+cw.pdf}
-            {}
-        \end{minipage}
-    \end{block}
-\end{frame}
+%\begin{frame}[fragile, t]
+%    \frametitle{Example: \texttt{Reserved} in action}
+%    \begin{alertblock}{Two-phase borrows}
+%        Mutable reborrows in function arguments tolerate shared reborrows
+%        until function entry.
+%    \end{alertblock}
+%
+%    \begin{block}{}
+%        \begin{minipage}{0.4\textwidth}
+%            \begin{lstlisting}[language=rust, escapechar=\@]
+%@              @fn main() {
+%@\visible<2>{\color{red}>}@    let mut v =
+%@\visible<2>{\color{red}>}@        vec![1usize];
+%@\visible<3,5>{\color{red}>}@    v.push(
+%@\visible<4,5>{\color{red}>}@        v.len()
+%@\visible<5>{\color{red}>}@    );
+%@              @}
+%            \end{lstlisting}
+%        \end{minipage}
+%        \vline
+%        \begin{minipage}{0.40\textwidth}
+%            \begin{tikzpicture}[
+%                every node/.append style = {anchor = west},
+%                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
+%                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+%                ]
+%                \node (nv) at (0,0) {\texttt{v:} {\visible<2->{\textover{\texttt{Active}}{}}}}
+%                        child {node (nvpush) {\texttt{v\textsubscript{push}:} {\visible<3,4>{\textover{\texttt{Reserved}}{}}}{\visible<5>{\textover{\texttt{Active}}{}}}}}
+%                        child {node (nvlen) {\texttt{v\textsubscript{len}:} {\visible<4>{\textover{\texttt{Frozen}}{}}}{\visible<5>{\textover{\texttt{Disabled}}{}}}}}
+%                        ;
+%
+%                \node (vert) at (4,0 |- nv) {};
+%                \node at (vert |- nv) {{\visible<3,4>{\(\gets\) reborrow}}};
+%                \node<4> at (vert |- nvlen) {\(\gets\) read};
+%                \node<5> at (vert |- nvpush) {\(\gets\) write};
+%            \end{tikzpicture}~\\~\\
+%            \includegraphics<1-2>[width=1.4\textwidth]{mod.base.pdf}
+%            \includegraphics<3>[width=1.4\textwidth]{path.base.mut.pdf}
+%            \includegraphics<4>[width=1.4\textwidth]{path.base.mut+fr.pdf}
+%            \includegraphics<5>[width=1.4\textwidth]{path.base.mut+fr+cw.pdf}
+%            {}
+%        \end{minipage}
+%    \end{block}
+%\end{frame}
 
 \subsection{Justifying \texttt{noalias}}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile, t]
     \frametitle{Loss of permissions too early}
     \begin{alertblock}{LLVM \texttt{noalias} (in TB terms)}
-        No foreign access during the same function call as a child write.
+        No foreign access during the same function call as a child access
+        if at least one is a write.
     \end{alertblock}
-    \begin{block}{Previous model: unsound}
-        \begin{lstlisting}[language=rust, escapechar=@]
+    
+    \begin{onlyenv}<1>
+        \begin{center}
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+            1 \(\backslash\) 2 & \(\uparrow\)R & \(\uparrow\)W & \(\downarrow\)R & \(\downarrow\)W \\
+            \hline
+            \(\uparrow\)R &  &  &  & \(\times\) \\
+            \hline
+            \(\uparrow\)W &  &  & \(\times\) & \(\times\) \\
+            \hline
+            \(\downarrow\)R &  & \(\times\) &  &  \\
+            \hline
+            \(\downarrow\)W & \(\times\) & \(\times\) &  &  \\
+            \hline
+        \end{tabular}
+        \end{center}
+    \end{onlyenv}
+
+    \begin{onlyenv}<2>
+        \begin{block}{Previous model: unsound}
+            \begin{lstlisting}[language=rust, escapechar=@]
 fn write(x: &mut u64) {
     *x = 42; // activation
     opaque(/* foreign read for x: noalias violation */);
 }
-        \end{lstlisting}
-    \end{block}
-    \includegraphics[width=0.7\textwidth]{path.base.mut+cw+fr.pdf}
+            \end{lstlisting}
+        \end{block}
+        \includegraphics[width=0.7\textwidth]{path.base.mut+cw+fr.pdf}
+    \end{onlyenv}
 \end{frame}
 
-\begin{frame}[t]
+\begin{frame}[fragile, t]
     \frametitle{Protectors lock permissions}
     \begin{onlyenv}<1>
         \begin{exampleblock}{Intuition}
@@ -127,31 +149,32 @@ fn write(x: &mut u64) {
             returned and enforce exclusivity for their arguments.
         \end{exampleblock}
 
+        \begin{center}
+            \begin{tabular}{|c|c|c|c|c|}
+                \hline
+                1 \(\backslash\) 2 & \(\uparrow\)R & \(\uparrow\)W & \(\downarrow\)R & \(\downarrow\)W \\
+                \hline
+                \(\uparrow\)R &  &  &  & \(\times\) \\
+                \hline
+                \(\uparrow\)W &  &  & \(\approx\) & \(\approx\) \\
+                \hline
+                \(\downarrow\)R &  & \(\times\) &  &  \\
+                \hline
+                \(\downarrow\)W & \(\times\) & \(\times\) &  &  \\
+                \hline
+            \end{tabular}
+            \begin{tabular}{l}
+                \(\times\): should be UB \\
+                \(\approx\): should be UB earlier \\
+            \end{tabular}
+        \end{center}
+
         Concept adapted from Stacked Borrows: protectors.
         \begin{itemize}
             \item references get a protector on function entry
             \item protector lasts until the end of the call
             \item protectors strengthen the guarantees
         \end{itemize}
-
-        \begin{tabular}{|c|c|c|c|c|}
-            \hline
-            \(\downarrow\)1 \(\backslash\) 2 \(\rightarrow\) & \(\uparrow\)R & \(\uparrow\)W & \(\downarrow\)R & \(\downarrow\)W \\
-            \hline
-            \(\uparrow\)R & / & / & / & \(\times\) \\
-            \hline
-            \(\uparrow\)W & / & / & \(\approx\) & \(\approx\) \\
-            \hline
-            \(\downarrow\)R & / & \(\times\) & / & / \\
-            \hline
-            \(\downarrow\)W & \(\times\) & \(\times\) & / & / \\
-            \hline
-        \end{tabular}
-        \begin{tabular}{l}
-            /: not UB \\
-            \(\times\): should be UB \\
-            \(\approx\): should be UB earlier \\
-        \end{tabular}
     \end{onlyenv}
     \includegraphics<2>{blank.prot.pdf}
     \includegraphics<3>{steps.prot.cp.pdf}
@@ -176,27 +199,27 @@ fn write(x: &mut u64) { // with protector
     \includegraphics[width=0.7\textwidth]{path.prot.mut+cw+fr.pdf}
 \end{frame}
 
-\begin{frame}[fragile, t]
-    \frametitle{Why not just...}
-    \begin{block}{...insert an implicit read/write on function exit ?}
-        \begin{lstlisting}[language=rust, escapechar=@]
-fn write(x: &mut u64) { // with protector
-    *x = 42; // activation
-    opaque(/* foreign read for x: noalias violation */);
-    // implicit write through x ?
-}
-        \end{lstlisting}
-    \end{block}
-    \begin{onlyenv}<1>
-        \includegraphics[width=0.7\textwidth]{path.base.mut+cw+fr.pdf}
-    \end{onlyenv}
-    \begin{onlyenv}<2>
-        \begin{itemize}
-            \item what if \texttt{opaque} doesn't terminate ?
-            \item should we insert a read or a write ?
-        \end{itemize}
-    \end{onlyenv}
-\end{frame}
+%\begin{frame}[fragile, t]
+%    \frametitle{Why not just...}
+%    \begin{block}{...insert an implicit read/write on function exit ?}
+%        \begin{lstlisting}[language=rust, escapechar=@]
+%fn write(x: &mut u64) { // with protector
+%    *x = 42; // activation
+%    opaque(/* foreign read for x: noalias violation */);
+%    // implicit write through x ?
+%}
+%        \end{lstlisting}
+%    \end{block}
+%    \begin{onlyenv}<1>
+%        \includegraphics[width=0.7\textwidth]{path.base.mut+cw+fr.pdf}
+%    \end{onlyenv}
+%    \begin{onlyenv}<2>
+%        \begin{itemize}
+%            \item what if \texttt{opaque} doesn't terminate ?
+%            \item should we insert a read or a write ?
+%        \end{itemize}
+%    \end{onlyenv}
+%\end{frame}
 
 
 \subsection*{}

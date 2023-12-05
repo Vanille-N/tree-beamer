@@ -60,19 +60,22 @@
 
     TB also has...
     \begin{itemize}
-        \item tweaked rules for interactions between interior mutability and protectors/\texttt{Reserved}
-        \item performance improvements compared to the naive implementation
+        \item interactions between interior mutability and protectors/\texttt{Reserved}
+        \item performance improvements
             \begin{itemize}
-                \item many tricks to trim tree traversals
+                \item tricks to trim tree traversals
                 \item lazy initialization for out-of-range accesses
             \end{itemize}
-        \item ongoing attempt at formalization in Coq
+        \item formalization in Coq in progress
     \end{itemize}~\\
     \vfill
 
-    Don't hesitate to test your code with Miri and send us your interesting/unexpected cases of UB!\\~\\
+    Don't hesitate to test your code with Miri and send us your
+    interesting/unexpected cases of UB!
+    (\texttt{github:rust-lang/miri}) \\
+    {\color{blue} \texttt{MIRIFLAGS=-Zmiri-tree-borrows cargo +miri miri test}}\\~\\
     \vfill
 
-    \href{https://github.com/Vanille-N/tree-beamer/tree/lmf}{\texttt{github:Vanille-N/tree-beamer/tree/lmf}}\\
+    Slides: \href{https://github.com/Vanille-N/tree-beamer/tree/lmf}{\texttt{github:Vanille-N/tree-beamer/tree/lmf}}\\
     Complementary material: \href{https://perso.crans.org/vanille/treebor}{\texttt{perso.crans.org/vanille/treebor}}\\
 \end{frame}
