@@ -1,6 +1,6 @@
-all: lmf.pdf
+all: etaps.pdf
 
-lmf.pdf: build/main.pdf
+etaps.pdf: build/main.pdf
 	cp $< $@
 
 # All .tex source files
