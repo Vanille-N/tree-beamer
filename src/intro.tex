@@ -6,10 +6,6 @@
 
 % FIXME: explain why the tree is structural; provide intuition why it's also the good structure
 
-\begin{frame}
-    \includegraphics[width=\textwidth]{ecosystem.pdf}
-\end{frame}
-
 \begin{frame}[fragile, t]
     \frametitle{What is Undefined Behavior ?}
 
@@ -42,103 +38,9 @@
             dangerous, only use them if you really know what you are doing.
         \end{block}
         \begin{exampleblock}{\texttt{unsafe}}
-            Already a selling point of Rust: \texttt{unsafe} is explicit.\\
+            A selling point of Rust: \texttt{unsafe} is explicit.\\
             UB can only occur as a result of well-delimited blocks.
         \end{exampleblock}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{Common examples}
-
-    \begin{onlyenv}<1>
-        Unchecked out-of-bounds accesses
-        \begin{block}{Rust}
-            \begin{lstlisting}[language=rust]
-let v = { let x = [0]; unsafe { x.get_unchecked(1) } };
-            \end{lstlisting}
-        \end{block}
-
-        \begin{block}{C}
-            \begin{lstlisting}[language=c]
-int* x = malloc(sizeof(int)); int v = x[1];
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<2>
-        Dereferencing null
-        \begin{block}{Rust}
-            \begin{lstlisting}[language=rust]
-let v = unsafe { *(0 as *const u8) }
-            \end{lstlisting}
-        \end{block}
-
-        \begin{block}{C}
-            \begin{lstlisting}[language=c]
-int v = *(int*)0
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-
-    \begin{onlyenv}<3>
-        Constructing an invalid value
-        \begin{block}{Rust}
-            \begin{lstlisting}[language=rust]
-let x: bool = unsafe { std::mem::transmute(2) };
-            \end{lstlisting}
-        \end{block}
-
-        \begin{block}{C}
-            \begin{lstlisting}[language=c]
-bool x = ((union { int i; bool b }){ .i = 2 }).b;
-            \end{lstlisting}
-        \end{block}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{Pointer types in Rust}
-    \begin{onlyenv}<1>
-        \begin{lstlisting}[language=rust, escapechar=@]
-// Raw pointers (unsafe)
-*const T
-*mut T
-// (*const T @\(\sqsubset\)@ *mut T)
-
-// References (safe)
-&'a T // shared and immutable
-&'a mut T // unique and mutable
-// (&'a T @\(\sqsubset\)@ &'a mut T)
-// ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a T @\(\sqsubset\)@ &'b T)
-// ('a @\(\subset\)@ 'b @\(\Rightarrow\)@ &'a mut T @\(\sqsubset\)@ &'b mut T)
-
-// Wrappers
-UnsafeCell, Box, Unique, ...
-        \end{lstlisting}
-    \end{onlyenv}
-
-    \begin{onlyenv}<2>
-        Just like
-        \begin{lstlisting}[language=rust]
-// x: &mut bool
-*x = 4;
-        \end{lstlisting}
-        is a type error (mismatched types \texttt{bool} and \texttt{u8}),
-        \begin{lstlisting}[language=rust]
-// x: &u8
-*x = 4;
-        \end{lstlisting}
-        is also a type error (\texttt{\&\_} does not support assignment),
-        and so is
-        \begin{lstlisting}[language=rust]
-// n: u8
-let p = (&mut n, &mut n);
-        \end{lstlisting}
-        (impossible to satisfy lifetime constraints).\\
-
-        Mutability and uniqueness are part of the type!\\
-        Can we exploit that?
     \end{onlyenv}
 \end{frame}
 
@@ -188,17 +90,6 @@ fn foo(x: &mut u64) {
     \begin{onlyenv}<3>
     ...which we are going to assume does not happen: violating uniqueness is UB!
     \end{onlyenv}
-\end{frame}
-
-
-\begin{frame}[fragile, t]
-    \frametitle{How much UB is enough ? Too much ?}
-    \vspace{-1em}
-    \begin{figure}
-        \makebox[\textwidth][c]{
-            \includegraphics[width=13cm]{how-much-ub.png}
-        }
-    \end{figure}
 \end{frame}
 
 \begin{frame}[t]

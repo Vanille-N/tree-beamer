@@ -60,24 +60,6 @@ fn foo(w2: &mut u64) {
 \end{frame}
 
 \begin{frame}
-    \frametitle{What's in the tree ?}
-    Each pointer is given a tag~\\~\\
-
-    Tree Borrows tracks:
-    \begin{itemize}
-        \item \textbf{permission}: per tag, per location;
-        \item \textbf{hierarchy} between tags;
-        \item accesses are done through a tag:
-            \begin{itemize}
-                \item \textbf{require permissions} of the tag\\
-                    (UB if the permissions are insufficient)
-                \item \textbf{update permissions} of other tags\\
-                    (UB if the modification is forbidden)
-            \end{itemize}
-    \end{itemize}
-\end{frame}
-
-\begin{frame}
     \frametitle{One pointer, \(2 \times 2\) kinds of accesses}
     \begin{block}{}
         \centering

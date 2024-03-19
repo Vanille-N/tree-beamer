@@ -55,51 +55,6 @@
     \end{onlyenv}
 \end{frame}
 
-%\begin{frame}[fragile, t]
-%    \frametitle{Example: \texttt{Reserved} in action}
-%    \begin{alertblock}{Two-phase borrows}
-%        Mutable reborrows in function arguments tolerate shared reborrows
-%        until function entry.
-%    \end{alertblock}
-%
-%    \begin{block}{}
-%        \begin{minipage}{0.4\textwidth}
-%            \begin{lstlisting}[language=rust, escapechar=\@]
-%@              @fn main() {
-%@\visible<2>{\color{red}>}@    let mut v =
-%@\visible<2>{\color{red}>}@        vec![1usize];
-%@\visible<3,5>{\color{red}>}@    v.push(
-%@\visible<4,5>{\color{red}>}@        v.len()
-%@\visible<5>{\color{red}>}@    );
-%@              @}
-%            \end{lstlisting}
-%        \end{minipage}
-%        \vline
-%        \begin{minipage}{0.40\textwidth}
-%            \begin{tikzpicture}[
-%                every node/.append style = {anchor = west},
-%                grow via three points={one child at (0.3,-0.5) and two children at (0.3,-0.5) and (0.3,-1.0)},
-%                edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
-%                ]
-%                \node (nv) at (0,0) {\texttt{v:} {\visible<2->{\textover{\texttt{Active}}{}}}}
-%                        child {node (nvpush) {\texttt{v\textsubscript{push}:} {\visible<3,4>{\textover{\texttt{Reserved}}{}}}{\visible<5>{\textover{\texttt{Active}}{}}}}}
-%                        child {node (nvlen) {\texttt{v\textsubscript{len}:} {\visible<4>{\textover{\texttt{Frozen}}{}}}{\visible<5>{\textover{\texttt{Disabled}}{}}}}}
-%                        ;
-%
-%                \node (vert) at (4,0 |- nv) {};
-%                \node at (vert |- nv) {{\visible<3,4>{\(\gets\) reborrow}}};
-%                \node<4> at (vert |- nvlen) {\(\gets\) read};
-%                \node<5> at (vert |- nvpush) {\(\gets\) write};
-%            \end{tikzpicture}~\\~\\
-%            \includegraphics<1-2>[width=1.4\textwidth]{mod.base.pdf}
-%            \includegraphics<3>[width=1.4\textwidth]{path.base.mut.pdf}
-%            \includegraphics<4>[width=1.4\textwidth]{path.base.mut+fr.pdf}
-%            \includegraphics<5>[width=1.4\textwidth]{path.base.mut+fr+cw.pdf}
-%            {}
-%        \end{minipage}
-%    \end{block}
-%\end{frame}
-
 \subsection{Justifying \texttt{noalias}}
 
 \begin{frame}[fragile, t]

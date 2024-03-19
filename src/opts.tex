@@ -50,54 +50,6 @@
 \newcommand{\assumepath}[2]{\textover{\visible<#1>{\color{magenta}{#2}}}{}}
 
 \begin{frame}[fragile, t]
-    \frametitle{Swap write-write}
-
-    \begin{onlyenv}<1-3>
-        \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-let y = &mut ...;
-*x = 42; // (optimization: move down ?)
-*y = 19; // is this a foreign write ? @\assumepath{2}{if yes}\assumepath{3}{if not}@
-
-*x = 57;
-            \end{lstlisting}
-        \end{block}%
-        \includegraphics<1>{blank.base.pdf}%
-        \includegraphics<3>{path.base.mut+cw+cw.pdf}%
-        \includegraphics<2>{path.base.mut+cw+fw+cw.pdf}%
-    \end{onlyenv}
-
-    \begin{onlyenv}<4>
-        \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-let y = &mut ...;
-
-*y = 19; // assumed not to be a foreign write
-*x = 42;
-*x = 57;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base.mut+cw+cw.pdf}
-    \end{onlyenv}
-
-    \begin{onlyenv}<5>
-        \begin{block}{{\cmark} Base model}
-            \begin{lstlisting}[language=rust, escapechar=@]
-let x = &mut ...;
-let y = &mut ...;
-
-*y = 19; // assumed not to be a foreign write
-
-*x = 57;
-            \end{lstlisting}
-        \end{block}
-        \includegraphics{path.base.mut+cw.pdf}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
     \frametitle{Insert speculative read}
     \begin{onlyenv}<1-4>
         \begin{block}{{\cmark} Base model}
@@ -241,33 +193,6 @@ copy_nonoverlapping(shr, raw, 1);
                         ;
             \end{tikzpicture}
         \end{onlyenv}
-    \end{onlyenv}
-\end{frame}
-
-\begin{frame}[fragile, t]
-    \frametitle{A more formal approach}
-    \begin{onlyenv}<1>
-        One big invariant:
-        \begin{itemize}
-            \item preserved by any step of the program that does not cause UB
-            \item provides sufficient hypotheses for the optimizations we want
-        \end{itemize}
-    \end{onlyenv}
-    \begin{onlyenv}<2>
-        An excerpt from the invariant for protected activated mutable references:
-        \begin{align*}
-            \forall t \in T, l \in L . 
-            & \exists p, c . (p, t, c) \in \sigma_t.TREES(l). \\
-            & p \ne \textsf{Disabled} \Rightarrow \\
-            & \sigma_s.\textsf{MEM}(l) \sim \sigma_t.\textsf{MEM}(l) \\
-            & \wedge p = \textsf{Active} \\
-            & \wedge \forall t' \in \textsf{Children}_{\sigma_t}(t)\ .\ t'.\textsf{PERM}[l] = \textsf{Disabled} \\
-            & \wedge \forall t' \in \textsf{Parents}_{\sigma_t}(t)\ .\ t'.\textsf{PERM}[l] = \textsf{Active} \\
-            & \wedge \forall t' \in \textsf{Uncles}_{\sigma_t}(t)\ .\ t'.\textsf{PERM}[l] \in \{\textsf{Disabled, Res InMut}\}
-        \end{align*}
-        What happens to this property when we do ... \\
-        \( \qquad \) ...a foreign read ? a foreign write ? a reborrow ? \\
-        What does this allow ? \( \to \) arbitrary child accesses
     \end{onlyenv}
 \end{frame}
 
