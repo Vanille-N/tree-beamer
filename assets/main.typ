@@ -220,124 +220,106 @@
 
 ]
 
+#let state(x, y, name, label) = {
+  let name = name + "-box"
+  draw.rect((x, y), (x+2, y+1), name: name)
+  draw.content(name + ".center", anchor: "center", label)
+}
+
+#let bezier-between-states(start, end, dir) = {
+  let name = "arr-" + start + "-" + end
+  let start = start + "-box"
+  let end = end + "-box"
+  draw.bezier(
+    start + "." + dir,
+    end + ".north",
+    (start + "." + dir, "-|", end + ".north"),
+    mark: (end: ">"),
+    name: name,
+  )
+}
+
+#let straight-down(start, end, dir, label) = {
+  let name = "arr-" + start + "-" + end
+  let start = start + "-box"
+  let end = end + "-box"
+  let sign = if dir == "west" { 1 } else { -1 }
+  draw.line(
+    start + ".south",
+    end + ".north",
+    mark: (end: ">"),
+    name: name,
+  )
+  draw.content(
+    (rel: (sign * 0.2, 0), to: name + ".mid"),
+    anchor: dir,
+    text(fill: gray)[#label]
+  )
+}
+#let self-loop(box, dir, label) = {
+  let name = box + "-loop"
+  let box = box + "-box"
+  let sign = if dir == "east" { 1 } else { -1 }
+  draw.bezier(
+    box + "." + dir,
+    box + "." + dir,
+    (rel: (sign * 1.5, 1.5), to: box + "." + dir),
+    (rel: (sign * 1.5, -1.5), to: box + "." + dir),
+    name: name,
+    mark: (end: ">"),
+  )
+  draw.content(
+    (rel: (sign * 0.2, 0), to: name + ".mid"),
+    anchor: if dir == "east" { "west" } else { "east" },
+    text(fill: gray)[#label]
+  )
+}
+
 #let state-machine-normal = canvas({
-    draw.rect((0,0), (2,1), name: "res-box")
-    draw.content("res-box.center", anchor: "center", `Res`)
+    state(0, 0, "res", `Res`)
+    state(0, -3, "act", `Act`)
+    state(0, -6, "frz", `Frz`)
+    state(3, -9, "dis", `Dis`)
 
-    draw.rect((0,-3), (2,-2), name: "act-box")
-    draw.content("act-box.center", anchor: "center", `Act`)
+    bezier-between-states("res", "dis", "east")
+    bezier-between-states("act", "dis", "east")
+    bezier-between-states("frz", "dis", "east")
+    draw.content(
+      (rel: (0.5, -0.5), to: "arr-res-dis.ctrl-0"),
+      anchor: "center", angle: -45deg,
+      text(fill: gray)[foreign write],
+    )
 
-    draw.rect((0,-6), (2,-5), name: "frz-box")
-    draw.content("frz-box.center", anchor: "center", `Frz`)
+    straight-down("res", "act", "east", [child write])
+    straight-down("act", "frz", "east", [foreign read])
 
-    draw.rect((-1,-9), (-3,-8), name: "dis-box")
-    draw.content("dis-box.center", anchor: "center", `Dis`)
-
-    draw.bezier("res-box.west", "dis-box.north",
-      ("res-box.west", "-|", "dis-box.north"),
-      mark: (end: ">"),
-      name: "arr-res-dis")
-    draw.bezier("act-box.west", "dis-box.north",
-      ("act-box.west", "-|", "dis-box.north"))
-    draw.bezier("frz-box.west", "dis-box.north",
-      ("frz-box.west", "-|", "dis-box.north"))
-
-    draw.line("res-box.south", "act-box.north",
-      mark: (end: ">"),
-      name: "arr-res-act")
-    draw.line("act-box.south", "frz-box.north",
-      mark: (end: ">"),
-      name: "arr-act-frz")
-
-    draw.bezier("res-box.east", "res-box.east",
-      (rel: (1.5, 1.5), to: "res-box.east"),
-      (rel: (1.5, -1.5), to: "res-box.east"),
-      name: "loop-res",
-      mark: (end: ">"))
-
-    draw.bezier("act-box.east", "act-box.east",
-      (rel: (1.5, 1.5), to: "act-box.east"),
-      (rel: (1.5, -1.5), to: "act-box.east"),
-      name: "loop-act",
-      mark: (end: ">"))
-
-    draw.bezier("frz-box.east", "frz-box.east",
-      (rel: (1.5, 1.5), to: "frz-box.east"),
-      (rel: (1.5, -1.5), to: "frz-box.east"),
-      name: "loop-frz",
-      mark: (end: ">"))
-
-    draw.bezier("dis-box.east", "dis-box.east",
-      (rel: (1.5, 1.5), to: "dis-box.east"),
-      (rel: (1.5, -1.5), to: "dis-box.east"),
-      name: "loop-dis",
-      mark: (end: ">"))
-
-    draw.content((rel: (-0.5, 0), to: "arr-res-dis.ctrl-0"), anchor: "center", angle: 45deg, [foreign write])
-    draw.content((rel: (0.2, 0), to: "arr-res-act.mid"), anchor: "west", [child write])
-    draw.content((rel: (0.2, 0), to: "arr-act-frz.mid"), anchor: "west", [foreign read])
-    draw.content((rel: (0.2, 0), to: "loop-res.mid"), anchor: "west", [any read])
-    draw.content((rel: (0.2, 0), to: "loop-act.mid"), anchor: "west", [child any])
-    draw.content((rel: (0.2, 0), to: "loop-frz.mid"), anchor: "west", [any read])
-    draw.content((rel: (0.2, 0), to: "loop-dis.mid"), anchor: "west", [foreign any])
+    self-loop("res", "west", [any read])
+    self-loop("act", "west", [child r/w])
+    self-loop("frz", "west", [any read])
+    self-loop("dis", "west", [foreign r/w])
 })
 
 #let state-machine-protect = canvas({
-    draw.rect((0,0), (2,1), name: "res-box")
-    draw.content("res-box.center", anchor: "center", `Res`)
+    state(0, 0, "res", `Res`)
+    state(0, -3, "act", `Act`)
+    state(0, -6, "frz", `Frz`)
+    state(3, -3, "con", `Con`)
+    draw.rect((3, -9), (5, -8), stroke: none)
 
-    draw.rect((0,-3), (2,-2), name: "act-box")
-    draw.content("act-box.center", anchor: "center", `Act`)
+    bezier-between-states("res", "con", "east")
+    draw.content(
+      (rel: (0.9, -0.5), to: "arr-res-con.ctrl-0"),
+      anchor: "center", angle: -45deg,
+      text(fill: gray)[foreign read],
+    )
 
-    draw.rect((-3, -3), (-1, -2), name: "con-box")
-    draw.content("con-box.center", anchor: "center", `Con`)
+    straight-down("res", "act", "east", [child write])
 
-    draw.rect((0,-6), (2,-5), name: "frz-box")
-    draw.content("frz-box.center", anchor: "center", `Frz`)
-
-    draw.rect((-1,-9), (-3,-8), name: "dis-box", stroke: white)
-
-    draw.bezier("res-box.west", "con-box.north",
-      ("res-box.west", "-|", "con-box.north"),
-      mark: (end: ">"),
-      name: "arr-res-con")
-
-    draw.line("res-box.south", "act-box.north",
-      mark: (end: ">"),
-      name: "arr-res-act")
-
-    draw.bezier("res-box.east", "res-box.east",
-      (rel: (1.5, 1.5), to: "res-box.east"),
-      (rel: (1.5, -1.5), to: "res-box.east"),
-      name: "loop-res",
-      mark: (end: ">"))
-
-    draw.bezier("act-box.east", "act-box.east",
-      (rel: (1.5, 1.5), to: "act-box.east"),
-      (rel: (1.5, -1.5), to: "act-box.east"),
-      name: "loop-act",
-      mark: (end: ">"))
-
-    draw.bezier("frz-box.east", "frz-box.east",
-      (rel: (1.5, 1.5), to: "frz-box.east"),
-      (rel: (1.5, -1.5), to: "frz-box.east"),
-      name: "loop-frz",
-      mark: (end: ">"))
-
-    draw.bezier("con-box.west", "con-box.west",
-      (rel: (-1.5, 1.5), to: "con-box.west"),
-      (rel: (-1.5, -1.5), to: "con-box.west"),
-      name: "loop-con",
-      mark: (end: ">"))
-
-
-    draw.content((rel: (-0.5, 0), to: "arr-res-con.ctrl-0"), anchor: "center", angle: 45deg, [foreign read])
-    draw.content((rel: (0.2, 0), to: "arr-res-act.mid"), anchor: "west", [child write])
-    draw.content((rel: (0.2, 0), to: "loop-res.mid"), anchor: "west", [child read])
-    draw.content((rel: (0.2, 0), to: "loop-act.mid"), anchor: "west", [child any])
-    draw.content((rel: (0.2, 0), to: "loop-frz.mid"), anchor: "west", [any read])
-    draw.content((rel: (-0.2, 0), to: "loop-con.mid"), anchor: "east", [any read])
-  })
+    self-loop("res", "west", [any read])
+    self-loop("act", "west", [child r/w])
+    self-loop("frz", "west", [any read])
+    self-loop("con", "east", [any read])
+})
 
 
 #slide[
