@@ -1,0 +1,72 @@
+mtheme (metropolis), color, clean up template
+(1) author order: Neven, Johannes, Derek, Ralf
+(1) accurate affiliation
+
+1st slide: standard aliasing xor mutability visual
+
+(2) del
+start with concrete example
+(audience knows Rust, yay)
+Slide 4's example is fine, but less text and align the code
+Title "Absence of aliasing allows optimizations"
+It's ok for not all slides to have a title
+
+show context that violates optimization
+It's not the optimization that's wrong, it's the code
+
+-> define exactly why this program is wrong
+-> concrete rules to describe and detect wrong programs
+
+déjà vu ? Stacked Borrows (successor)
+
+(5) too much text but maybe we do want to start with a high level description ?
+every pointer has a tag, and we keep track of where the pointer comes from in a big tree
+  zones self, strict children, parents, cousins
+  introduce the state upfront (sweep initialized under the rug) ?
+    minimum so that we can show the example
+    have a quick reference in the corner (simplified state machine + intuition)
+  
+visual representation
+- 1 location -> put the permission in the tree (after they have been introduced; first only the tag)
+- make the tree center aligned instead of flushed left
+
+go through the example step by step
+  + version that's not rejected
+
+simplify the state machine
+  text on the arrows, combine arrows with same effect
+  reserved implicitly only initial state
+
+example with shared reference then ?
+
+ >o[Res]
+     |  \
+  o[Act] |
+     |  \|
+ >o[Frz] |
+        \|
+       [Dis]
+
+
+Example involving 2-phase borrows
+  if it doesn't compile, write it
+
+{MAYBE
+    Then introduce protectors
+    - motivation for why we need this
+    - how protectors affect the existing permissions
+      (mention some complications (& backup slide):
+       - interior mutable shared reference, raw pointers work the same
+       - interior mutability affects reserved)
+
+     >o[Res]
+         |  \
+      o[Act] [Con]o
+
+     >o[Frz]
+
+    (probably not enough time for conflicted in detail)
+}
+
+Finish with comparison with SB
+- some code example that passes TB but not SB

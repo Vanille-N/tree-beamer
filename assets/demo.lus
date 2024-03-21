@@ -1,0 +1,31 @@
+
+
+
+    -- Picks a random boolean
+    extern node random_bool() returns (b : bool);
+
+    -- Picks a random integer 0 or 1
+    node random_incr() returns (i : int);
+    let
+        i = if random_bool() then 1 else 0;
+    tel;
+
+    -- Computes the cumulative sum of the input
+    node cumulative_sum(n : int) returns (s : int);
+    let
+        s = (0 fby s) + n;
+    tel;
+
+    -- Checks that the input is nondecreasing
+    node nondecreasing(n : int) returns (ok : bool);
+    let
+        ok = true -> (n >= pre n);
+    tel;
+
+    node system() returns ();
+    var s : int;
+    let
+        s = cumulative_sum(random_incr());
+        assert nondecreasing(s);
+    tel;
+
