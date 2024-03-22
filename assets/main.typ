@@ -78,15 +78,15 @@
   #grid(
     columns: (50%, 50%),
   ```rs
-  fn foo(x: &mut u64) {
-      let val = *x;
+  fn foo(y: &mut u64) {
+      let val = *y;
       *x = 42;
       opaque();
-      *x = val;
+      *y = val;
   }
   ```,
   ```rs
-  fn foo(x: &mut u64) {
+  fn foo(y: &mut u64) {
 
 
       opaque();
@@ -150,6 +150,20 @@
     draw.content((), node.content.content)
 }
 
+#let strict_color = blue.darken(10%)
+#let self_color = blue.darken(-50%)
+#let parent_color = red.darken(-50%)
+#let cousin_color = red.darken(10%)
+#let child_color = blue.darken(-20%)
+#let foreign_color = red.darken(-20%)
+#let standard_color_picker(rel) = {
+  if rel == "T" { self_color }
+  else if rel == "S" { strict_color }
+  else if rel == "P" { parent_color }
+  else if rel == "C" { cousin_color }
+  else { none }
+}
+#let standard_color_picker_restrict(r) = (rel) => if rel == r { standard_color_picker(rel) } else { none }
 
 #slide[
   #let structure = ((content: [], rel: "P"),
@@ -179,33 +193,37 @@
         )
       )
 
-  #let child_color = blue.darken(-50%)
-  #let foreign_color = red.darken(20%)
-  #grid(
+    #grid(
     columns: (70%, 30%),
     {
       only(1)[#canvas({
-        tag-tree( (node) => { draw-node-highlight((rel) => if rel == "T" { child_color } else { none }, node) }, structure)
+        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("T"), node) }, structure)
       })]
       only(2)[#canvas({
-        tag-tree( (node) => { draw-node-highlight((rel) => if rel == "S" { child_color } else { none }, node) }, structure)
+        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("S"), node) }, structure)
       })]
       only(3)[#canvas({
-        tag-tree( (node) => { draw-node-highlight((rel) => if rel == "P" { foreign_color } else { none }, node) }, structure)
+        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P"), node) }, structure)
       })]
       only(4)[#canvas({
-        tag-tree( (node) => { draw-node-highlight((rel) => if rel == "C" { foreign_color } else { none }, node) }, structure)
+        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("C"), node) }, structure)
       })]
 
       only(5)[#canvas({
-          tag-tree( (node) => { draw-node-highlight((rel) => if rel == "C" or rel == "P" { foreign_color } else if rel == "T" or rel == "S" { child_color } else { none }, node) }, structure)
+          tag-tree( (node) => { draw-node-highlight(standard_color_picker, node) }, structure)
       })]
 
     },
     [
-      #text(fill: child_color)[self & strict children $->$ children]
+      #only((1,2,5))[
+        #text(fill: self_color)[self] & #text(fill: strict_color)[strict children] \
+        #text(fill: child_color)[$->$ children]
+      ]
 
-      #text(fill: foreign_color)[parents & cousins \ $->$ foreign]
+      #only((3,4,5))[
+        #text(fill: parent_color)[parents] & #text(fill: cousin_color)[cousins] \
+        #text(fill: foreign_color)[$->$ foreign]
+      ]
     ]
 )
 ]
@@ -329,5 +347,135 @@
     [*Protected*],
     state-machine-normal,
     state-machine-protect,
+  )
+]
+
+#slide[
+  #grid(
+    columns: (30%, 40%, 20%),
+    scale(80%)[
+    #only(1)[```rs
+      static mut X = 0;
+      ```
+    ]
+    #only(2)[```rs
+      static mut X = 0;
+      let y = &mut X;
+      ```
+    ]
+    #only(3)[```rs
+      static mut X = 0;
+      let y = &mut X;
+      let val = *y;
+      ```
+    ]
+    #only(4)[```rs
+      static mut X = 0;
+      let y = &mut X;
+      let val = *y;
+      *y = 42;
+      ```
+    ]
+    #only(5)[```rs
+      static mut X = 0;
+      let y = &mut X;
+      let val = *y;
+      *y = 42;
+      print!(X);
+      ```
+    ]
+    #only(6)[```rs
+      static mut X = 0;
+      let y = &mut X;
+      let val = *y;
+      *y = 42;
+      print!(X);
+      *y = val;
+      ```
+    ]
+    ],
+
+    [
+      #only(1)[#canvas({
+        tag-tree((node) => draw-node-highlight((rel) => none, node),
+          (
+            (content: [`X`], rel: ""),
+          )
+        )
+      })]
+      #only(2)[#canvas({
+        tag-tree((node) => draw-node-highlight((rel) => none, node),
+          (
+            (content: [`X`], rel: ""),
+              (content: [`y`], rel: ""),
+          )
+        )
+      })]
+      #only(3)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`X`], rel: "S"),
+              (content: [`y`], rel: "T"),
+          )
+        )
+      })]
+      #only(4)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`X`], rel: "S"),
+              (content: [`y`], rel: "T"),
+          )
+        )
+      })]
+      #only(5)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`X`], rel: "T"),
+              (content: [`y`], rel: "C"),
+          )
+        )
+      })]
+      #only(6)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`X`], rel: "S"),
+              (content: [`y`], rel: "T"),
+          )
+        )
+      })]
+
+      #only(1)[```
+      Alloc
+        X: Active (new)
+
+      ```]
+      #only(2)[```
+      Retag X -> y
+        X: Active
+        y: Reserved (new)
+      ```]
+      #only(3)[```
+      Read y
+        X: Active
+        y: Reserved
+      ```]
+      #only(4)[```
+      Write y
+        X: Active
+        y: Active (Res -> Act)
+      ```]
+      #only(5)[```
+      Read X
+        X: Active
+        y: Frozen (Act -> Frz)
+      ```]
+      #only(6)[```
+      Write y
+        X: Active
+        y: UB (Frz -> _)
+      ```]
+    ],
+
+    scale(70%)[#state-machine-normal]
   )
 ]
