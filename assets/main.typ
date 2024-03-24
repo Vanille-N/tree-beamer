@@ -922,14 +922,185 @@
 
 #slide[
   #grid(
-    columns: (50%, 50%),
-    ```rs
-    let mut x = 0u64;
-    let y = &mut x;
-    let z = y as *mut u64;
-    *y = 15;
-    *z = 42;
-    *x = 0;
-    ```,
+    columns: (5%, 60%, 25%),
+    [],
+    [
+      #text(size: 19pt)[
+        #alternatives[```rs
+          let mut x = 0u64;
+          let y = &mut x;
+          let z = y as *mut u64;
+          *y = 15;
+          *z = 42;
+          *x = 0;
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+
+
+
+
+
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = &mut x;
+
+
+
+
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = &mut x;
+          let z = y as *mut u64;
+
+
+
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = &mut x;
+          let z = y as *mut u64;
+          *y = 15;
+
+
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = &mut x;
+          let z = y as *mut u64;
+          *y = 15;
+          *z = 42;
+
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = &mut x;
+          let z = y as *mut u64;
+          *y = 15;
+          *z = 42;
+          *x = 0;
+
+          ```
+        ]
+      ]
+      #align(left)[#alternatives[][][][][][][#Accepted]]
+
+      #let current-state(anchor, content) = {
+        let content = text(size: 16pt)[#content]
+        draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
+      }
+      #let accessed-tag(anchor, content) = {
+        let content = text(size: 13pt)[#content]
+        draw.content((rel: (-2.5, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.line((rel: (-2.5, -0.1), to: "tags." + anchor),
+                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
+      }
+      #let transition-summary(anchor, content, ..style) = {
+        let text-color = style.named().at("text-color", default: gray)
+        let content = text(fill: text-color, size: 11pt)[#content]
+        draw.content((rel: (0.85, 0.2), to: "tags." + anchor), anchor: "south-west")[#content]
+      }
+
+      #let bounding-box = draw.rect((rel: (-6, -3), to: "tags.0"), (rel: (6, 1), to: "tags.0"), stroke: none)
+
+      #scale(130%)[
+      #alternatives[
+      ][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+          ),
+          spread: 6,
+          grow: 2,
+        )
+        current-state("0")[`Active`]
+        accessed-tag("0")[Alloc]
+        transition-summary("0", text-color: alloc_color)[`new`]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+              (content: [`y`], rel: ""),
+          ),
+          spread: 6,
+          grow: 2,
+        )
+        current-state("0")[`Active`]
+        current-state("0-0")[`Reserved`]
+        accessed-tag("0-0")[Retag]
+        transition-summary("0", text-color: child_color)[`noop`]
+        transition-summary("0-0", text-color: alloc_color)[`new`]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+              (content: [`y`,`z`], rel: ""),
+          ),
+          spread: 6,
+          grow: 2,
+        )
+        current-state("0")[`Active`]
+        current-state("0-0")[`Reserved`]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+              (content: [`y`,`z`], rel: ""),
+          ),
+          spread: 6,
+          grow: 2,
+        )
+        current-state("0")[`Active`]
+        current-state("0-0")[`Active`]
+        accessed-tag("0-0")[Write]
+        transition-summary("0", text-color: child_color)[`noop`]
+        transition-summary("0-0", text-color: child_color)[`Res -> Act`]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+              (content: [`y`,`z`], rel: ""),
+          ),
+          spread: 6,
+          grow: 2,
+        )
+        current-state("0")[`Active`]
+        current-state("0-0")[`Active`]
+        accessed-tag("0-0")[Write]
+        transition-summary("0", text-color: child_color)[`noop`]
+        transition-summary("0-0", text-color: child_color)[`noop`]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+              (content: [`y`,`z`], rel: ""),
+          ),
+          spread: 6,
+          grow: 2,
+        )
+        current-state("0")[`Active`]
+        current-state("0-0")[`Disabled`]
+        accessed-tag("0")[Write]
+        transition-summary("0", text-color: child_color)[`noop`]
+        transition-summary("0-0", text-color: foreign_color)[`Act -> Dis`]
+        bounding-box
+      })]]
+    ]
+   ],
+   only((2,3,4,5,6,7))[#scale(70%)[#state-machine-normal]],
   )
 ]
+
