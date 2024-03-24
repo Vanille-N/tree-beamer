@@ -16,42 +16,21 @@ Related:
 
 ## Pre-rendered PDF
 
-A precompiled PDF is not yet available for this branch.
-It will soon be on [my homepage](https://perso.crans.org/vanille/share/satge/arpe).
+A precompiled PDF for this branch can be found on
+[my homepage](https://perso.crans.org/vanille/share/satge/arpe/etaps.pdf).
 
 ## Building the beamer from source
 
 You can clone this repository and compile from source to have the latest version.
 Requires:
-- `latexmk` (tested 2023-05-27 with version 4.79)
-- `pdflatex` (tested 2023-05-27 with version 3.141592653-2.6-1.40.25)
+- `typst` (0.10.0, tested 2024-03-24)
 
-From the root directory, execute `$ make`.
+From the root directory, execute `$ ./run.sh compile`.
 
-Source files will be fetched from `src/` into `build/`, compiled locally
-inside `build/`, and the beamer `main.pdf` will be moved back to the root directory.
-To delete all build artifacts, run either `$ rm -rf build/` or `$ make clean`.
-See `Makefile` for details.
+Source files will be fetched from `assets/` and compiled into `build/`.
+The resulting pdf is `build/main.pdf`.
 
 If anything fails to compile, feel free to open an issue.
-
-## Running the code examples shown in the talk
-
-All code snippets are in `examples/`, with documentation and miri integration.
-See details in the folder's README.
-
-## Contents
-
-- Figures and graphs are in `img/`.
-- LaTeX sources for the slides in `src/`
-    * `main.tex` is the root file,
-    * `head-*` are header files,
-    * `rustlistings.sty` is a syntax highlighter for Rust code listings provided by Ralf Jung
-    * actual contents of the presentation are in `intro.tex`, `structure.tex`,
-      `rules.tex`, `opts.tex`, `evaluation.tex`.
-- Executable examples in `examples/`
-    * `demo/rw-elim` illustrates the example executed during the talk.
-    * for other examples see the `examples/README.md`
 
 
 ## Related resources
