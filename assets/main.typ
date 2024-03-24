@@ -343,7 +343,7 @@
   )
 }
 
-#let state-machine-normal = canvas({
+#let state-machine-normal = {
     state(0, 0, "res", `Res`)
     state(0, -3, "act", `Act`)
     state(0, -6, "frz", `Frz`)
@@ -365,39 +365,118 @@
     self-loop("act", "west", [child r/w], text-color: child_color)
     self-loop("frz", "west", [any read], text-color: mixed_color)
     self-loop("dis", "west", [foreign r/w], text-color: foreign_color)
-})
+}
 
-#let state-machine-protect = canvas({
+#let state-machine-protect = {
     state(0, 0, "res", `Res`)
     state(0, -3, "act", `Act`)
     state(0, -6, "frz", `Frz`)
-    state(3, -3, "con", `Con`)
+    state(3, -1, "con", `Con`)
     draw.rect((3, -9), (5, -8), stroke: none)
 
     bezier-between-states("res", "con", "east")
     draw.content(
-      (rel: (0.9, -0.5), to: "arr-res-con.ctrl-0"),
-      anchor: "center", angle: -45deg,
+      (rel: (0.9, 0.7), to: "arr-res-con.ctrl-0"),
+      anchor: "center", angle: -10deg,
       text(fill: foreign_color)[foreign read],
     )
 
     straight-down("res", "act", "east", [child write], text-color: child_color)
 
-    self-loop("res", "west", [any read], text-color: mixed_color)
+    self-loop("res", "west", [child read], text-color: child_color)
     self-loop("act", "west", [child r/w], text-color: child_color)
     self-loop("frz", "west", [any read], text-color: mixed_color)
     self-loop("con", "east", [any read], text-color: mixed_color)
-})
+}
 
 
 #slide[
-  #grid(
-    columns: (45%, 50%),
-    [*Default*],
-    [*Protected*],
-    state-machine-normal,
-    state-machine-protect,
-  )
+  #align(right)[
+    #let marker(to, ldist) = {
+      draw.line(
+        (rel: (-ldist - 1, 0), to: to + "-box.west"),
+        (rel: (-ldist, 0), to: to + "-box.west"),
+        mark: (end: "o"),
+        name: to + "-line",
+      )
+    }
+    #let rel-to-line(to, rel, anchor) = {
+      (rel: rel, to: to + "-line." + anchor)
+    }
+    #let bounding-box = {
+      draw.rect((rel: (5, 2), to: "res-box.center"), (rel: (-22, -10), to: "res-box.center"), stroke: none)
+    }
+    #alternatives[
+      #canvas({
+        state-machine-normal
+        bounding-box
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("res", 5)
+        marker("act", 5)
+        draw.content(rel-to-line("res", (-0.5, 0), "start"), anchor: "east")[`&mut` not yet written to]
+        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[`&mut` already written]
+        draw.line(
+          rel-to-line("res", (-0.1, -0.5), "start"),
+          rel-to-line("act", (-0.1, 0.5), "start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[write to it]
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("act", 5)
+        marker("frz", 5)
+        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[exclusive access]
+        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
+        draw.line(
+          rel-to-line("act", (-0.1, -0.5), "start"),
+          rel-to-line("frz", (-0.1, 0.5), "start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains access]
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("frz", 5)
+        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
+        draw.bezier(
+          (rel: (-0.1, -0.5), to: "frz-line.start"),
+          (rel: (0.1, -0.5), to: "frz-line.start"),
+          (rel: (-1.5, -2.5), to: "frz-line.start"),
+          (rel: (1.5, -2.5), to: "frz-line.start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[any read-only operation]
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("frz", 5)
+        marker("dis", 8)
+        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
+        draw.content(rel-to-line("dis", (-0.5, 0), "start"), anchor: "east")[no access]
+        draw.line(
+          rel-to-line("frz", (-0.1, -0.5), "start"),
+          rel-to-line("dis", (-0.1, 0.5), "start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains exclusive access]
+      })
+    ]
+  ]
 ]
 
 #focus-slide[
@@ -953,6 +1032,7 @@
           ```
         ][```rs
           let mut x = 0u64;
+
 
 
 
