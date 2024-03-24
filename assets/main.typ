@@ -647,7 +647,7 @@
       })]]]
      ],
 
-     only((2,3,4,5,6,7))[#scale(90%)[#state-machine-normal]],
+     only((2,3,4,5,6,7))[#scale(90%)[#canvas({state-machine-normal})]],
   )
 ]
 
@@ -770,7 +770,7 @@
       })]]]
      ],
 
-     only((2,3,4,5))[#scale(90%)[#state-machine-normal]]
+     only((2,3,4,5))[#scale(90%)[#canvas({state-machine-normal})]]
   )
 ]
 
@@ -1006,7 +1006,7 @@
       })]]
      ]
    ],
-   only((2,3,4,5,6,7,8))[#scale(70%)[#state-machine-normal]],
+   only((2,3,4,5,6,7,8))[#scale(70%)[#canvas({state-machine-normal})]],
   )
 ]
 
@@ -1225,7 +1225,7 @@
       })]]
     ]
    ],
-   only((2,3,4,5,6,7,8))[#scale(70%)[#state-machine-normal]],
+   only((2,3,4,5,6,7,8))[#scale(70%)[#canvas({state-machine-normal})]],
   )
 ]
 
