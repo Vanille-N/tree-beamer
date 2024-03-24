@@ -1128,10 +1128,51 @@
         transition-summary("0", text-color: child_color)[`noop`]
         transition-summary("0-0", text-color: foreign_color)[`Act -> Dis`]
         bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+              (content: [`y`,`z`], rel: ""),
+          ),
+          spread: 6,
+          grow: 2,
+        )
+        current-state("0")[`Active`]
+        accessed-tag("0-0")[Write $arrow.zigzag$]
+        transition-summary("0", text-color: child_color)[`noop`]
+        transition-summary("0-0", text-color: foreign_color)[`Dis ->`]
+        bounding-box
       })]]
     ]
    ],
    only((2,3,4,5,6,7,8))[#scale(70%)[#state-machine-normal]],
   )
 ]
+
+#focus-slide[
+  = Conclusion
+]
+
+#slide[
+  #align(horizon)[
+    - fine-grained 2-phase borrows
+    - interior mutability supported
+    - some common patterns that were forbidden by Stacked Borrows are now allowed
+    #v(2em)
+    Learn more: #link("https://perso.crans.org/vanille/treebor/")[`https://perso.crans.org/vanille/treebor/`]
+    - stronger guarantees for function arguments
+    - more lenient with out-of-bounds accesses
+  ]
+]
+
+#slide[
+  #grid(
+    columns: (45%, 50%),
+    [*Default*],
+    [*Protected*],
+    canvas({state-machine-normal}),
+    canvas({state-machine-protect}),
+  )
+]
+
 
