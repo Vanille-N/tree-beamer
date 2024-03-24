@@ -2,10 +2,11 @@
 
 SOURCE=assets/main.typ
 TARGET=build/main.pdf
+FONTS=fonts
 
 pdfview() { zathura "$1"; }
 terminal() { alacritty --command "$@"; }
-typstc() { typst $1 "$SOURCE" "$TARGET"; }
+typstc() { typst $1 "$SOURCE" "$TARGET" --font-path "$FONTS"; }
 
 print_help() {
     echo "USAGE:"

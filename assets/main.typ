@@ -915,3 +915,21 @@
    only((2,3,4,5,6,7,8))[#scale(70%)[#state-machine-normal]],
   )
 ]
+
+#focus-slide[
+  = Shared mutability
+]
+
+#slide[
+  #grid(
+    columns: (50%, 50%),
+    ```rs
+    let mut x = 0u64;
+    let y = &mut x;
+    let z = y as *mut u64;
+    *y = 15;
+    *z = 42;
+    *x = 0;
+    ```,
+  )
+]
