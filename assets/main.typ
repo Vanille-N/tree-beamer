@@ -3,9 +3,7 @@
 
 #import themes.simple: *
 
-#set text(
-  font: "Inria Sans"
-)
+#set text(font: "Inria Sans")
 #show raw: text.with(font: "JetBrains Mono")
 
 #show: simple-theme.with(
@@ -43,16 +41,16 @@
 ]
 
 #slide[
-  == Absence of aliasing allows optimizations
+  == Absence of aliasing + mutability allows optimizations
 
   #grid(
-    columns: (50%, 50%),
+    columns: (60%, 40%),
   ```rs
   // Example 1
   fn foo(x: &mut u64) {
       let val = *x;
-      *x = 42;
-      opaque();
+      *x = 42; // overwritten
+      opaque(); // no interference
       *x = val;
   }
   ```,
@@ -71,7 +69,7 @@
 #slide[
   #only(1)[
     ```rs
-    // Context 1
+    // Client 1
     static mut X: u64 = 0;
     fn opaque() { println!("{}", unsafe { X }); }
     fn main() { foo(unsafe { &mut X }); }
@@ -207,6 +205,10 @@
 }
 #let standard_color_picker_restrict(r) = (rel) => if rel == r { standard_color_picker(rel) } else { none }
 
+#focus-slide[
+  = Tracking relationships
+]
+
 #slide[
   #let structure = ((content: [], rel: "P"),
         ((content: [], rel: "P"),
@@ -268,6 +270,10 @@
       ]
     ]
 )
+]
+
+#focus-slide[
+  = State machine
 ]
 
 #slide[
@@ -409,6 +415,15 @@
       #scale(80%)[
         #alternatives[```rs
           static mut X = 0;
+          let y = &mut X;
+          let val = *y;
+          *y = 42;
+          print!(X);
+          *y = val;
+
+          ```
+        ][```rs
+          static mut X = 0;
 
 
 
@@ -464,7 +479,7 @@
         ]
       ]
 
-      #align(left)[#alternatives[][][][][][#Rejected]]
+      #align(left)[#alternatives[][][][][][][#Rejected]]
 
       #let current-state(anchor, content) = {
         draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
@@ -481,7 +496,7 @@
       }
 
       #scale(130%)[
-      #alternatives[#align(top + right)[#canvas({
+      #alternatives[][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight((rel) => none, node),
           (
             (content: [`X`], rel: ""),
@@ -553,7 +568,7 @@
       })]]]
      ],
 
-    scale(90%)[#state-machine-normal],
+     only((2,3,4,5,6,7))[#scale(90%)[#state-machine-normal]],
   )
 ]
 
@@ -756,7 +771,7 @@
           let y = &mut x;
           let z = &x;
           read_only(z);
-          mutate(x);
+          mutate(y);
 
 
           ```
@@ -766,7 +781,7 @@
           let y = &mut x;
           let z = &x;
           read_only(z);
-          mutate(x);
+          mutate(y);
           read_only(z);
 
           ```
@@ -917,7 +932,7 @@
 ]
 
 #focus-slide[
-  = Shared mutability
+  = Interior mutability
 ]
 
 #slide[
@@ -928,25 +943,17 @@
       #text(size: 19pt)[
         #alternatives[```rs
           let mut x = 0u64;
-          let y = &mut x;
-          let z = y as *mut u64;
-          *y = 15;
-          *z = 42;
-          *x = 0;
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-
-
-
-
+          let y = Cell::from_mut(&mut x);
+          let z = &*y;
+          y.set(15);
+          z.set(42);
+          x = 0;
 
 
           ```
         ][```rs
           let mut x = 0u64;
-          let y = &mut x;
+
 
 
 
@@ -955,8 +962,19 @@
           ```
         ][```rs
           let mut x = 0u64;
-          let y = &mut x;
-          let z = y as *mut u64;
+          let y = Cell::from_mut(&mut x);
+
+
+
+
+
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = Cell::from_mut(&mut x);
+          let z = &*y;
+
 
 
 
@@ -964,34 +982,47 @@
           ```
         ][```rs
           let mut x = 0u64;
-          let y = &mut x;
-          let z = y as *mut u64;
-          *y = 15;
+          let y = Cell::from_mut(&mut x);
+          let z = &*y;
+          y.set(15);
+
+
+
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = Cell::from_mut(&mut x);
+          let z = &*y;
+          y.set(15);
+          z.set(42);
 
 
 
           ```
         ][```rs
           let mut x = 0u64;
-          let y = &mut x;
-          let z = y as *mut u64;
-          *y = 15;
-          *z = 42;
+          let y = Cell::from_mut(&mut x);
+          let z = &*y;
+          y.set(15);
+          z.set(42);
+          x = 0;
 
 
           ```
         ][```rs
           let mut x = 0u64;
-          let y = &mut x;
-          let z = y as *mut u64;
-          *y = 15;
-          *z = 42;
-          *x = 0;
+          let y = Cell::from_mut(&mut x);
+          let z = &*y;
+          y.set(15);
+          z.set(42);
+          x = 0;
+          y.set(15);
 
           ```
         ]
       ]
-      #align(left)[#alternatives[][][][][][][#Accepted]]
+      #align(left)[#alternatives[][][][][][][#Accepted][#Rejected]]
 
       #let current-state(anchor, content) = {
         let content = text(size: 16pt)[#content]
@@ -1100,7 +1131,7 @@
       })]]
     ]
    ],
-   only((2,3,4,5,6,7))[#scale(70%)[#state-machine-normal]],
+   only((2,3,4,5,6,7,8))[#scale(70%)[#state-machine-normal]],
   )
 ]
 
