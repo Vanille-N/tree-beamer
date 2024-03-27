@@ -17,6 +17,10 @@
 )
 
 #show heading.where(level: 2): it => [
+  #set text(fill: aqua.darken(30%))
+  #it
+]
+#show heading.where(level: 3): it => [
   #set text(fill: aqua.darken(50%))
   #it
 ]
@@ -24,7 +28,7 @@
 #title-slide[
   = Tree Borrows
 
-  Neven Villani #footnote[ENS Paris-Saclay] <ens>,
+  Neven Villani #footnote[ENS Paris-Saclay, Université Paris-Saclay] <ens>,
   Johannes Hostert #footnote[ETH Zürich] <eth>,
   Derek Dreyer #footnote[MPI-SWS Saarbrücken] <mpi>,
   Ralf Jung @eth
@@ -37,7 +41,24 @@
 ]
 
 #slide[
-  Placeholder: aliasing xor mutability visual
+  == Strong guarantees for references
+
+  #align(center)[
+    #canvas({
+      draw.circle((0, 0), radius: 2.5, stroke: (paint: red, thickness: 5pt), name: "circ")
+      draw.line("circ.south-west", "circ.north-east", stroke: (paint: red, thickness: 5pt))
+      draw.content((0, 0))[
+        #align(center)[
+        aliasing \
+          & \
+        mutability
+      ]]
+    })
+  ]
+
+  ```rs &mut``` $->$ mutation, no aliasing
+
+  ```rs &``` $->$ aliasing, no mutation #footnote[for non-interior-mutable types]
 ]
 
 #slide[
@@ -45,25 +66,28 @@
 
   #grid(
     columns: (60%, 40%),
-  ```rs
-  // Example 1
-  fn foo(x: &mut u64) {
-      let val = *x;
-      *x = 42; // overwritten
-      opaque(); // no interference
-      *x = val;
-  }
-  ```,
-  ```rs
-  // Example 1 (optimized)
-  fn foo(x: &mut u64) {
+    ```rs
+    // Example 1
+    fn foo(x: &mut u64) {
+        let val = *x;
+        *x = 42; // overwritten
+        opaque(); // no interference
+        *x = val;
+    }
+    ```,
+    ```rs
+    // Example 1 (optimized)
+    fn foo(x: &mut u64) {
 
 
-      opaque();
+        opaque();
 
-  }
-  ```
+    }
+    ```
   )
+
+  #pause
+  But what about ```rs unsafe``` ?
 ]
 
 #slide[
@@ -79,85 +103,128 @@
 
     #grid(
       columns: (50%, 50%),
-    ```rs
-    // Example 1
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
-        opaque();
-        *y = val;
-    }
-    ```,
-    ```rs
-    // Example 1 (optimized)
-    fn foo(y: &mut u64) {
+      ```rs
+      // Example 1
+      fn foo(y: &mut u64) {
+          let val = *y;
+          *y = 42;
+          opaque();
+          *y = val;
+      }
+      ```,
+      ```rs
+      // Example 1 (optimized)
+      fn foo(y: &mut u64) {
 
 
-        opaque();
+          opaque();
 
-    }
-    ```,
+      }
+      ```,
     )
   ]
-  #only(2)[
-    #grid(
-      columns: (50%, 50%),
-    ```rs
-    // Example 1 (inlined)
-    static mut X = 0;
-    let y = &mut X;
-    let val = *y;
-    *y = 42;
-    print!(X);
-    *y = val;
-    ```,
-    ```rs
-    // Example 1 (opt, inlined)
-    static mut X = 0;
-    let y = &mut X;
+  #only((2,3))[
+    #text(size: 14pt)[(This code doesn't actually compile.
+    We could add raw pointer casts to confuse the borrow checker so that it does)]
+    #text(size: 23pt)[
+      #grid(
+        columns: (50%, 50%),
+        ```rs
+        // Example 1 (inlined)
+        static mut X = 0;
+        let y = &mut X;
+        let val = *y;
+        *y = 42;
+        print!(X);
+        *y = val;
+        ```,
+        ```rs
+        // Example 1 (opt, inlined)
+        static mut X = 0;
+        let y = &mut X;
 
 
-    print!(X);
+        print!(X);
 
-    ```,
-    ```
-
-
-    > 42
-    ```,
-    ```
+        ```,
+        ```
 
 
-    > 0
-    ```
+        > 42
+        ```,
+        ```
 
-    )
+
+        > 0
+        ```
+      )
+    ]
+  ]
+  #only(3)[
+    #align(center)[
+      #box(fill: color.mix(red.darken(-40%), gray).darken(-60%), inset: 12pt, radius: 12pt)[
+        #align(left)[
+          Optimization changes observable behavior... \
+          is the optimization incorrect ?
+        ]
+      ]
+    ]
   ]
 ]
 
 #slide[
   == It's not the optimization that is wrong, it's the code
 
-  Tree Borrows states rules that code must obey.
+  Tree Borrows adds proof obligations to ```rs unsafe``` blocks.
 
-  Code that violates these rules is excluded from the proof of correctness of optimizations.
+  Code that violates these rules is declared *Undefined Behavior*
+  and ruled out from the proof of correctness of optimizations.
 
+  #pause
+  #align(center)[
+    #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
+      #align(left)[
+        === Sounds familiar ?
 
-  === Sounds familiar ?
-
-  Stacked Borrows has the same purpose, and Tree Borrows is its successor.
+        *Stacked Borrows* has the same purpose, \
+        Tree Borrows is its successor.
+      ]
+    ]
+  ]
 ]
 
 #slide[
-  === Track provenance of pointers
+  === Aliasing model
+  - defines which pointers are valid, for which ranges of memory, and in which order they can be accessed
+  - *dynamic check* of uniqueness of ```rs &mut``` and immutability of ```rs &```
 
+  #pause
+
+  === Design constraints
+  - strict enough that interesting *optimizations* are possible
+  - permissive enough that *existing libraries* are correct \
+    $->$ more permissive than Stacked Borrows
+]
+
+#slide[
+  == Key design elements
+  #v(-1.2em)
+
+  === Per-location
+  - *disjoint* accesses do not interfere
+  - valid range of memory is *dynamic*
+
+  #pause
+
+  === Track provenance of pointers
   - each pointer gets an *identifier* on creation, its "tag"
   - we use a *tree* to keep track of the relationships between tags
 
-  === Track permissions of pointers
+  #pause
 
+  === Track permissions of pointers
   - each tag is associated with a *state* that represents its permission
-  - memory accesses *update* permissions based on the tag relationships
+  - accesses *update* permissions based on tag relationships
 ]
 
 #let tag-tree(draw-node, data, ..style) = {
@@ -203,7 +270,7 @@
   else if rel == "C" { cousin_color }
   else { none }
 }
-#let standard_color_picker_restrict(r) = (rel) => if rel == r { standard_color_picker(rel) } else { none }
+#let standard_color_picker_restrict(..r) = (rel) => if rel in r.pos() { standard_color_picker(rel) } else { none }
 
 #focus-slide[
   = Tracking relationships
@@ -247,26 +314,73 @@
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("S"), node) }, structure)
       })]
       only(3)[#canvas({
-        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P"), node) }, structure)
+        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("T", "S"), node) }, structure)
       })]
       only(4)[#canvas({
+        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P"), node) }, structure)
+      })]
+      only(5)[#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("C"), node) }, structure)
       })]
+      only(6)[#canvas({
+        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P", "C"), node) }, structure)
+      })]
 
-      only(5)[#canvas({
+
+      only(7)[#canvas({
           tag-tree( (node) => { draw-node-highlight(standard_color_picker, node) }, structure)
       })]
+      only(8)[#canvas({
+          tag-tree( (node) => { draw-node-highlight((rel) => if rel == "H" { alloc_color } else { none }, node) },
+          ((content: [], rel: ""),
+            ((content: [], rel: ""),
+              ((content: [], rel:  ""),
+               (content: [],  rel: ""),
+               ((content: [], rel:  ""),
+                (content: [], rel:  "")
+               ),
+               (content: [], rel:  "")
+              ),
+              ((content: [self], rel:  ""),
+               (content: [], rel:  ""),
+               ((content: [], rel:  ""),
+                ((content: [], rel:  ""),
+                 (content: [], rel:  "")
+                 )
+                ),
+                (content: [new], rel: "H"),
+               )
+            ),
+            ((content: [], rel:  ""),
+              (content: [], rel:  ""),
+              ((content: [], rel:  ""),
+               (content: [], rel:  ""),
+               (content: [], rel:  "")
+              )
+            )
+          )
+        )
+      })]
+
 
     },
     [
-      #only((1,2,5))[
+      #only((1,2,3,7))[
         #text(fill: self_color)[self] & #text(fill: strict_color)[strict children] \
         #text(fill: child_color)[$->$ children]
       ]
 
-      #only((3,4,5))[
+      #only((4,5,6,7))[
         #text(fill: parent_color)[parents] & #text(fill: cousin_color)[cousins] \
         #text(fill: foreign_color)[$->$ foreign]
+      ]
+
+      #only(8)[
+        #align(center)[
+          #text(fill: alloc_color)[reborrows] \
+          create \
+          #text(fill: child_color)[children]
+        ]
       ]
     ]
 )
@@ -278,6 +392,10 @@
 
 #slide[
   == Per-location permission
+
+  After creation each pointer experiences a sequence of \
+  child/foreign read/write accesses and gains/loses permissions \
+  in consequence
 
   - `Reserved` #sym.approx mutable reference (not yet written to)
   - `Active` #sym.approx mutable reference
@@ -647,7 +765,7 @@
       })]]]
      ],
 
-     only((2,3,4,5,6,7))[#scale(90%)[#canvas({state-machine-normal})]],
+     only((2,3,4,5,6,7))[#scale(70%)[#canvas({state-machine-normal})]],
   )
 ]
 
@@ -770,8 +888,11 @@
       })]]]
      ],
 
-     only((2,3,4,5))[#scale(90%)[#canvas({state-machine-normal})]]
+     only((2,3,4,5))[#scale(70%)[#canvas({state-machine-normal})]]
   )
+  #only(5)[#text(size: 19pt)[
+    This is one of the ways in which Tree Borrows is *less restrictive* than Stacked Borrows
+  ]]
 ]
 
 #focus-slide[
@@ -883,8 +1004,7 @@
         let content = text(fill: text-color, size: 11pt)[#content]
         draw.content((rel: (0.85, 0.2), to: "tags." + anchor), anchor: "south-west")[#content]
       }
-      
-      #let bounding-box = draw.rect((rel: (-6, -4), to: "tags.0"), (rel: (6, 1), to: "tags.0"), stroke: none)
+      #let bounding-box = draw.rect((rel: (-6, -2.8), to: "tags.0"), (rel: (6, 0.8), to: "tags.0"), stroke: none)
 
       #scale(130%)[
       #alternatives[
@@ -894,7 +1014,7 @@
             (content: [`x`], rel: ""),
           ),
           spread: 6,
-          grow: 3,
+          grow: 2,
         )
         current-state("0")[`Active`]
         accessed-tag("0")[Alloc]
@@ -907,7 +1027,7 @@
               (content: [`y`], rel: ""),
           ),
           spread: 6,
-          grow: 3,
+          grow: 2,
         )
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
@@ -923,7 +1043,7 @@
               (content: [`z`], rel: ""),
           ),
           spread: 6,
-          grow: 3,
+          grow: 2,
         )
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
@@ -941,7 +1061,7 @@
               (content: [`z`], rel: ""),
           ),
           spread: 6,
-          grow: 3,
+          grow: 2,
         )
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
@@ -958,7 +1078,7 @@
               (content: [`z`], rel: ""),
           ),
           spread: 6,
-          grow: 3,
+          grow: 2,
         )
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
@@ -976,7 +1096,7 @@
               (content: [`z`], rel: ""),
           ),
           spread: 6,
-          grow: 3,
+          grow: 2,
         )
         current-state("0")[`Active`]
         current-state("0-0")[`Active`]
@@ -994,7 +1114,7 @@
               (content: [`z`], rel: ""),
           ),
           spread: 6,
-          grow: 3,
+          grow: 2,
         )
         current-state("0")[`Active`]
         current-state("0-0")[`Active`]
@@ -1008,6 +1128,9 @@
    ],
    only((2,3,4,5,6,7,8))[#scale(70%)[#canvas({state-machine-normal})]],
   )
+  #only(8)[#text(size: 19pt)[
+    This is one of the ways in which Tree Borrows is *more consistent* than Stacked Borrows
+  ]]
 ]
 
 #focus-slide[
@@ -1120,7 +1243,7 @@
         draw.content((rel: (0.85, 0.2), to: "tags." + anchor), anchor: "south-west")[#content]
       }
 
-      #let bounding-box = draw.rect((rel: (-6, -3), to: "tags.0"), (rel: (6, 1), to: "tags.0"), stroke: none)
+      #let bounding-box = draw.rect((rel: (-6, -2.8), to: "tags.0"), (rel: (6, 0.8), to: "tags.0"), stroke: none)
 
       #scale(130%)[
       #alternatives[
@@ -1227,6 +1350,9 @@
    ],
    only((2,3,4,5,6,7,8))[#scale(70%)[#canvas({state-machine-normal})]],
   )
+  #only(8)[#text(size: 19pt)[
+    This is one of the ways in which Tree Borrows is *more consistent* than Stacked Borrows
+  ]]
 ]
 
 #focus-slide[
@@ -1235,13 +1361,15 @@
 
 #slide[
   #align(horizon)[
+    *Features:*
     - fine-grained 2-phase borrows
-    - interior mutability supported
-    - some common patterns that were forbidden by Stacked Borrows are now allowed
-    #v(2em)
-    Learn more: #link("https://perso.crans.org/vanille/treebor/")[`https://perso.crans.org/vanille/treebor/`]
+    - simple handling of interior mutability
+    - common patterns forbidden by Stacked Borrows now allowed
+    *Try it out:* #link("https://github.com/rust-lang/miri")[`https://github.com/rust-lang/miri`]
+    - use the flag `-Zmiri-tree-borrows`
+    *Learn more:* #link("https://perso.crans.org/vanille/treebor")[`https://perso.crans.org/vanille/treebor/`]
     - stronger guarantees for function arguments
-    - more lenient with out-of-bounds accesses
+    - more lenient than Stacked Borrows with out-of-bounds accesses
   ]
 ]
 
