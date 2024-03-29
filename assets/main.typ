@@ -68,16 +68,16 @@
     columns: (60%, 40%),
     ```rs
     // Example 1
-    fn foo(x: &mut u64) {
-        let val = *x;
-        *x = 42; // overwritten
+    fn foo(y: &mut u64) {
+        let val = *y;
+        *y = 42; // overwritten
         opaque(); // no interference
-        *x = val;
+        *y = val;
     }
     ```,
     ```rs
     // Example 1 (optimized)
-    fn foo(x: &mut u64) {
+    fn foo(y: &mut u64) {
 
 
         opaque();
@@ -124,8 +124,8 @@
     )
   ]
   #only((2,3))[
-    #text(size: 14pt)[(This code doesn't actually compile.
-    We could add raw pointer casts to confuse the borrow checker so that it does)]
+    #text(size: 14pt)[(This code doesn't actually compile. \
+    Add raw pointer casts to confuse the borrow checker without affecting memory semantics so that it compiles)]
     #text(size: 23pt)[
       #grid(
         columns: (50%, 50%),
@@ -1365,11 +1365,12 @@
     - fine-grained 2-phase borrows
     - simple handling of interior mutability
     - common patterns forbidden by Stacked Borrows now allowed
-    *Try it out:* #link("https://github.com/rust-lang/miri")[`https://github.com/rust-lang/miri`]
-    - use the flag `-Zmiri-tree-borrows`
     *Learn more:* #link("https://perso.crans.org/vanille/treebor")[`https://perso.crans.org/vanille/treebor/`]
     - stronger guarantees for function arguments
     - more lenient than Stacked Borrows with out-of-bounds accesses
+    *Try it out:* #link("https://github.com/rust-lang/miri")[`https://github.com/rust-lang/miri`]
+    - use the flag `-Zmiri-tree-borrows`
+    - report any surprises
   ]
 ]
 
