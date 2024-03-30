@@ -64,107 +64,161 @@
 #slide[
   == Absence of aliasing + mutability allows optimizations
 
-  #grid(
-    columns: (60%, 40%),
-    ```rs
-    // Example 1
+  #alternatives[```rs
     fn foo(y: &mut u64) {
         let val = *y;
-        *y = 42; // overwritten
-        opaque(); // no interference
+        *y = 42;
+
+        *y = val;
+    }
+    ```][```rs
+    fn foo(y: &mut u64) {
+        let val = *y;
+      //*y = 42;
+
+        *y = val;
+    }
+    ```][```rs
+    fn foo(y: &mut u64) {
+        let val = *y;
+      //*y = 42;
+
+      //*y = val;
+    }
+    ```][```rs
+    fn foo(y: &mut u64) {
+      //let val = *y;
+      //*y = 42;
+
+      //*y = val;
+    }
+    ```]
+    #only(5)[#grid(columns: (35%, 15%, 40%),
+    ```rs
+    fn foo(y: &mut u64) {
+        let val = *y;
+        *y = 42;
+
         *y = val;
     }
     ```,
+    align(horizon)[$==>^"optimized"$],
     ```rs
-    // Example 1 (optimized)
     fn foo(y: &mut u64) {
+      //let val = *y;
+      //*y = 42;
 
-
-        opaque();
-
+      //*y = val;
     }
     ```
-  )
-
-  #pause
-  But what about ```rs unsafe``` ?
+    )]
+    #only(6)[#grid(columns: (35%, 15%, 40%),
+    ```rs
+    fn foo(y: &mut u64) {
+        let val = *y;
+        *y = 42;
+        opaque();
+        *y = val;
+    }
+    ```,
+    align(horizon)[$==>^"optimized"$],
+    ```rs
+    fn foo(y: &mut u64) {
+      //let val = *y;
+      //*y = 42;
+        opaque();
+      //*y = val;
+    }
+    ```
+    )]
 ]
 
 #slide[
-  #only(1)[
-    ```rs
-    // Client 1
-    static mut X: u64 = 0;
-    fn opaque() { println!("{}", unsafe { X }); }
-    fn main() { foo(unsafe { &mut X }); }
-    ```
-
-    #line(length: 100%)
-
-    #grid(
-      columns: (50%, 50%),
-      ```rs
-      // Example 1
-      fn foo(y: &mut u64) {
-          let val = *y;
-          *y = 42;
-          opaque();
-          *y = val;
-      }
-      ```,
-      ```rs
-      // Example 1 (optimized)
-      fn foo(y: &mut u64) {
+  #alternatives[```rs
 
 
-          opaque();
 
-      }
-      ```,
-    )
-  ]
-  #only((2,3))[
-    #text(size: 14pt)[(This code doesn't actually compile. \
-    Add raw pointer casts to confuse the borrow checker without affecting memory semantics so that it compiles)]
-    #text(size: 23pt)[
-      #grid(
-        columns: (50%, 50%),
-        ```rs
-        // Example 1 (inlined)
-        static mut X = 0;
-        let y = &mut X;
+
+
+
+    fn foo(y: &mut u64) {
         let val = *y;
         *y = 42;
-        print!(X);
-        *y = val;
-        ```,
-        ```rs
-        // Example 1 (opt, inlined)
-        static mut X = 0;
-        let y = &mut X;
+        opaque();
+        *y = val
+    }
+    ```][```rs
+    static mut X: u64 = 0;
 
 
-        print!(X);
-
-        ```,
-        ```
 
 
-        > 42
-        ```,
-        ```
 
+    fn foo(y: &mut u64) {
+        let val = *y;
+        *y = 42;
+        opaque();
+        *y = val
+    }
+    ```][```rs
+    static mut X: u64 = 0;
 
-        > 0
-        ```
-      )
-    ]
-  ]
-  #only(3)[
-    #align(center)[
+    fn main() {
+        foo(unsafe { &mut X });
+    }
+
+    fn foo(y: &mut u64) {
+        let val = *y;
+        *y = 42;
+        opaque();
+        *y = val
+    }
+    ```][```rs
+    static mut X: u64 = 0;
+
+    fn main() {
+        foo(unsafe { &mut X });
+    }
+
+    fn foo(y: &mut u64) {
+        let val = *y;
+        *y = 42;
+        println!("{}", unsafe { X }); // prints 42
+        *y = val
+    }
+    ```][```rs
+    static mut X: u64 = 0;
+
+    fn main() {
+        foo(unsafe { &mut X });
+    }
+
+    fn foo(y: &mut u64) {
+      //let val = *y;
+      //*y = 42;
+        println!("{}", unsafe { X }); // prints 0
+      //*y = val
+    }
+    ```][```rs
+    static mut X: u64 = 0;
+
+    fn main() {
+        foo(unsafe { &mut X });
+    }
+
+    fn foo(y: &mut u64) {
+      //let val = *y;
+      //*y = 42;
+        println!("{}", unsafe { X }); // prints 0
+      //*y = val
+    }
+    ```]
+
+  #only(6)[
+    #place(center + bottom)[
       #box(fill: color.mix(red.darken(-40%), gray).darken(-60%), inset: 12pt, radius: 12pt)[
         #align(left)[
-          Optimization changes observable behavior... \
+          Optimization *changes observable behavior*... \
           is the optimization incorrect ?
         ]
       ]
@@ -194,6 +248,66 @@
 ]
 
 #slide[
+  == Stacked Borrows
+
+  Adds *extra state* to the abstract machine to track provenance. \
+  Distinguishes pointers to the same location with an *identifier*.
+
+  #pause
+  Uses a *stack* to enforce that borrows are well-parenthesized. \
+  The stack associates each pointer to its current *permission*.
+
+  #pause
+  Accesses to pointers *update* the stack structure and the permissions.
+]
+
+#slide[
+  However Stacked Borrows...
+
+  - does not handle 2-phase borrows
+    #pause
+    ```rs
+    vec.push(vec.len())
+    ```
+  #pause
+
+  - forbids common ```rs unsafe``` patterns
+    #pause
+    ```rs
+    let from = data.as_ptr();
+    // SB inserts an implicit write, killing the raw pointer
+    let to = data.as_mut_ptr().add(1);
+    std::ptr::copy_nonoverlapping(from, to, 1);
+    ```
+
+  #pause
+  #align(center)[
+    #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
+      #align(left)[
+        Both of these restrictions come from the stack requirement.
+      ]
+    ]
+  ]
+]
+
+#slide[
+  == Stacked Borrows $arrow.squiggly$ Tree Borrows
+
+  Remove the simplifying assumption of a stack, use a *tree* instead.
+
+  #pause
+  This allows
+  - more accurate tracking of pointer ancestry
+  - more fine-grained permissions
+
+  #pause
+  Resulting in
+  - accurate handling of 2-phase borrows
+  - more patterns permitted
+  - simpler rules, fewer exceptions
+]
+
+#slide[
   === Aliasing model
   - defines which pointers are valid, for which ranges of memory, and in which order they can be accessed
   - *dynamic check* of uniqueness of ```rs &mut``` and immutability of ```rs &```
@@ -201,9 +315,11 @@
   #pause
 
   === Design constraints
-  - strict enough that interesting *optimizations* are possible
+  - strict enough that interesting *optimizations* are possible \
+    $->$ _formalized in Coq, ongoing work to prove correctness_
+  #pause
   - permissive enough that *existing libraries* are correct \
-    $->$ more permissive than Stacked Borrows
+    $->$ _implemented in the Miri interpreter, checked against `std`_
 ]
 
 #slide[
@@ -212,12 +328,11 @@
 
   === Per-location
   - *disjoint* accesses do not interfere
-  - valid range of memory is *dynamic*
 
   #pause
 
   === Track provenance of pointers
-  - each pointer gets an *identifier* on creation, its "tag"
+  - each pointer gets an *identifier* on creation
   - we use a *tree* to keep track of the relationships between tags
 
   #pause
@@ -598,7 +713,7 @@
 ]
 
 #focus-slide[
-  = Example 1 is detected as UB
+  = First example contains UB
 ]
 
 #let Accepted = box(text(fill: green)[*Accepted*], stroke: green, inset: 7pt)
@@ -609,59 +724,33 @@
     columns: (10%, 45%, 30%),
     [],
     [
-      #scale(80%)[
-        #alternatives[```rs
+      #grid(
+        columns: (35%, 20%),
+        [
+          #let executing-loc(i, content) = canvas({
+            let y = 0.75 - 0.74 * i
+            draw.rect((1, 1), (-3, -3.4), stroke: none)
+            draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
+            let content = text(size: 20pt)[#content]
+            draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
+          })
+          #alternatives[
+                      ][#executing-loc(0, [Alloc `X`])
+                      ][#executing-loc(1, [Borrow `y`])
+                      ][#executing-loc(2, [Read `y`])
+                      ][#executing-loc(3, [Write `y`])
+                      ][#executing-loc(4, [Read `X`])
+                      ][#executing-loc(5, [Write `y`])
+                      ]
+        ],
+        text(size: 19pt)[
+        #alternatives(repeat-last: true)[```rs
           static mut X = 0;
           let y = &mut X;
           let val = *y;
           *y = 42;
-          print!(X);
+          print!(X); // read access violates uniqueness of y
           *y = val;
-
-          ```
-        ][```rs
-          static mut X = 0;
-
-
-
-
-
-
-          ```
-        ][```rs
-          static mut X = 0;
-          let y = &mut X;
-
-
-
-
-
-          ```
-        ][```rs
-          static mut X = 0;
-          let y = &mut X;
-          let val = *y;
-
-
-
-
-          ```
-        ][```rs
-          static mut X = 0;
-          let y = &mut X;
-          let val = *y;
-          *y = 42;
-
-
-
-          ```
-        ][```rs
-          static mut X = 0;
-          let y = &mut X;
-          let val = *y;
-          *y = 42;
-          print!(X);
-
 
           ```
         ][```rs
@@ -673,11 +762,12 @@
           *y = val;
 
           ```
-        ]
-      ]
+        ]])
 
-      #align(left)[#alternatives[][][][][][][#Rejected]]
-
+      #let previous-state(anchor, content) = {
+        let content = text(fill: gray.darken(30%), size: 13pt)[old: #content]
+        draw.content((rel: (1, 0.5), to: "tags." + anchor), anchor: "south-west")[#content]
+      }
       #let current-state(anchor, content) = {
         draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
       }
@@ -689,8 +779,9 @@
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
         let content = text(fill: text-color, size: 13pt)[#content]
-        draw.content((rel: (1, 0.2), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.content((rel: (1, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
+      #let bounding-box = draw.rect((rel: (-6, -2.8), to: "tags.0"), (rel: (6, 0.8), to: "tags.0"), stroke: none)
 
       #scale(130%)[
       #alternatives[][#align(top + right)[#canvas({
@@ -699,9 +790,10 @@
             (content: [`X`], rel: ""),
           )
         )
-        current-state("0")[`Active`` `` `` `]
+        current-state("0")[`Active`]
         accessed-tag("0")[Alloc]
-        transition-summary("0", text-color: alloc_color)[`new`]
+        transition-summary("0", text-color: alloc_color)[new]
+        bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight((rel) => none, node),
           (
@@ -709,11 +801,13 @@
               (content: [`y`], rel: ""),
           )
         )
+        previous-state("0")[Active]
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
-        accessed-tag("0-0")[Retag]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: alloc_color)[`new`]
+        accessed-tag("0-0")[Borrow]
+        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0-0", text-color: alloc_color)[new]
+        bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
@@ -721,11 +815,14 @@
               (content: [`y`], rel: ""),
           )
         )
+        previous-state("0")[Active]
+        previous-state("0-0")[Reserved]
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
         accessed-tag("0-0")[Read]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: child_color)[`noop`]
+        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0-0", text-color: child_color)[+child read]
+        bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
@@ -733,11 +830,14 @@
               (content: [`y`], rel: ""),
           )
         )
-        current-state("0")[`Active`` `` `` `]
+        previous-state("0")[Active]
+        previous-state("0-0")[Reserved]
+        current-state("0")[`Active`]
         current-state("0-0")[`Active`]
         accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: child_color)[`Res -> Act`]
+        transition-summary("0", text-color: child_color)[+child write]
+        transition-summary("0-0", text-color: child_color)[+child write]
+        bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
@@ -745,11 +845,14 @@
               (content: [`y`], rel: ""),
           )
         )
+        previous-state("0")[Active]
         accessed-tag("0")[Read]
-        current-state("0")[`Active`` `` `` `]
+        previous-state("0-0")[Active]
+        current-state("0")[`Active`]
         current-state("0-0")[`Frozen`]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`Act -> Frz`]
+        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0-0", text-color: foreign_color)[+foreign read]
+        bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
@@ -757,142 +860,19 @@
               (content: [`y`], rel: ""),
           )
         )
-        current-state("0")[`Active`` `` `` `]
-        current-state("0-0")[]
-        accessed-tag("0-0")[Write $arrow.zigzag$]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: child_color)[`Frz ->`]
+        previous-state("0")[Active]
+        previous-state("0-0")[Frozen]
+        current-state("0")[`Active`]
+        current-state("0-0")[#Rejected]
+        accessed-tag("0-0")[Write]
+        transition-summary("0", text-color: child_color)[+child write]
+        transition-summary("0-0", text-color: child_color)[+child write]
+        bounding-box
       })]]]
      ],
 
      only((2,3,4,5,6,7))[#scale(70%)[#canvas({state-machine-normal})]],
   )
-]
-
-#focus-slide[
-  = Read-only is never UB
-]
-
-#slide[
-  #grid(
-    columns: (10%, 45%, 30%),
-    [],
-    [
-      #text(size: 20pt)[
-        #alternatives[```rs
-          // No mutation
-          let mut x = 0u64;
-          let y = &mut x;
-          let _vx = x;
-          let _vy = *y;
-
-          ```
-        ][```rs
-          // No mutation
-          let mut x = 0u64;
-
-
-
-
-          ```
-        ][```rs
-          // No mutation
-          let mut x = 0u64;
-          let y = &mut x;
-
-
-
-          ```
-        ][```rs
-          // No mutation
-          let mut x = 0u64;
-          let y = &mut x;
-          let _vx = x;
-
-
-          ```
-        ][```rs
-          // No mutation
-          let mut x = 0u64;
-          let y = &mut x;
-          let _vx = x;
-          let _vy = *y;
-
-          ```
-        ]
-      ]
-
-      #align(left)[#alternatives[][][][][#Accepted]]
-
-      #let current-state(anchor, content) = {
-        draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
-      }
-      #let accessed-tag(anchor, content) = {
-        draw.content((rel: (-4, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
-        draw.line((rel: (-4, -0.1), to: "tags." + anchor),
-                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
-      }
-      #let transition-summary(anchor, content, ..style) = {
-        let text-color = style.named().at("text-color", default: gray)
-        let content = text(fill: text-color, size: 13pt)[#content]
-        draw.content((rel: (1, 0.2), to: "tags." + anchor), anchor: "south-west")[#content]
-      }
-
-      #scale(130%)[
-      #alternatives[
-      ][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight((rel) => none, node),
-          (
-            (content: [`x`], rel: ""),
-          )
-        )
-        current-state("0")[`Active`` `` `` `]
-        accessed-tag("0")[Alloc]
-        transition-summary("0", text-color: alloc_color)[`new`]
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight((rel) => none, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-          )
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Reserved`]
-        accessed-tag("0-0")[Retag]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: alloc_color)[`new`]
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-          )
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Reserved`]
-        accessed-tag("0")[Read]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`noop`]
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-          )
-        )
-        current-state("0")[`Active`` `` `` `]
-        current-state("0-0")[`Reserved`]
-        accessed-tag("0-0")[Read]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: child_color)[`noop`]
-      })]]]
-     ],
-
-     only((2,3,4,5))[#scale(70%)[#canvas({state-machine-normal})]]
-  )
-  #only(5)[#text(size: 19pt)[
-    This is one of the ways in which Tree Borrows is *less restrictive* than Stacked Borrows
-  ]]
 ]
 
 #focus-slide[
@@ -904,121 +884,90 @@
     columns: (5%, 60%, 25%),
     [],
     [
-      #text(size: 19pt)[
-        #alternatives[```rs
-          // General pattern
+      #grid(
+        columns: (30%, 20%),
+        [
+          #let executing-loc(i, content) = canvas({
+            let y = 0.75 - 0.74 * i
+            draw.rect((1, 1), (-3.6, -2.7), stroke: none)
+            draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
+            let content = text(size: 20pt)[#content]
+            draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
+          })
+          #alternatives[
+                      ][
+                      ][#executing-loc(0, [Alloc `x`])
+                      ][#executing-loc(1, [Borrow `y`])
+                      ][#executing-loc(2, [Borrow `z`])
+                      ][#executing-loc(3, [Read `z`])
+                      ][#executing-loc(4, [Write `y`])
+                      ]
+        ],
+        text(size: 19pt)[
+        #alternatives(repeat-last: true)[```rs
+          let mut x = 0u64;
+          let y = &mut x; // Create mutable reference
+          let z = &x;
+          read_only(z);
+          mutate(y);      // Use it mutably
+
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let y = &mut x;
+          let z = &x;     // << Two-phase borrowed,
+          read_only(z);   // << read access allowed
+          mutate(y);
+
+          ```
+        ][```rs
           let mut x = 0u64;
           let y = &mut x;
           let z = &x;
           read_only(z);
           mutate(y);
-
-
-          ```
-        ][```rs
-          // General pattern
-          let mut x = 0u64;
-
-
-
-
-
-
-          ```
-        ][```rs
-          // General pattern
-          let mut x = 0u64;
-          let y = &mut x;
-
-
-
-
-
-          ```
-        ][```rs
-          // General pattern
-          let mut x = 0u64;
-          let y = &mut x;
-          let z = &x;
-
-
-
-
-          ```
-        ][```rs
-          // Bad extension #1
-          let mut x = 0u64;
-          let y = &mut x;
-          let z = &x;
-          mutate(z);
-
-
-
-          ```
-        ][```rs
-          // General pattern
-          let mut x = 0u64;
-          let y = &mut x;
-          let z = &x;
-          read_only(z);
-
-
-
-          ```
-        ][```rs
-          // General pattern
-          let mut x = 0u64;
-          let y = &mut x;
-          let z = &x;
-          read_only(z);
-          mutate(y);
-
-
-          ```
-        ][```rs
-          // Bad extension #2
-          let mut x = 0u64;
-          let y = &mut x;
-          let z = &x;
-          read_only(z);
-          mutate(y);
-          read_only(z);
-
           ```
         ]
-      ]
-      #align(left)[#alternatives[][][][][#Rejected][][#Accepted][#Rejected]]
+      ])
 
+      #let previous-state(anchor, content) = {
+        let content = text(fill: gray.darken(30%), size: 11pt)[old: #content]
+        draw.content((rel: (0.85, 0.4), to: "tags." + anchor), anchor: "south-west")[#content]
+      }
       #let current-state(anchor, content) = {
-        let content = text(size: 16pt)[#content]
+        let content = text(size: 21pt)[#content]
         draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
       }
       #let accessed-tag(anchor, content) = {
-        let content = text(size: 13pt)[#content]
-        draw.content((rel: (-2.5, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
-        draw.line((rel: (-2.5, -0.1), to: "tags." + anchor),
+        let content = text(size: 16pt)[#content]
+        draw.content((rel: (-3, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.line((rel: (-3, -0.1), to: "tags." + anchor),
                   (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
       }
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
         let content = text(fill: text-color, size: 11pt)[#content]
-        draw.content((rel: (0.85, 0.2), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.content((rel: (0.85, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
-      #let bounding-box = draw.rect((rel: (-6, -2.8), to: "tags.0"), (rel: (6, 0.8), to: "tags.0"), stroke: none)
+      #let bounding-box = draw.rect(
+        (rel: (-6.5, -4), to: "tags.0"),
+        (rel: (7.2, 0.8), to: "tags.0"),
+        stroke: none
+      )
 
       #scale(130%)[
-      #alternatives[
+      #alternatives[][
       ][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
             (content: [`x`], rel: ""),
           ),
-          spread: 6,
-          grow: 2,
+          spread: 7,
+          grow: 3,
         )
         current-state("0")[`Active`]
         accessed-tag("0")[Alloc]
-        transition-summary("0", text-color: alloc_color)[`new`]
+        transition-summary("0", text-color: alloc_color)[new]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -1026,14 +975,15 @@
             (content: [`x`], rel: ""),
               (content: [`y`], rel: ""),
           ),
-          spread: 6,
-          grow: 2,
+          spread: 7,
+          grow: 3,
         )
+        previous-state("0")[Active]
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
-        accessed-tag("0-0")[Retag]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: alloc_color)[`new`]
+        accessed-tag("0-0")[Borrow]
+        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0-0", text-color: alloc_color)[new]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -1042,16 +992,18 @@
               (content: [`y`], rel: ""),
               (content: [`z`], rel: ""),
           ),
-          spread: 6,
-          grow: 2,
+          spread: 7,
+          grow: 3,
         )
+        previous-state("0")[Active]
+        previous-state("0-0")[Reserved]
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
         current-state("0-1")[`Frozen`]
-        accessed-tag("0-1")[Retag]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`noop`]
-        transition-summary("0-1", text-color: alloc_color)[`new`]
+        accessed-tag("0-1")[Borrow]
+        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0-0", text-color: foreign_color)[+foreign read]
+        transition-summary("0-1", text-color: alloc_color)[new]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -1060,33 +1012,19 @@
               (content: [`y`], rel: ""),
               (content: [`z`], rel: ""),
           ),
-          spread: 6,
-          grow: 2,
+          spread: 7,
+          grow: 3,
         )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Reserved`]
-        accessed-tag("0-1")[Write $arrow.zigzag$]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`noop`]
-        transition-summary("0-1", text-color: child_color)[`Frz ->`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-              (content: [`z`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
+        previous-state("0")[Active]
+        previous-state("0-0")[Reserved]
+        previous-state("0-1")[Frozen]
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
         current-state("0-1")[`Frozen`]
         accessed-tag("0-1")[Read]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`noop`]
-        transition-summary("0-1", text-color: child_color)[`noop`]
+        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0-0", text-color: foreign_color)[+foreign read]
+        transition-summary("0-1", text-color: child_color)[+child read]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -1095,264 +1033,25 @@
               (content: [`y`], rel: ""),
               (content: [`z`], rel: ""),
           ),
-          spread: 6,
-          grow: 2,
+          spread: 7,
+          grow: 3,
         )
+        previous-state("0")[Active]
+        previous-state("0-0")[Reserved]
+        previous-state("0-1")[Frozen]
         current-state("0")[`Active`]
         current-state("0-0")[`Active`]
         current-state("0-1")[`Disabled`]
         accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: child_color)[`Res -> Act`]
-        transition-summary("0-1", text-color: foreign_color)[`Frz -> Dis`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-              (content: [`z`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Active`]
-        accessed-tag("0-1")[Read $arrow.zigzag$]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`noop`]
-        transition-summary("0-1", text-color: child_color)[`Dis ->`]
-        bounding-box
-      })]]
-     ]
-   ],
-   only((2,3,4,5,6,7,8))[#scale(70%)[#canvas({state-machine-normal})]],
-  )
-  #only(8)[#text(size: 19pt)[
-    This is one of the ways in which Tree Borrows is *more consistent* than Stacked Borrows
-  ]]
-]
-
-#focus-slide[
-  = Interior mutability
-]
-
-#slide[
-  #grid(
-    columns: (5%, 60%, 25%),
-    [],
-    [
-      #text(size: 19pt)[
-        #alternatives[```rs
-          let mut x = 0u64;
-          let y = Cell::from_mut(&mut x);
-          let z = &*y;
-          y.set(15);
-          z.set(42);
-          x = 0;
-
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-
-
-
-
-
-
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = Cell::from_mut(&mut x);
-
-
-
-
-
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = Cell::from_mut(&mut x);
-          let z = &*y;
-
-
-
-
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = Cell::from_mut(&mut x);
-          let z = &*y;
-          y.set(15);
-
-
-
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = Cell::from_mut(&mut x);
-          let z = &*y;
-          y.set(15);
-          z.set(42);
-
-
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = Cell::from_mut(&mut x);
-          let z = &*y;
-          y.set(15);
-          z.set(42);
-          x = 0;
-
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = Cell::from_mut(&mut x);
-          let z = &*y;
-          y.set(15);
-          z.set(42);
-          x = 0;
-          y.set(15);
-
-          ```
-        ]
-      ]
-      #align(left)[#alternatives[][][][][][][#Accepted][#Rejected]]
-
-      #let current-state(anchor, content) = {
-        let content = text(size: 16pt)[#content]
-        draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
-      }
-      #let accessed-tag(anchor, content) = {
-        let content = text(size: 13pt)[#content]
-        draw.content((rel: (-2.5, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
-        draw.line((rel: (-2.5, -0.1), to: "tags." + anchor),
-                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
-      }
-      #let transition-summary(anchor, content, ..style) = {
-        let text-color = style.named().at("text-color", default: gray)
-        let content = text(fill: text-color, size: 11pt)[#content]
-        draw.content((rel: (0.85, 0.2), to: "tags." + anchor), anchor: "south-west")[#content]
-      }
-
-      #let bounding-box = draw.rect((rel: (-6, -2.8), to: "tags.0"), (rel: (6, 0.8), to: "tags.0"), stroke: none)
-
-      #scale(130%)[
-      #alternatives[
-      ][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        accessed-tag("0")[Alloc]
-        transition-summary("0", text-color: alloc_color)[`new`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Reserved`]
-        accessed-tag("0-0")[Retag]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: alloc_color)[`new`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`,`z`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Reserved`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`,`z`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Active`]
-        accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: child_color)[`Res -> Act`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`,`z`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Active`]
-        accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: child_color)[`noop`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`,`z`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        current-state("0-0")[`Disabled`]
-        accessed-tag("0")[Write]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`Act -> Dis`]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`,`z`], rel: ""),
-          ),
-          spread: 6,
-          grow: 2,
-        )
-        current-state("0")[`Active`]
-        accessed-tag("0-0")[Write $arrow.zigzag$]
-        transition-summary("0", text-color: child_color)[`noop`]
-        transition-summary("0-0", text-color: foreign_color)[`Dis ->`]
+        transition-summary("0", text-color: child_color)[+child write]
+        transition-summary("0-0", text-color: child_color)[+child write]
+        transition-summary("0-1", text-color: foreign_color)[+foreign write]
         bounding-box
       })]]
     ]
    ],
-   only((2,3,4,5,6,7,8))[#scale(70%)[#canvas({state-machine-normal})]],
+   only((3,4,5,6,7))[#scale(70%)[#canvas({state-machine-normal})]],
   )
-  #only(8)[#text(size: 19pt)[
-    This is one of the ways in which Tree Borrows is *more consistent* than Stacked Borrows
-  ]]
 ]
 
 #focus-slide[
@@ -1363,11 +1062,11 @@
   #align(horizon)[
     *Features:*
     - fine-grained 2-phase borrows
-    - simple handling of interior mutability
+    - simple handling of raw pointers and interior mutability
     - common patterns forbidden by Stacked Borrows now allowed
     *Learn more:* #link("https://perso.crans.org/vanille/treebor")[`https://perso.crans.org/vanille/treebor/`]
-    - stronger guarantees for function arguments
-    - more lenient than Stacked Borrows with out-of-bounds accesses
+    - stronger guarantees for function arguments (protectors)
+    - no range restriction on reborrow
     *Try it out:* #link("https://github.com/rust-lang/miri")[`https://github.com/rust-lang/miri`]
     - use the flag `-Zmiri-tree-borrows`
     - report any surprises

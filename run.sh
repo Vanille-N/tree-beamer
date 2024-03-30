@@ -29,7 +29,6 @@ while true; do
     case $1 in
         ("") exit 0;;
         ("zathura"|"z")
-            typstc compile;
             pdfview $TARGET &
             ;;
         ("watch"|"w")
