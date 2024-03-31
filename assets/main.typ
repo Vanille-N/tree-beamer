@@ -25,6 +25,20 @@
   #it
 ]
 
+// Set this to true to print some bounding boxes and layout lines to help align content.
+#let show-layout-boundaries = false
+#let rect-if-show-layout(ul, br) = {
+  draw.rect(ul, br, stroke: if show-layout-boundaries { black } else { none })
+}
+#let box-if-show-layout(c) = {
+  rect(
+    inset: 0pt,
+    fill: if show-layout-boundaries { green.darken(-50%) } else { none },
+    stroke: none,
+  )[#c]
+}
+#let layout(c) = box-if-show-layout(c)
+
 #title-slide[
   = Tree Borrows
 
@@ -64,77 +78,78 @@
 #slide[
   == Absence of aliasing + mutability allows optimizations
 
-  #alternatives[```rs
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
+  // Some blank to align the code with the next slide
+  ```
 
-        *y = val;
-    }
-    ```][```rs
-    fn foo(y: &mut u64) {
-        let val = *y;
-      //*y = 42;
 
-        *y = val;
-    }
-    ```][```rs
-    fn foo(y: &mut u64) {
-        let val = *y;
-      //*y = 42;
 
-      //*y = val;
-    }
-    ```][```rs
-    fn foo(y: &mut u64) {
-      //let val = *y;
-      //*y = 42;
+  ```
+  #v(0.52em)
+  #grid(columns: (40%, 15%, 35%),
+    alternatives[][][][][```rs
+      fn foo(y: &mut u64) {
+          let val = *y;
+          *y = 42;
 
-      //*y = val;
-    }
-    ```]
-    #only(5)[#grid(columns: (35%, 15%, 40%),
-    ```rs
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
+          *y = val;
+      }
+      ```][```rs
+      fn foo(y: &mut u64) {
+          let val = *y;
+          *y = 42;
+          opaque();
+          *y = val;
+      }
+      ```],
+      align(horizon)[#alternatives[][][][][$==>^"optimized"$][$==>^"optimized"$]],
+      alternatives[```rs
+        fn foo(y: &mut u64) {
+            let val = *y;
+            *y = 42;
 
-        *y = val;
-    }
-    ```,
-    align(horizon)[$==>^"optimized"$],
-    ```rs
-    fn foo(y: &mut u64) {
-      //let val = *y;
-      //*y = 42;
+            *y = val;
+        }
+        ```][```rs
+        fn foo(y: &mut u64) {
+            let val = *y;
+          //*y = 42;
 
-      //*y = val;
-    }
-    ```
-    )]
-    #only(6)[#grid(columns: (35%, 15%, 40%),
-    ```rs
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
-        opaque();
-        *y = val;
-    }
-    ```,
-    align(horizon)[$==>^"optimized"$],
-    ```rs
-    fn foo(y: &mut u64) {
-      //let val = *y;
-      //*y = 42;
-        opaque();
-      //*y = val;
-    }
-    ```
-    )]
+            *y = val;
+        }
+        ```][```rs
+        fn foo(y: &mut u64) {
+            let val = *y;
+          //*y = 42;
+
+          //*y = val;
+        }
+        ```][```rs
+        fn foo(y: &mut u64) {
+          //let val = *y;
+          //*y = 42;
+
+          //*y = val;
+        }
+        ```][```rs
+        fn foo(y: &mut u64) {
+          //let val = *y;
+          //*y = 42;
+
+          //*y = val;
+        }
+        ```][```rs
+        fn foo(y: &mut u64) {
+          //let val = *y;
+          //*y = 42;
+            opaque();
+          //*y = val;
+        }
+        ```]
+  )
 ]
 
 #slide[
-  #alternatives[```rs
+  #layout[#alternatives[```rs
 
 
 
@@ -145,7 +160,7 @@
         let val = *y;
         *y = 42;
         opaque();
-        *y = val
+        *y = val;
     }
     ```][```rs
     static mut X: u64 = 0;
@@ -158,7 +173,7 @@
         let val = *y;
         *y = 42;
         opaque();
-        *y = val
+        *y = val;
     }
     ```][```rs
     static mut X: u64 = 0;
@@ -171,7 +186,7 @@
         let val = *y;
         *y = 42;
         opaque();
-        *y = val
+        *y = val;
     }
     ```][```rs
     static mut X: u64 = 0;
@@ -184,7 +199,7 @@
         let val = *y;
         *y = 42;
         println!("{}", unsafe { X }); // prints 42
-        *y = val
+        *y = val;
     }
     ```][```rs
     static mut X: u64 = 0;
@@ -197,7 +212,7 @@
       //let val = *y;
       //*y = 42;
         println!("{}", unsafe { X }); // prints 0
-      //*y = val
+      //*y = val;
     }
     ```][```rs
     static mut X: u64 = 0;
@@ -210,9 +225,9 @@
       //let val = *y;
       //*y = 42;
         println!("{}", unsafe { X }); // prints 0
-      //*y = val
+      //*y = val;
     }
-    ```]
+    ```]]
 
   #only(6)[
     #place(center + bottom)[
@@ -267,7 +282,10 @@
   - does not handle 2-phase borrows
     #pause
     ```rs
-    vec.push(vec.len())
+    vec.push(vec[0]);
+    //       ^^^^^^ 2. read-only operation before function entry
+    //                 does not invalidate the &mut
+    //  ^^^^ 1. implicit &mut in function arguments
     ```
   #pause
 
@@ -277,14 +295,19 @@
     let from = data.as_ptr();
     // SB inserts an implicit write, killing the raw pointer
     let to = data.as_mut_ptr().add(1);
-    std::ptr::copy_nonoverlapping(from, to, 1);
+    std::ptr::copy_nonoverlapping(from, to, 1); // UB
     ```
 
   #pause
-  #align(center)[
+  #place(center + horizon)[
+    #rect(width: 100%, height: 100%, fill: gray.transparentize(80%))
+  ]
+  #place(center + horizon)[
     #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
-      #align(left)[
-        Both of these restrictions come from the stack requirement.
+      #text(size: 40pt)[
+        #align(left)[
+          Both of these restrictions \ come from the stack requirement.
+        ]
       ]
     ]
   ]
@@ -421,31 +444,22 @@
 
     #grid(
     columns: (70%, 30%),
-    {
-      only(1)[#canvas({
+    layout[#{
+      alternatives[#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("T"), node) }, structure)
-      })]
-      only(2)[#canvas({
+      })][#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("S"), node) }, structure)
-      })]
-      only(3)[#canvas({
+      })][#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("T", "S"), node) }, structure)
-      })]
-      only(4)[#canvas({
+      })][#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P"), node) }, structure)
-      })]
-      only(5)[#canvas({
+      })][#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("C"), node) }, structure)
-      })]
-      only(6)[#canvas({
+      })][#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P", "C"), node) }, structure)
-      })]
-
-
-      only(7)[#canvas({
+      })][#canvas({
           tag-tree( (node) => { draw-node-highlight(standard_color_picker, node) }, structure)
-      })]
-      only(8)[#canvas({
+      })][#canvas({
           tag-tree( (node) => { draw-node-highlight((rel) => if rel == "H" { alloc_color } else { none }, node) },
           ((content: [], rel: ""),
             ((content: [], rel: ""),
@@ -478,8 +492,8 @@
       })]
 
 
-    },
-    [
+    }],
+    layout[
       #only((1,2,3,7))[
         #text(fill: self_color)[self] & #text(fill: strict_color)[strict children] \
         #text(fill: child_color)[$->$ children]
@@ -496,6 +510,12 @@
           create \
           #text(fill: child_color)[children]
         ]
+
+        #v(1em)
+
+        ```rs
+        let new = &*self;
+        ```
       ]
     ]
 )
@@ -521,7 +541,7 @@
 
 #let state(x, y, name, label) = {
   let name = name + "-box"
-  draw.rect((x, y), (x+2, y+1), name: name)
+  draw.rect((x, y), (x+4, y+1), name: name)
   draw.content(name + ".center", anchor: "center", label)
 }
 
@@ -577,17 +597,17 @@
 }
 
 #let state-machine-normal = {
-    state(0, 0, "res", `Res`)
-    state(0, -3, "act", `Act`)
-    state(0, -6, "frz", `Frz`)
-    state(3, -9, "dis", `Dis`)
+    state(0, 0, "res", `Reserved`)
+    state(0, -3, "act", `Active`)
+    state(0, -6, "frz", `Frozen`)
+    state(3, -9, "dis", `Disabled`)
 
     bezier-between-states("res", "dis", "east")
     bezier-between-states("act", "dis", "east")
     bezier-between-states("frz", "dis", "east")
     draw.content(
-      (rel: (0.5, -0.5), to: "arr-res-dis.ctrl-0"),
-      anchor: "center", angle: -45deg,
+      (rel: (0.7, -1.1), to: "arr-res-dis.ctrl-0"),
+      anchor: "center", angle: -60deg,
       text(fill: foreign_color)[foreign write],
     )
 
@@ -600,136 +620,22 @@
     self-loop("dis", "west", [foreign r/w], text-color: foreign_color)
 }
 
-#let state-machine-protect = {
-    state(0, 0, "res", `Res`)
-    state(0, -3, "act", `Act`)
-    state(0, -6, "frz", `Frz`)
-    state(3, -1, "con", `Con`)
-    draw.rect((3, -9), (5, -8), stroke: none)
-
-    bezier-between-states("res", "con", "east")
-    draw.content(
-      (rel: (0.9, 0.7), to: "arr-res-con.ctrl-0"),
-      anchor: "center", angle: -10deg,
-      text(fill: foreign_color)[foreign read],
-    )
-
-    straight-down("res", "act", "east", [child write], text-color: child_color)
-
-    self-loop("res", "west", [child read], text-color: child_color)
-    self-loop("act", "west", [child r/w], text-color: child_color)
-    self-loop("frz", "west", [any read], text-color: mixed_color)
-    self-loop("con", "east", [any read], text-color: mixed_color)
-}
-
-
-#slide[
-  #align(right)[
-    #let marker(to, ldist) = {
-      draw.line(
-        (rel: (-ldist - 1, 0), to: to + "-box.west"),
-        (rel: (-ldist, 0), to: to + "-box.west"),
-        mark: (end: "o"),
-        name: to + "-line",
-      )
-    }
-    #let rel-to-line(to, rel, anchor) = {
-      (rel: rel, to: to + "-line." + anchor)
-    }
-    #let bounding-box = {
-      draw.rect((rel: (5, 2), to: "res-box.center"), (rel: (-22, -10), to: "res-box.center"), stroke: none)
-    }
-    #alternatives[
-      #canvas({
-        state-machine-normal
-        bounding-box
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("res", 5)
-        marker("act", 5)
-        draw.content(rel-to-line("res", (-0.5, 0), "start"), anchor: "east")[`&mut` not yet written to]
-        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[`&mut` already written]
-        draw.line(
-          rel-to-line("res", (-0.1, -0.5), "start"),
-          rel-to-line("act", (-0.1, 0.5), "start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[write to it]
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("act", 5)
-        marker("frz", 5)
-        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[exclusive access]
-        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
-        draw.line(
-          rel-to-line("act", (-0.1, -0.5), "start"),
-          rel-to-line("frz", (-0.1, 0.5), "start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains access]
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("frz", 5)
-        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
-        draw.bezier(
-          (rel: (-0.1, -0.5), to: "frz-line.start"),
-          (rel: (0.1, -0.5), to: "frz-line.start"),
-          (rel: (-1.5, -2.5), to: "frz-line.start"),
-          (rel: (1.5, -2.5), to: "frz-line.start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[any read-only operation]
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("frz", 5)
-        marker("dis", 8)
-        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
-        draw.content(rel-to-line("dis", (-0.5, 0), "start"), anchor: "east")[no access]
-        draw.line(
-          rel-to-line("frz", (-0.1, -0.5), "start"),
-          rel-to-line("dis", (-0.1, 0.5), "start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains exclusive access]
-      })
-    ]
-  ]
-]
-
 #focus-slide[
   = First example contains UB
 ]
 
-#let Accepted = box(text(fill: green)[*Accepted*], stroke: green, inset: 7pt)
-#let Rejected = box(text(fill: red)[*Rejected*], stroke: red, inset: 7pt)
+#let Rejected = box(text(fill: red)[*UB*], stroke: red, inset: 7pt)
 
 #slide[
   #grid(
-    columns: (10%, 45%, 30%),
-    [],
-    [
+    columns: (55%, 45%),
+    layout[
       #grid(
-        columns: (35%, 20%),
-        [
+        columns: (30%, 70%),
+        layout[
           #let executing-loc(i, content) = canvas({
-            let y = 0.75 - 0.74 * i
-            draw.rect((1, 1), (-3, -3.4), stroke: none)
+            let y = 1 - 0.86 * i
+            rect-if-show-layout((1, 1.3), (-3, -3.8))
             draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
@@ -743,7 +649,7 @@
                       ][#executing-loc(5, [Write `y`])
                       ]
         ],
-        text(size: 19pt)[
+        layout[#text(size: 22pt)[
         #alternatives(repeat-last: true)[```rs
           static mut X = 0;
           let y = &mut X;
@@ -762,7 +668,8 @@
           *y = val;
 
           ```
-        ]])
+        ]]]
+      )
 
       #let previous-state(anchor, content) = {
         let content = text(fill: gray.darken(30%), size: 13pt)[old: #content]
@@ -781,7 +688,12 @@
         let content = text(fill: text-color, size: 13pt)[#content]
         draw.content((rel: (1, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
-      #let bounding-box = draw.rect((rel: (-6, -2.8), to: "tags.0"), (rel: (6, 0.8), to: "tags.0"), stroke: none)
+      #let bounding-box = rect-if-show-layout(
+        (rel: (-6.2, -2.8), to: "tags.0"),
+        (rel: (4.5, 0.8), to: "tags.0")
+      )
+
+      #v(2em)
 
       #scale(130%)[
       #alternatives[][#align(top + right)[#canvas({
@@ -871,7 +783,7 @@
       })]]]
      ],
 
-     only((2,3,4,5,6,7))[#scale(70%)[#canvas({state-machine-normal})]],
+     layout[#only((2,3,4,5,6,7))[#scale(90%)[#canvas({state-machine-normal})]]],
   )
 ]
 
@@ -882,14 +794,14 @@
 #slide[
   #grid(
     columns: (5%, 60%, 25%),
-    [],
-    [
+    layout[],
+    layout[
       #grid(
         columns: (30%, 20%),
         [
           #let executing-loc(i, content) = canvas({
-            let y = 0.75 - 0.74 * i
-            draw.rect((1, 1), (-3.6, -2.7), stroke: none)
+            let y = 0.75 - 0.86 * i
+            rect-if-show-layout((1, 1), (-3.6, -3))
             draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
@@ -903,7 +815,7 @@
                       ][#executing-loc(4, [Write `y`])
                       ]
         ],
-        text(size: 19pt)[
+        text(size: 22pt)[
         #alternatives(repeat-last: true)[```rs
           let mut x = 0u64;
           let y = &mut x; // Create mutable reference
@@ -930,6 +842,7 @@
         ]
       ])
 
+      #v(2em)
       #let previous-state(anchor, content) = {
         let content = text(fill: gray.darken(30%), size: 11pt)[old: #content]
         draw.content((rel: (0.85, 0.4), to: "tags." + anchor), anchor: "south-west")[#content]
@@ -949,10 +862,9 @@
         let content = text(fill: text-color, size: 11pt)[#content]
         draw.content((rel: (0.85, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
-      #let bounding-box = draw.rect(
+      #let bounding-box = rect-if-show-layout(
         (rel: (-6.5, -4), to: "tags.0"),
         (rel: (7.2, 0.8), to: "tags.0"),
-        stroke: none
       )
 
       #scale(130%)[
@@ -1050,7 +962,134 @@
       })]]
     ]
    ],
-   only((3,4,5,6,7))[#scale(70%)[#canvas({state-machine-normal})]],
+   layout[#only((3,4,5,6,7))[#scale(80%)[#canvas({state-machine-normal})]]],
+  )
+]
+
+#focus-slide[
+  = Raw pointers
+]
+
+#slide[
+  #grid(
+    columns: (5%, 60%, 25%),
+    layout[],
+    layout[
+      #grid(
+        columns: (30%, 20%),
+        [
+          #let executing-loc(i, content) = canvas({
+            let y = 0.75 - 0.86 * i
+            rect-if-show-layout((1, 1), (-3.6, -3))
+            draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
+            let content = text(size: 20pt)[#content]
+            draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
+          })
+          #alternatives[
+                      ][#executing-loc(0, [Alloc `x`])
+                      ][#executing-loc(1, [Raw `r`])
+                      ][#executing-loc(2, [Write `x`])
+                      ][#executing-loc(3, [Write `r`])
+                      ]
+        ],
+        text(size: 22pt)[
+        #alternatives(repeat-last: true)[```rs
+          let mut x = 0u64;
+          let r = core::ptr::addr_of_mut!(x);
+          x = 42; // x and r should be interchangeable
+          r.write(50);
+          ```
+        ][```rs
+          let mut x = 0u64;
+          let r = addr_of_mut!(x);
+          x = 42;
+          r.write(50);
+          ```
+        ]
+
+      ])
+
+      #let previous-state(anchor, content) = {
+        let content = text(fill: gray.darken(30%), size: 11pt)[old: #content]
+        draw.content((rel: (0.85, 0.4), to: "tags." + anchor), anchor: "south-west")[#content]
+      }
+      #let current-state(anchor, content) = {
+        let content = text(size: 21pt)[#content]
+        draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
+      }
+      #let accessed-tag(anchor, content) = {
+        let content = text(size: 16pt)[#content]
+        draw.content((rel: (-3, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.line((rel: (-3, -0.1), to: "tags." + anchor),
+                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
+      }
+      #let transition-summary(anchor, content, ..style) = {
+        let text-color = style.named().at("text-color", default: gray)
+        let content = text(fill: text-color, size: 11pt)[#content]
+        draw.content((rel: (0.85, 0), to: "tags." + anchor), anchor: "south-west")[#content]
+      }
+      #let bounding-box = rect-if-show-layout(
+        (rel: (-6.5, -4), to: "tags.0"),
+        (rel: (7.2, 0.8), to: "tags.0"),
+      )
+
+      #v(2em)
+      #scale(130%)[
+      #alternatives[
+      ][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`], rel: ""),
+          ),
+          spread: 7,
+          grow: 3,
+        )
+        current-state("0")[`Active`]
+        accessed-tag("0")[Alloc]
+        transition-summary("0", text-color: alloc_color)[new]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`,`r`], rel: ""),
+          ),
+          spread: 7,
+          grow: 3,
+        )
+        previous-state("0")[Active]
+        current-state("0")[`Active`]
+        accessed-tag("0")[Raw]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`,`r`], rel: ""),
+          ),
+          spread: 7,
+          grow: 3,
+        )
+        previous-state("0")[Active]
+        current-state("0")[`Active`]
+        accessed-tag("0")[Write]
+        transition-summary("0", text-color: child_color)[+child write]
+        bounding-box
+      })]][#align(top + right)[#canvas({
+        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+          (
+            (content: [`x`,`r`], rel: ""),
+          ),
+          spread: 7,
+          grow: 3,
+        )
+        previous-state("0")[Active]
+        current-state("0")[`Active`]
+        accessed-tag("0")[Write]
+        transition-summary("0", text-color: child_color)[+child write]
+        bounding-box
+      })]]
+    ]
+   ],
+   layout[#only((2,3,4,5))[#scale(80%)[#canvas({state-machine-normal})]]],
   )
 ]
 
@@ -1072,15 +1111,3 @@
     - report any surprises
   ]
 ]
-
-#slide[
-  #grid(
-    columns: (45%, 50%),
-    [*Default*],
-    [*Protected*],
-    canvas({state-machine-normal}),
-    canvas({state-machine-protect}),
-  )
-]
-
-
