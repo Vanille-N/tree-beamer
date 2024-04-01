@@ -39,6 +39,22 @@
 }
 #let layout(c) = box-if-show-layout(c)
 
+
+#let full-slide-overlay(c) = {
+  place(center + horizon)[
+    #rect(width: 120%, height: 101%, fill: white.transparentize(20%))
+  ]
+  place(center + horizon)[
+    #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
+      #text(size: 40pt)[
+        #align(left)[#c]
+      ]
+    ]
+  ]
+}
+
+
+
 #title-slide[
   = Tree Borrows
 
@@ -299,17 +315,8 @@
     ```
 
   #pause
-  #place(center + horizon)[
-    #rect(width: 100%, height: 100%, fill: gray.transparentize(80%))
-  ]
-  #place(center + horizon)[
-    #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
-      #text(size: 40pt)[
-        #align(left)[
-          Both of these restrictions \ come from the stack requirement.
-        ]
-      ]
-    ]
+  #full-slide-overlay[
+      Both of these restrictions \ come (indirectly) from the \ stack approximation.
   ]
 ]
 
@@ -338,31 +345,15 @@
   #pause
 
   === Design constraints
+  #v(-1em)
+  ==== Enough UB
   - strict enough that interesting *optimizations* are possible \
     $->$ _formalized in Coq, ongoing work to prove correctness_
   #pause
+  #v(-1em)
+  ==== Not too much
   - permissive enough that *existing libraries* are correct \
     $->$ _implemented in the Miri interpreter, checked against `std`_
-]
-
-#slide[
-  == Key design elements
-  #v(-1.2em)
-
-  === Per-location
-  - *disjoint* accesses do not interfere
-
-  #pause
-
-  === Track provenance of pointers
-  - each pointer gets an *identifier* on creation
-  - we use a *tree* to keep track of the relationships between tags
-
-  #pause
-
-  === Track permissions of pointers
-  - each tag is associated with a *state* that represents its permission
-  - accesses *update* permissions based on tag relationships
 ]
 
 #let tag-tree(draw-node, data, ..style) = {
@@ -415,37 +406,76 @@
 ]
 
 #slide[
-  #let structure = ((content: [], rel: "P"),
+  #let structure = (
+    (content: [], rel: "P"),
         ((content: [], rel: "P"),
-          ((content: [], rel:  "C"),
-           (content: [],  rel: "C"),
-           ((content: [], rel:  "C"),
-            (content: [], rel:  "C")
-           ),
-           (content: [], rel:  "C")
-          ),
-          ((content: [self], rel:  "T"),
-           (content: [], rel:  "S"),
-           ((content: [], rel:  "S"),
-            ((content: [], rel:  "S"),
-             (content: [], rel:  "S")
+            ((content: [], rel:  "C"),
+                (content: [],  rel: "C"),
+                ((content: [], rel:  "C"),
+                    (content: [], rel:  "C")
+                ),
+                (content: [], rel:  "C")
+            ),
+            ((content: [self], rel:  "T"),
+                ((content: [], rel:  "S"),
+                    (content: [], rel: "S")
+                ),
+                ((content: [], rel:  "S"),
+                    ((content: [], rel:  "S"),
+                          (content: [], rel:  "S")
+                    )
+                ),
+                (content: [], rel: "S"),
              )
-            )
-           )
         ),
         ((content: [], rel:  "C"),
-          (content: [], rel:  "C"),
-          ((content: [], rel:  "C"),
-           (content: [], rel:  "C"),
-           (content: [], rel:  "C")
-          )
+            (content: [], rel:  "C"),
+            ((content: [], rel:  "C"),
+                (content: [], rel:  "C"),
+                (content: [], rel:  "C")
+            )
         )
-      )
+    )
 
     #grid(
     columns: (70%, 30%),
     layout[#{
       alternatives[#canvas({
+          tag-tree(
+            (node) => {
+              draw-node-highlight((rel) => if rel == "H" { alloc_color } else { none }, node)
+            },
+            ((content: [], rel: ""),
+                ((content: [], rel: ""),
+                    ((content: [], rel:  ""),
+                       (content: [],  rel: ""),
+                       ((content: [], rel:  ""),
+                          (content: [], rel:  "")
+                       ),
+                       (content: [], rel:  "")
+                    ),
+                    ((content: [self], rel:  ""),
+                       ((content: [], rel:  ""),
+                          (content: [], rel: "")
+                       ),
+                      ((content: [], rel:  ""),
+                        ((content: [], rel:  ""),
+                           (content: [], rel:  "")
+                        )
+                      ),
+                      (content: [new], rel: "H"),
+                    )
+                ),
+                ((content: [], rel:  ""),
+                    (content: [], rel:  ""),
+                    ((content: [], rel:  ""),
+                       (content: [], rel:  ""),
+                       (content: [], rel:  "")
+                    )
+                )
+            )
+        )
+      })][#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("T"), node) }, structure)
       })][#canvas({
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("S"), node) }, structure)
@@ -459,56 +489,14 @@
         tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P", "C"), node) }, structure)
       })][#canvas({
           tag-tree( (node) => { draw-node-highlight(standard_color_picker, node) }, structure)
-      })][#canvas({
-          tag-tree( (node) => { draw-node-highlight((rel) => if rel == "H" { alloc_color } else { none }, node) },
-          ((content: [], rel: ""),
-            ((content: [], rel: ""),
-              ((content: [], rel:  ""),
-               (content: [],  rel: ""),
-               ((content: [], rel:  ""),
-                (content: [], rel:  "")
-               ),
-               (content: [], rel:  "")
-              ),
-              ((content: [self], rel:  ""),
-               (content: [], rel:  ""),
-               ((content: [], rel:  ""),
-                ((content: [], rel:  ""),
-                 (content: [], rel:  "")
-                 )
-                ),
-                (content: [new], rel: "H"),
-               )
-            ),
-            ((content: [], rel:  ""),
-              (content: [], rel:  ""),
-              ((content: [], rel:  ""),
-               (content: [], rel:  ""),
-               (content: [], rel:  "")
-              )
-            )
-          )
-        )
       })]
-
-
     }],
     layout[
-      #only((1,2,3,7))[
-        #text(fill: self_color)[self] & #text(fill: strict_color)[strict children] \
-        #text(fill: child_color)[$->$ children]
-      ]
-
-      #only((4,5,6,7))[
-        #text(fill: parent_color)[parents] & #text(fill: cousin_color)[cousins] \
-        #text(fill: foreign_color)[$->$ foreign]
-      ]
-
-      #only(8)[
+      #only(1)[
         #align(center)[
           #text(fill: alloc_color)[reborrows] \
           create \
-          #text(fill: child_color)[children]
+          #text(fill: child_color)[immediate children]
         ]
 
         #v(1em)
@@ -517,8 +505,18 @@
         let new = &*self;
         ```
       ]
+
+      #only((2,3,4,8))[
+        #text(fill: self_color)[self] & #text(fill: strict_color)[strict children] \
+        #text(fill: child_color)[$->$ children]
+      ]
+
+      #only((5,6,7,8))[
+        #text(fill: parent_color)[parents] & #text(fill: cousin_color)[cousins] \
+        #text(fill: foreign_color)[$->$ foreign]
+      ]
     ]
-)
+  )
 ]
 
 #focus-slide[
@@ -620,6 +618,12 @@
     self-loop("dis", "west", [foreign r/w], text-color: foreign_color)
 }
 
+#slide[
+  #align(center)[
+    #canvas({state-machine-normal})
+  ]
+]
+
 #focus-slide[
   = First example contains UB
 ]
@@ -640,7 +644,7 @@
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
           })
-          #alternatives[
+          #alternatives(repeat-last: true)[
                       ][#executing-loc(0, [Alloc `X`])
                       ][#executing-loc(1, [Borrow `y`])
                       ][#executing-loc(2, [Read `y`])
@@ -696,7 +700,7 @@
       #v(2em)
 
       #scale(130%)[
-      #alternatives[][#align(top + right)[#canvas({
+      #alternatives(repeat-last: true)[][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight((rel) => none, node),
           (
             (content: [`X`], rel: ""),
@@ -783,8 +787,13 @@
       })]]]
      ],
 
-     layout[#only((2,3,4,5,6,7))[#scale(90%)[#canvas({state-machine-normal})]]],
+     layout[#only((2,3,4,5,6,7,8))[#scale(90%)[#canvas({state-machine-normal})]]],
   )
+  #only(8)[#full-slide-overlay[
+    - exclusively owned ```rs &mut``` is `Active`
+    - `Active -> Frozen` detects \
+      violations of uniqueness
+  ]]
 ]
 
 #focus-slide[
@@ -806,7 +815,7 @@
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
           })
-          #alternatives[
+          #alternatives(repeat-last: true)[
                       ][
                       ][#executing-loc(0, [Alloc `x`])
                       ][#executing-loc(1, [Borrow `y`])
@@ -868,7 +877,7 @@
       )
 
       #scale(130%)[
-      #alternatives[][
+      #alternatives(repeat-last: true)[][
       ][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
@@ -962,8 +971,14 @@
       })]]
     ]
    ],
-   layout[#only((3,4,5,6,7))[#scale(80%)[#canvas({state-machine-normal})]]],
+   layout[#only((3,4,5,6,7,8))[#scale(80%)[#canvas({state-machine-normal})]]],
   )
+  #only(8)[
+    #full-slide-overlay[
+      - ```rs &mut``` starts `Reserved`
+      - `Reserved` allows all read accesses
+    ]
+  ]
 ]
 
 #focus-slide[
@@ -985,7 +1000,7 @@
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
           })
-          #alternatives[
+          #alternatives(repeat-last: true)[
                       ][#executing-loc(0, [Alloc `x`])
                       ][#executing-loc(1, [Raw `r`])
                       ][#executing-loc(2, [Write `x`])
@@ -1035,7 +1050,7 @@
 
       #v(2em)
       #scale(130%)[
-      #alternatives[
+      #alternatives(repeat-last: true)[
       ][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
@@ -1089,8 +1104,15 @@
       })]]
     ]
    ],
-   layout[#only((2,3,4,5))[#scale(80%)[#canvas({state-machine-normal})]]],
+   layout[#only((2,3,4,5,6,7))[#scale(80%)[#canvas({state-machine-normal})]]],
   )
+
+  #only(7)[
+    #full-slide-overlay[
+      - raw pointers inherit parent's permissions
+      - same approach works for interior mutability
+    ]
+  ]
 ]
 
 #focus-slide[
@@ -1098,14 +1120,31 @@
 ]
 
 #slide[
+  == Key design elements
+  #v(-1.2em)
+
+  === Per-location
+  - *disjoint* accesses do not interfere
+
+  #pause
+
+  === Track provenance of pointers
+  - each pointer gets an *identifier* on creation
+  - we use a *tree* to keep track of the relationships between tags
+
+  #pause
+
+  === Track permissions of pointers
+  - each tag is associated with a *state* that represents its permission
+  - accesses *update* permissions based on tag relationships
+]
+
+#slide[
   #align(horizon)[
-    *Features:*
-    - fine-grained 2-phase borrows
-    - simple handling of raw pointers and interior mutability
-    - common patterns forbidden by Stacked Borrows now allowed
     *Learn more:* #link("https://perso.crans.org/vanille/treebor")[`https://perso.crans.org/vanille/treebor/`]
     - stronger guarantees for function arguments (protectors)
     - no range restriction on reborrow
+
     *Try it out:* #link("https://github.com/rust-lang/miri")[`https://github.com/rust-lang/miri`]
     - use the flag `-Zmiri-tree-borrows`
     - report any surprises
