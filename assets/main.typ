@@ -348,22 +348,20 @@
 
   #pause
   #full-slide-overlay[
-    The stack is too rigid to represent the information required to track the exact relationship
+    The stack is too rigid to represent the exact relationship
   ]
 ]
 
 #slide[
   == Stacked Borrows $arrow.squiggly$ Tree Borrows
 
-  Stack is not precise enough $->$ use a *tree* instead.
+  Stack is not precise enough. \
+
+  Use a *tree* instead
+  $->$ accurate tracking of pointer ancestry
 
   #pause
-  This allows
-  - more accurate tracking of pointer ancestry
-  - more fine-grained permissions
-
-  #pause
-  Resulting in
+  Results in
   - accurate handling of two-phase borrows
   - more permitted patterns
   - simpler rules, fewer exceptions
