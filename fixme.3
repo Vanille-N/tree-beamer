@@ -65,3 +65,9 @@ Slide 18
 Slide 20
 - addr_of_mut! from the start
 - explain the code
+
+maybe → child read →?
+
+one thing that's currently not sufficiently clear is that we treat all mutable references as if they were two-phase. so the example should start by saying that that's what we do, and here's an example demonstrating what this means in practice.
+it would probably be good to make the example actually compile by making it &mut *addr_of_mut!(x), but then you have to move it after the interior mutability example.
+and then somewhere, not sure where, it would be good to say why we treat all mutable references as two-phase -- namely that this is crucial to accepting these unsafe code examples that stacked borrows rejects
