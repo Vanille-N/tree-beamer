@@ -1,0 +1,67 @@
+2024-04-04 Second practice talk
+
+Slide 2
+- smoother
+- no details needed, the audience knows
+
+Slide 3
+- emphasize that adding the opaque is what makes the optimization basically impossible.
+
+Slide 6 (and everywhere)
+- call it a tag
+
+Slide 7
+- make it clear that "SB doesn't handle 2-phase" does NOT mean it's UB, it's raw pointers
+- arrows should point to `vec` not `push`
+- explain the unsafe example ? That sounds difficult.
+  Currently an implicit write.
+  Making it an implicit read would require inserting the pointer in the middle of
+  the stack ? This is a hack and it's starting to look tree-like.
+  We might not need to explain the details, just be precise about which of the examples
+  are UB.
+- show the tree structure
+- ~~"precise"~~ -> it's about flexibility
+  "stack is too rigid"
+
+The example is a two-phase borrows, use it for the step-by-step execution.
+"And there's other kinds of two-phase borrow -like behavior" in unsafe code that we want to allow
+
+Slide 8
+- emphasize Tree is natural because every pointer has a parent.
+
+Slide 9 has too much text
+- it mixes summary (aliasing model) with new stuff (constraints)
+- We're not testing std regularly
+Remove the summary part, focus more on the evaluation
+
+Slide 16
+- `Active -> Frozen` is not the only way to detect loss of uniqueness,
+  `Active -> Disabled` also detects that
+- Point at the state machine: accesses of any kind end Active which detects uniqueness
+- point out the weirdness of `Active -> Frozen`
+
+Slide 17
+- ~~Two-phase borrows~~
+- "All mutable references are two-phase borrows"
+
+Raw pointer example
+- rejected by SB, explain why
+
+Put back the slide about the intuition of the state machine
+
+Step-by-step execution
+- different arrow head for the event ?
+- explain visual language
+- highlight arrow ?
+- first time we have a transition, use it to explain the details
+- first time we have two nodes, specify that the state machine runs at each node separately
+
+Summarize comparison with SB ?
+
+Slide 18
+- swap z and y
+- make it closer to the previous pattern
+
+Slide 20
+- addr_of_mut! from the start
+- explain the code
