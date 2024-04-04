@@ -58,9 +58,9 @@
 #title-slide[
   = Tree Borrows
 
-  Neven Villani #footnote[ENS Paris-Saclay, Université Paris-Saclay] <ens>,
-  Johannes Hostert #footnote[ETH Zürich] <eth>,
-  Derek Dreyer #footnote[MPI-SWS Saarbrücken] <mpi>,
+  #underline[Neven Villani], #footnote[ENS Paris-Saclay, Université Paris-Saclay] <ens>
+  Johannes Hostert, #footnote[ETH Zürich] <eth>
+  Derek Dreyer, #footnote[MPI-SWS Saarbrücken] <mpi>
   Ralf Jung @eth
 
   #v(2em)
@@ -250,7 +250,7 @@
       #box(fill: color.mix(red.darken(-40%), gray).darken(-60%), inset: 12pt, radius: 12pt)[
         #align(left)[
           Optimization *changes observable behavior*... \
-          is the optimization incorrect ?
+          Is the optimization incorrect?
         ]
       ]
     ]
@@ -269,7 +269,7 @@
   #align(center)[
     #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
       #align(left)[
-        === Sounds familiar ?
+        === Sounds familiar?
 
         *Stacked Borrows* has the same purpose, \
         Tree Borrows is its successor.
@@ -281,11 +281,11 @@
 #slide[
   == Stacked Borrows
 
-  Adds *extra state* to the abstract machine to track provenance. \
-  Distinguishes pointers to the same location with an *identifier*.
+  Adds *extra state* to the abstract machine to track provenance.
+  Distinguishes pointers to the same location with a *tag*. \
 
   #pause
-  Uses a *stack* to enforce that borrows are well-parenthesized. \
+  Uses a *stack* to enforce that borrows are well-bracketed. \
   The stack associates each pointer to its current *permission*.
 
   #pause
@@ -293,15 +293,15 @@
 ]
 
 #slide[
-  However Stacked Borrows...
+  However, Stacked Borrows...
 
-  - does not handle 2-phase borrows
+  - does not handle two-phase borrows
     #pause
     ```rs
-    vec.push(vec[0]);
-    //       ^^^^^^ 2. read-only operation before function entry
-    //                 does not invalidate the &mut
-    //  ^^^^ 1. implicit &mut in function arguments
+        vec.push(vec[0]);
+    //  ^^^ 1. implicit &mut in function arguments
+    //           ^^^^^^ 2. read-only operation before function
+    //                     entry does not invalidate the &mut
     ```
   #pause
 
@@ -315,15 +315,47 @@
     ```
 
   #pause
+  #place(bottom)[
+    #canvas({
+      draw.rect((0, 0), (25, 6), stroke: none)
+      draw.rect((0, 0), (25, 4), stroke: none,
+        fill: white.transparentize(30%))
+      draw.content((3.196, 3.45), name: "text-from")[`from`]
+      draw.content((6.158, 3.45), name: "text-data1")[`data`]
+      draw.content((2.77, 1.5), name: "text-to")[`to`]
+      draw.content((5.31, 1.5), name: "text-data2")[`data`]
+    })
+  ]
+  #place(bottom + right)[
+    #box(radius: 10pt, fill: blue.darken(-70%))[
+      #canvas({
+        draw.rect((-2, 1.5), (6, -4.5), stroke: none)
+        tree.tree((`data`, `from`, `to`),
+          spread: 4,
+          grow: 3,
+          draw-node: (node, ..) => {
+            draw.circle((), radius: 1, stroke: black)
+            draw.content((), node.content)
+          },
+          draw-edge: (from, to, ..) => {
+            let (a, b) = (from + ".center", to + ".center")
+            draw.line((a, 1, b), (b, 1, a))
+          }
+        )
+      })
+   ]
+  ]
+
+  #pause
   #full-slide-overlay[
-      Both of these restrictions \ come (indirectly) from the \ stack approximation.
+    The stack is too rigid to represent the information required to track the exact relationship
   ]
 ]
 
 #slide[
   == Stacked Borrows $arrow.squiggly$ Tree Borrows
 
-  Remove the simplifying assumption of a stack, use a *tree* instead.
+  Stack is not precise enough $->$ use a *tree* instead.
 
   #pause
   This allows
@@ -332,28 +364,24 @@
 
   #pause
   Resulting in
-  - accurate handling of 2-phase borrows
-  - more patterns permitted
+  - accurate handling of two-phase borrows
+  - more permitted patterns
   - simpler rules, fewer exceptions
 ]
 
 #slide[
-  === Aliasing model
-  - defines which pointers are valid, for which ranges of memory, and in which order they can be accessed
-  - *dynamic check* of uniqueness of ```rs &mut``` and immutability of ```rs &```
-
-  #pause
-
   === Design constraints
-  #v(-1em)
   ==== Enough UB
   - strict enough that interesting *optimizations* are possible \
-    $->$ _formalized in Coq, ongoing work to prove correctness_
+    $->$ guided by desirable optimizations, and expected UB \
+    $->$ _formalized in Coq, ongoing work to prove correctness_ \
+
   #pause
-  #v(-1em)
+
   ==== Not too much
   - permissive enough that *existing libraries* are correct \
-    $->$ _implemented in the Miri interpreter, checked against `std`_
+    $->$ guided by common patterns, complaints about Stacked Borrows \
+    $->$ _implemented in the Miri interpreter, checked against libraries_
 ]
 
 #let tag-tree(draw-node, data, ..style) = {
@@ -384,10 +412,10 @@
 }
 
 #let dim(c) = color.mix(c, gray)
-#let strict_color = blue.darken(10%)
-#let self_color = blue.darken(-50%)
-#let parent_color = red.darken(-50%)
-#let cousin_color = red.darken(10%)
+#let strict_color = blue.darken(-50%)
+#let self_color = blue.darken(5%)
+#let parent_color = red.darken(10%)
+#let cousin_color = red.darken(-50%)
 #let child_color = dim(blue.darken(-20%))
 #let foreign_color = dim(red.darken(-20%))
 #let mixed_color = dim(purple.darken(-40%))
@@ -619,8 +647,91 @@
 }
 
 #slide[
-  #align(center)[
-    #canvas({state-machine-normal})
+  #align(right)[
+    #let marker(to, ldist) = {
+      draw.line(
+        (rel: (-ldist - 1, 0), to: to + "-box.west"),
+        (rel: (-ldist, 0), to: to + "-box.west"),
+        mark: (end: "o"),
+        name: to + "-line",
+      )
+    }
+    #let rel-to-line(to, rel, anchor) = {
+      (rel: rel, to: to + "-line." + anchor)
+    }
+    #let bounding-box = {
+      draw.rect((rel: (5, 2), to: "res-box.center"), (rel: (-22, -10), to: "res-box.center"), stroke: none)
+    }
+    #alternatives[
+      #canvas({
+        state-machine-normal
+        bounding-box
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("res", 5)
+        marker("act", 5)
+        draw.content(rel-to-line("res", (-0.5, 0), "start"), anchor: "east")[`&mut` not yet written to]
+        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[`&mut` already written]
+        draw.line(
+          rel-to-line("res", (-0.1, -0.5), "start"),
+          rel-to-line("act", (-0.1, 0.5), "start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[write to it]
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("act", 5)
+        marker("frz", 5)
+        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[exclusive access]
+        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
+        draw.line(
+          rel-to-line("act", (-0.1, -0.5), "start"),
+          rel-to-line("frz", (-0.1, 0.5), "start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains access]
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("frz", 5)
+        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
+        draw.bezier(
+          (rel: (-0.1, -0.5), to: "frz-line.start"),
+          (rel: (0.1, -0.5), to: "frz-line.start"),
+          (rel: (-1.5, -2.5), to: "frz-line.start"),
+          (rel: (1.5, -2.5), to: "frz-line.start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[any read-only operation]
+      })
+    ][
+      #canvas({
+        state-machine-normal
+        bounding-box
+        marker("frz", 5)
+        marker("dis", 8)
+        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
+        draw.content(rel-to-line("dis", (-0.5, 0), "start"), anchor: "east")[no access]
+        draw.line(
+          rel-to-line("frz", (-0.1, -0.5), "start"),
+          rel-to-line("dis", (-0.1, 0.5), "start"),
+          mark: (end: ">"),
+          name: "transform",
+        )
+        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains exclusive access]
+      })
+    ]
   ]
 ]
 
@@ -640,7 +751,7 @@
           #let executing-loc(i, content) = canvas({
             let y = 1 - 0.86 * i
             rect-if-show-layout((1, 1.3), (-3, -3.8))
-            draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
+            draw.line((0, y), (1, y), name: "line", mark: (end: "o"))
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
           })
@@ -685,7 +796,7 @@
       #let accessed-tag(anchor, content) = {
         draw.content((rel: (-4, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
         draw.line((rel: (-4, -0.1), to: "tags." + anchor),
-                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
+                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: "o"))
       }
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
@@ -790,14 +901,14 @@
      layout[#only((2,3,4,5,6,7,8))[#scale(90%)[#canvas({state-machine-normal})]]],
   )
   #only(8)[#full-slide-overlay[
-    - exclusively owned ```rs &mut``` is `Active`
+    - Exclusively owned ```rs &mut``` is `Active`
     - `Active -> Frozen` detects \
       violations of uniqueness
   ]]
 ]
 
 #focus-slide[
-  = Two-phase borrows
+  = All mutable references are two-phase borrows
 ]
 
 #slide[
@@ -811,7 +922,7 @@
           #let executing-loc(i, content) = canvas({
             let y = 0.75 - 0.86 * i
             rect-if-show-layout((1, 1), (-3.6, -3))
-            draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
+            draw.line((0, y), (1, y), name: "line", mark: (end: "o"))
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
           })
@@ -836,8 +947,8 @@
         ][```rs
           let mut x = 0u64;
           let y = &mut x;
-          let z = &x;     // << Two-phase borrowed,
-          read_only(z);   // << read access allowed
+          let z = &x;     // Two-phase borrowing of y in progress
+          read_only(z);   // Read accesses still allowed
           mutate(y);
 
           ```
@@ -864,7 +975,7 @@
         let content = text(size: 16pt)[#content]
         draw.content((rel: (-3, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
         draw.line((rel: (-3, -0.1), to: "tags." + anchor),
-                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
+                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: "o"))
       }
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
@@ -976,7 +1087,8 @@
   #only(8)[
     #full-slide-overlay[
       - ```rs &mut``` starts `Reserved`
-      - `Reserved` allows all read accesses
+      - `Reserved` tolerates all read accesses
+      - Tree structure makes this possible
     ]
   ]
 ]
@@ -996,7 +1108,7 @@
           #let executing-loc(i, content) = canvas({
             let y = 0.75 - 0.86 * i
             rect-if-show-layout((1, 1), (-3.6, -3))
-            draw.line((0, y), (1, y), name: "line", mark: (end: ">"))
+            draw.line((0, y), (1, y), name: "line", mark: (end: "o"))
             let content = text(size: 20pt)[#content]
             draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
           })
@@ -1010,7 +1122,7 @@
         text(size: 22pt)[
         #alternatives(repeat-last: true)[```rs
           let mut x = 0u64;
-          let r = core::ptr::addr_of_mut!(x);
+          let r = addr_of_mut!(x);
           x = 42; // x and r should be interchangeable
           r.write(50);
           ```
@@ -1036,7 +1148,7 @@
         let content = text(size: 16pt)[#content]
         draw.content((rel: (-3, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
         draw.line((rel: (-3, -0.1), to: "tags." + anchor),
-                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: ">"))
+                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: "o"))
       }
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
@@ -1088,29 +1200,15 @@
         accessed-tag("0")[Write]
         transition-summary("0", text-color: child_color)[+child write]
         bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`,`r`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        previous-state("0")[Active]
-        current-state("0")[`Active`]
-        accessed-tag("0")[Write]
-        transition-summary("0", text-color: child_color)[+child write]
-        bounding-box
-      })]]
-    ]
+      })]]]
    ],
-   layout[#only((2,3,4,5,6,7))[#scale(80%)[#canvas({state-machine-normal})]]],
+   layout[#only((2,3,4,5,6))[#scale(80%)[#canvas({state-machine-normal})]]],
   )
 
-  #only(7)[
+  #only(6)[
     #full-slide-overlay[
-      - raw pointers inherit parent's permissions
-      - same approach works for interior mutability
+      - Raw pointers inherit tag \ (and permissions with it)
+      - Same approach for interior mutability
     ]
   ]
 ]
@@ -1120,33 +1218,20 @@
 ]
 
 #slide[
-  == Key design elements
-  #v(-1.2em)
-
-  === Per-location
-  - *disjoint* accesses do not interfere
-
-  #pause
-
-  === Track provenance of pointers
-  - each pointer gets an *identifier* on creation
-  - we use a *tree* to keep track of the relationships between tags
-
-  #pause
-
-  === Track permissions of pointers
-  - each tag is associated with a *state* that represents its permission
-  - accesses *update* permissions based on tag relationships
-]
-
-#slide[
   #align(horizon)[
-    *Learn more:* #link("https://perso.crans.org/vanille/treebor")[`https://perso.crans.org/vanille/treebor/`]
-    - stronger guarantees for function arguments (protectors)
+    *Learn more:* \
+    #link("https://perso.crans.org/vanille/treebor")[`https://perso.crans.org/vanille/treebor/`]
+    - protectors on function arguments
     - no range restriction on reborrow
 
-    *Try it out:* #link("https://github.com/rust-lang/miri")[`https://github.com/rust-lang/miri`]
+    #v(2em)
+
+    *Try it out:* \
+    #link("https://github.com/rust-lang/miri")[`https://github.com/rust-lang/miri`]
     - use the flag `-Zmiri-tree-borrows`
-    - report any surprises
+    - *test* your unsafe code, *report* any surprises!
+
+    #place(top + right)[#image("qr-treebor.png", width: 20%)]
+    #place(bottom + right)[#image("qr-miri.png", width: 20%)]
   ]
 ]
