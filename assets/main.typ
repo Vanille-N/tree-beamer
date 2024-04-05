@@ -658,7 +658,7 @@
       (rel: rel, to: to + "-line." + anchor)
     }
     #let bounding-box = {
-      draw.rect((rel: (5, 2), to: "res-box.center"), (rel: (-22, -10), to: "res-box.center"), stroke: none)
+      draw.rect((rel: (5, 2), to: "res-box.center"), (rel: (-22.5, -10), to: "res-box.center"), stroke: none)
     }
     #alternatives[
       #canvas({
@@ -799,7 +799,7 @@
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
         let content = text(fill: text-color, size: 13pt)[#content]
-        draw.content((rel: (1, 0), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.content((rel: (1.7, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
       #let bounding-box = rect-if-show-layout(
         (rel: (-6.2, -2.8), to: "tags.0"),
@@ -830,7 +830,7 @@
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
         accessed-tag("0-0")[Borrow]
-        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0", text-color: child_color)[$arrow.b$child read]
         transition-summary("0-0", text-color: alloc_color)[new]
         bounding-box
       })]][#align(top + right)[#canvas({
@@ -845,8 +845,8 @@
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
         accessed-tag("0-0")[Read]
-        transition-summary("0", text-color: child_color)[+child read]
-        transition-summary("0-0", text-color: child_color)[+child read]
+        transition-summary("0", text-color: child_color)[$arrow.b$child read]
+        transition-summary("0-0", text-color: child_color)[$arrow.b$child read]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -860,8 +860,8 @@
         current-state("0")[`Active`]
         current-state("0-0")[`Active`]
         accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[+child write]
-        transition-summary("0-0", text-color: child_color)[+child write]
+        transition-summary("0", text-color: child_color)[$arrow.b$child write]
+        transition-summary("0-0", text-color: child_color)[$arrow.b$child write]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -875,8 +875,8 @@
         previous-state("0-0")[Active]
         current-state("0")[`Active`]
         current-state("0-0")[`Frozen`]
-        transition-summary("0", text-color: child_color)[+child read]
-        transition-summary("0-0", text-color: foreign_color)[+foreign read]
+        transition-summary("0", text-color: child_color)[$arrow.b$child read]
+        transition-summary("0-0", text-color: foreign_color)[$arrow.b$foreign read]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -890,8 +890,8 @@
         current-state("0")[`Active`]
         current-state("0-0")[#Rejected]
         accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[+child write]
-        transition-summary("0-0", text-color: child_color)[+child write]
+        transition-summary("0", text-color: child_color)[$arrow.b$child write]
+        transition-summary("0-0", text-color: child_color)[$arrow.b$child write]
         bounding-box
       })]]]
      ],
@@ -900,7 +900,7 @@
   )
   #only(8)[#full-slide-overlay[
     - Exclusively owned ```rs &mut``` is `Active`
-    - `Active -> Frozen` detects \
+    - Transitions from `Active` detect \
       violations of uniqueness
   ]]
 ]
@@ -978,11 +978,11 @@
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
         let content = text(fill: text-color, size: 11pt)[#content]
-        draw.content((rel: (0.85, 0), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.content((rel: (1.7, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
       #let bounding-box = rect-if-show-layout(
         (rel: (-6.5, -4), to: "tags.0"),
-        (rel: (7.2, 0.8), to: "tags.0"),
+        (rel: (7.6, 0.8), to: "tags.0"),
       )
 
       #scale(130%)[
@@ -1012,7 +1012,7 @@
         current-state("0")[`Active`]
         current-state("0-0")[`Reserved`]
         accessed-tag("0-0")[Borrow]
-        transition-summary("0", text-color: child_color)[+child read]
+        transition-summary("0", text-color: child_color)[$arrow.b$child read]
         transition-summary("0-0", text-color: alloc_color)[new]
         bounding-box
       })]][#align(top + right)[#canvas({
@@ -1031,8 +1031,8 @@
         current-state("0-0")[`Reserved`]
         current-state("0-1")[`Frozen`]
         accessed-tag("0-1")[Borrow]
-        transition-summary("0", text-color: child_color)[+child read]
-        transition-summary("0-0", text-color: foreign_color)[+foreign read]
+        transition-summary("0", text-color: child_color)[$arrow.b$child read]
+        transition-summary("0-0", text-color: foreign_color)[$arrow.b$foreign read]
         transition-summary("0-1", text-color: alloc_color)[new]
         bounding-box
       })]][#align(top + right)[#canvas({
@@ -1052,9 +1052,9 @@
         current-state("0-0")[`Reserved`]
         current-state("0-1")[`Frozen`]
         accessed-tag("0-1")[Read]
-        transition-summary("0", text-color: child_color)[+child read]
-        transition-summary("0-0", text-color: foreign_color)[+foreign read]
-        transition-summary("0-1", text-color: child_color)[+child read]
+        transition-summary("0", text-color: child_color)[$arrow.b$child read]
+        transition-summary("0-0", text-color: foreign_color)[$arrow.b$foreign read]
+        transition-summary("0-1", text-color: child_color)[$arrow.b$child read]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -1073,9 +1073,9 @@
         current-state("0-0")[`Active`]
         current-state("0-1")[`Disabled`]
         accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[+child write]
-        transition-summary("0-0", text-color: child_color)[+child write]
-        transition-summary("0-1", text-color: foreign_color)[+foreign write]
+        transition-summary("0", text-color: child_color)[$arrow.b$child write]
+        transition-summary("0-0", text-color: child_color)[$arrow.b$child write]
+        transition-summary("0-1", text-color: foreign_color)[$arrow.b$foreign write]
         bounding-box
       })]]
     ]
@@ -1151,7 +1151,7 @@
       #let transition-summary(anchor, content, ..style) = {
         let text-color = style.named().at("text-color", default: gray)
         let content = text(fill: text-color, size: 11pt)[#content]
-        draw.content((rel: (0.85, 0), to: "tags." + anchor), anchor: "south-west")[#content]
+        draw.content((rel: (1.7, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
       #let bounding-box = rect-if-show-layout(
         (rel: (-6.5, -4), to: "tags.0"),
@@ -1196,7 +1196,7 @@
         previous-state("0")[Active]
         current-state("0")[`Active`]
         accessed-tag("0")[Write]
-        transition-summary("0", text-color: child_color)[+child write]
+        transition-summary("0", text-color: child_color)[$arrow.b$child write]
         bounding-box
       })]]]
    ],
