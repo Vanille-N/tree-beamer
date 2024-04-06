@@ -285,11 +285,8 @@
   Distinguishes pointers to the same location with a *tag*. \
 
   #pause
-  Uses a *stack* to enforce that borrows are well-bracketed. \
-  The stack associates each pointer to its current *permission*.
-
-  #pause
-  Accesses to pointers *update* the stack structure and the permissions.
+  Uses a *stack* to store permissions. \
+  Enforces that borrows are well-bracketed.
 ]
 
 #slide[
@@ -305,7 +302,7 @@
     ```
   #pause
 
-  - forbids common ```rs unsafe``` patterns
+  - forbids common ```rs unsafe``` patterns (declared UB)
     #pause
     ```rs
     let from = data.as_ptr();
@@ -555,12 +552,6 @@
   After creation each pointer experiences a sequence of \
   child/foreign read/write accesses and gains/loses permissions \
   in consequence
-
-  - `Reserved` #sym.approx mutable reference (not yet written to)
-  - `Active` #sym.approx mutable reference
-  - `Frozen` #sym.approx shared reference
-  - `Disabled` #sym.approx dead pointer
-
 ]
 
 #let state(x, y, name, label) = {
@@ -1174,8 +1165,8 @@
         current-state("0-1")[`Reserved`]
         accessed-tag("0-0")[Read]
         transition-summary("0", text-color: child_color)[$arrow.b$child read]
-        transition-summary("0-0", text-color: foreign_color)[$arrow.b$child read]
-        transition-summary("0-1", text-color: child_color)[$arrow.b$foreign read]
+        transition-summary("0-0", text-color: child_color)[$arrow.b$child read]
+        transition-summary("0-1", text-color: foreign_color)[$arrow.b$foreign read]
         bounding-box
       })]][#align(top + right)[#canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
@@ -1209,27 +1200,6 @@
       - `Reserved` tolerates all read accesses
       - Tree structure makes this possible
     ]
-  ]
-]
-
-#slide[
-  #align(horizon)[
-    ```rs
-        vec.push(vec[0]);
-    //  ^^^ two-phase mutable reborrow
-    //           ^^^^^^ shared reborrow
-    //  => `vec` is not invalidated by the shared reborrow
-    ```
-
-    #v(3em)
-    #pause
-
-    ```rs
-    let from = data.as_ptr(); // shared reborrow
-    let to = data.as_mut_ptr(); // two-phase mutable reborrow
-    std::ptr::copy_nonoverlapping(from, to.add(1), 1);
-    // => `to` does not invalidate the shared reborrow
-    ```
   ]
 ]
 
