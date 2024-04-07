@@ -59,8 +59,8 @@
   = Tree Borrows
 
   #underline[Neven Villani], #footnote[ENS Paris-Saclay, Université Paris-Saclay] <ens>
-  Johannes Hostert, #footnote[ETH Zürich] <eth>
-  Derek Dreyer, #footnote[MPI-SWS Saarbrücken] <mpi>
+  Johannes Hostert, #footnote[ETH Zurich] <eth>
+  Derek Dreyer, #footnote[MPI-SWS] <mpi>
   Ralf Jung @eth
 
   #v(2em)
@@ -260,10 +260,9 @@
 #slide[
   == It's not the optimization that is wrong, it's the code
 
-  Tree Borrows adds proof obligations to ```rs unsafe``` blocks.
+  Tree Borrows enforces aliasing rules by adding proof obligations to ```rs unsafe``` blocks.
 
-  Code that violates these rules is declared *Undefined Behavior*
-  and ruled out from the proof of correctness of optimizations.
+  Code that violates these rules is declared *Undefined Behavior*.
 
   #pause
   #align(center)[
@@ -308,7 +307,7 @@
     let from = data.as_ptr();
     // SB inserts an implicit write, killing the raw pointer
     let to = data.as_mut_ptr();
-    std::ptr::copy_nonoverlapping(from, to.add(1), 1); // UB
+    copy_nonoverlapping(from, to.add(1), 1); // UB
     ```
 
   #pause
