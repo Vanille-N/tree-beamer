@@ -4,9 +4,9 @@ by Neven Villani
 
 Slides and sources for presentations of Tree Borrows.
 
-This branch is specific to the presentation of Tree Borrows to be given
-at the Toccata meetup in December 2023 at the LMF. Other branches may
-contain material not presented here.
+This branch is specific to the presentation of Tree Borrows to given at
+the Rust Verification Workshop in Luxembourg (April 2024).
+Other branches may contain material not presented here.
 
 Related:
 - [Tree Borrows by Example](https://perso.crans.org/vanille/treebor/)
