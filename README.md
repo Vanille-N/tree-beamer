@@ -4,7 +4,7 @@ by Neven Villani
 
 Slides and sources for presentations of Tree Borrows.
 
-This branch is specific to the presentation of Tree Borrows to given at
+This branch is specific to the presentation of Tree Borrows given at
 the Rust Verification Workshop in Luxembourg (April 2024).
 Other branches may contain material not presented here.
 
