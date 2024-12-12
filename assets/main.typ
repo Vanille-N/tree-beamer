@@ -1,20 +1,43 @@
-#import "@preview/polylux:0.3.1": *
-#import "@preview/cetz:0.2.1": canvas, plot, draw, tree
+#import "@preview/touying:0.5.3": *
+#import "@preview/cetz:0.3.1"
+#import cetz: canvas, plot, draw, tree
+#import "@preview/numbly:0.1.0": numbly
 
-#import themes.simple: *
+#import themes.university: *
 
 #set text(font: "Inria Sans")
 #show raw: text.with(font: "JetBrains Mono")
 
-#show: simple-theme.with(
-  footer: [
-    #grid(
-      columns: (80%, 20%),
-      [Tree Borrows],
-      align(right)[#logic.logical-slide.display()],
-    )
-  ]
+#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
+
+
+// Register university theme
+// You can replace it with other themes and it can still work normally
+#show: university-theme.with(
+  aspect-ratio: "16-9",
+  footer-b: self => {
+    [Tree Borrows]
+  },
+  footer-a: self => {
+    [Neven Villani]
+  },
+  config-info(
+    title: [Tree Borrows],
+    author: [
+      #underline[Neven Villani], #footnote[ENS Paris-Saclay, Université Paris-Saclay] <ens>
+      Johannes Hostert, #footnote[ETH Zurich] <eth>
+      Derek Dreyer, #footnote[MPI-SWS] <mpi>
+      Ralf Jung @eth
+    ],
+    date: datetime(year: 2024, month: 4, day: 8),
+    institution: [Rust Verification Workshop],
+  ),
+  footer-c: self => {
+    utils.slide-counter.display()
+  },
 )
+
+//#set heading(numbering: numbly("{1}.", default: none))
 
 #show heading.where(level: 2): it => [
   #set text(fill: aqua.darken(30%))
@@ -53,26 +76,11 @@
   ]
 }
 
+#title-slide()
 
-
-#title-slide[
-  = Tree Borrows
-
-  #underline[Neven Villani], #footnote[ENS Paris-Saclay, Université Paris-Saclay] <ens>
-  Johannes Hostert, #footnote[ETH Zurich] <eth>
-  Derek Dreyer, #footnote[MPI-SWS] <mpi>
-  Ralf Jung @eth
-
-  #v(2em)
-
-  Rust Verification Workshop
-
-  2024-04-08
-]
+== Strong guarantees for references
 
 #slide[
-  == Strong guarantees for references
-
   #align(center)[
     #canvas({
       draw.circle((0, 0), radius: 2.5, stroke: (paint: red, thickness: 5pt), name: "circ")
@@ -91,8 +99,8 @@
   ```rs &``` $->$ aliasing, no mutation #footnote[for non-interior-mutable types]
 ]
 
+== Absence of aliasing + mutability allows optimizations
 #slide[
-  == Absence of aliasing + mutability allows optimizations
 
   // Some blank to align the code with the next slide
   ```
@@ -257,9 +265,8 @@
   ]
 ]
 
+== It's not the optimization that is wrong, it's the code
 #slide[
-  == It's not the optimization that is wrong, it's the code
-
   Tree Borrows enforces aliasing rules by adding proof obligations to ```rs unsafe``` blocks.
 
   Code that violates these rules is declared *Undefined Behavior*.
@@ -277,9 +284,8 @@
   ]
 ]
 
+== Stacked Borrows
 #slide[
-  == Stacked Borrows
-
   Adds *extra state* to the abstract machine to track provenance.
   Distinguishes pointers to the same location with a *tag*. \
 
@@ -288,6 +294,7 @@
   Enforces that borrows are well-bracketed.
 ]
 
+==
 #slide[
   However, Stacked Borrows...
 
@@ -314,13 +321,14 @@
   #place(bottom)[
     #canvas({
       draw.rect((0, 0), (25, 6), stroke: none)
-      draw.rect((0, 0), (25, 4), stroke: none,
+      draw.rect((0, 0), (25, 6), stroke: none,
         fill: white.transparentize(30%))
       draw.content((3.196, 3.45), name: "text-from")[`from`]
       draw.content((6.158, 3.45), name: "text-data1")[`data`]
       draw.content((2.77, 1.5), name: "text-to")[`to`]
       draw.content((5.31, 1.5), name: "text-data2")[`data`]
     })
+    #v(0.8em)
   ]
   #place(bottom + right)[
     #box(radius: 10pt, fill: blue.darken(-70%))[
@@ -348,9 +356,8 @@
   ]
 ]
 
+== Stacked Borrows $arrow.squiggly$ Tree Borrows
 #slide[
-  == Stacked Borrows $arrow.squiggly$ Tree Borrows
-
   Stack is not precise enough. \
 
   Use a *tree* instead
@@ -363,6 +370,7 @@
   - simpler rules, fewer exceptions
 ]
 
+==
 #slide[
   === Design constraints
   ==== Enough UB
@@ -424,7 +432,7 @@
 #let standard_color_picker_restrict(..r) = (rel) => if rel in r.pos() { standard_color_picker(rel) } else { none }
 
 #focus-slide[
-  = Tracking relationships
+  Tracking relationships
 ]
 
 #slide[
@@ -542,12 +550,11 @@
 ]
 
 #focus-slide[
-  = State machine
+  State machine
 ]
 
+== Per-location permission
 #slide[
-  == Per-location permission
-
   After creation each pointer experiences a sequence of \
   child/foreign read/write accesses and gains/loses permissions \
   in consequence
@@ -634,6 +641,7 @@
     self-loop("dis", "west", [foreign r/w], text-color: foreign_color)
 }
 
+==
 #slide[
   #align(right)[
     #let marker(to, ldist) = {
@@ -724,7 +732,7 @@
 ]
 
 #focus-slide[
-  = First example contains UB
+  First example contains UB
 ]
 
 #let Rejected = box(text(fill: red)[*UB*], stroke: red, inset: 7pt)
@@ -896,7 +904,7 @@
 ]
 
 #focus-slide[
-  = Raw pointers
+  Raw pointers
 ]
 
 #slide[
@@ -1017,7 +1025,7 @@
 
 
 #focus-slide[
-  = All mutable references are two-phase borrows
+  All mutable references are two-phase borrows
 ]
 
 #slide[
@@ -1203,7 +1211,7 @@
 ]
 
 #focus-slide[
-  = Conclusion
+  Conclusion
 ]
 
 #slide[
