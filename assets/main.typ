@@ -1232,3 +1232,50 @@
     #place(bottom + right)[#image("qr-miri.png", width: 20%)]
   ]
 ]
+
+// Notes
+//
+// Update affiliation
+//
+// ~Coq~ Rocq
+//
+// Start with code (concrete)
+// Slide 3: unsafe more prominent, be clear that unsafe is the issue
+// Consider choosing examples from the intro of the paper
+// SB examples are a little too complex... should SB be mentioned this early ?
+//    This is the gap, it's important to talk about SB's issues.
+// A slide on the positive impact of SB (impl in miri, included in CI, detect bugs)
+//    Then overview of the main complaints.
+//
+// "Design constraints" goes right before the evaluation section
+//    Reverse the causality:
+//      - we want optimizations => enough UB => proof
+//      - we want libraries => enough accepted code => crater
+//
+// Smoother transition to explaining the relationships
+//   Right after motivating the tree
+//   pick a concrete example
+//
+// To introduce the state machine, go through an example step by step.
+//    Example 6 from the paper.
+//
+// Raw pointers nope.
+//
+// At some point, explain briefly how we solve SB's three issues (one slide).
+//    can't explain all of them, but I'll show one of them in detail.
+//    the one that motivates the tree.
+//
+// Add evaluation
+//    It deserves time.
+//
+//
+// Examples should not need protectors
+// Start with Example 1, probably.
+//
+// Example 5 introduces the tree
+// Example 6 introduces the state machine
+// Example 7 is 1 again
+// Probably no further than that.
+//
+// TB in the playground
+// update the QR code to the paper website.
