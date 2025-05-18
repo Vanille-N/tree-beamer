@@ -10,30 +10,29 @@
 
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 
-
 // Register university theme
 // You can replace it with other themes and it can still work normally
 #show: university-theme.with(
   aspect-ratio: "16-9",
-  footer-b: self => {
-    [Tree Borrows]
-  },
-  footer-a: self => {
-    [Neven Villani]
-  },
   config-info(
     title: [Tree Borrows],
     author: [
-      #underline[Neven Villani], #footnote[ENS Paris-Saclay, Université Paris-Saclay] <ens>
+      #underline[Neven Villani], #footnote[Univ. Grenoble Alpes, Verimag] <ens>
       Johannes Hostert, #footnote[ETH Zurich] <eth>
       Derek Dreyer, #footnote[MPI-SWS] <mpi>
       Ralf Jung @eth
     ],
-    date: datetime(year: 2024, month: 4, day: 8),
-    institution: [Rust Verification Workshop],
+    date: datetime(year: 2025, month: 6, day: 21),
+    institution: [PLDI'25],
   ),
+  footer-a: self => {
+    [Neven Villani]
+  },
+  footer-b: self => {
+    [Tree Borrows]
+  },
   footer-c: self => {
-    utils.slide-counter.display()
+    context utils.slide-counter.display()
   },
 )
 
@@ -78,6 +77,146 @@
 
 #title-slide()
 
+// Notes
+//
+// Start with code (concrete)
+// Slide 3: unsafe more prominent, be clear that unsafe is the issue
+// Consider choosing examples from the intro of the paper
+// SB examples are a little too complex... should SB be mentioned this early ?
+//    This is the gap, it's important to talk about SB's issues.
+// A slide on the positive impact of SB (impl in miri, included in CI, detect bugs)
+//    Then overview of the main complaints.
+//
+// "Design constraints" goes right before the evaluation section
+//    Reverse the causality:
+//      - we want optimizations => enough UB => proof
+//      - we want libraries => enough accepted code => crater
+//
+// Smoother transition to explaining the relationships
+//   Right after motivating the tree
+//   pick a concrete example
+//
+// To introduce the state machine, go through an example step by step.
+//    Example 6 from the paper.
+//
+// Raw pointers nope.
+//
+// At some point, explain briefly how we solve SB's three issues (one slide).
+//    can't explain all of them, but I'll show one of them in detail.
+//    the one that motivates the tree.
+//
+// Add evaluation
+//    It deserves time.
+//
+// Examples should not need protectors
+// Start with Example 1, probably.
+//
+// Example 5 introduces the tree
+// Example 6 introduces the state machine
+// Example 7 is 1 again
+// Probably no further than that.
+//
+// TB in the playground
+// update the QR code to the paper website.
+
+#let body_color = gray.darken(-90%)
+#let line_color = gray.darken(50%)
+#let box_text_color = black
+
+#let codebox(body, do: _ => {}) = {
+  rect(
+    width: auto,
+    radius: 6pt,
+    fill: body_color,
+    inset: (y: 8pt, x: 5pt),
+    stroke: (top: 0.8pt + line_color, left: 0.8pt + line_color)
+  )[
+    #text(
+      fill: box_text_color, 
+      body,
+    )
+    #let linebreaks = ()
+    #{
+      for line in body.text.split("\n") {
+        linebreaks.push(line.len() + 1)
+      }
+    }
+    #place(top + left, dy: -6pt)[#cetz-canvas({
+      import cetz.draw: *
+      let cell-width = 12pt
+      let cell-height = 27.5pt
+      let line-col(line, col, anchor: "center") = {
+        let x = cell-width * (col + 0.5)
+        let y = - cell-height * (line + 0.5)
+        if anchor.contains("north") {
+          y += cell-height * 0.5
+        } else if anchor.contains("south") {
+          y -= cell-height * 0.5
+        }
+        if anchor.contains("east") {
+          x += cell-width * 0.5
+        } else if anchor.contains("west") {
+          x -= cell-width * 0.5
+        }
+        (x, y)
+      }
+      let dummy-highlight(line, col, len) = {
+        rect(
+          line-col(line, col, anchor: "north-west"),
+          line-col(line, col + len, anchor: "south-east")
+        )
+      }
+      let highlight(line, col, len) = {
+        rect(
+          stroke: none,
+          fill: yellow.transparentize(80%),
+          line-col(line, col, anchor: "north-west"),
+          line-col(line, col + len, anchor: "south-east")
+        )
+      }
+      let locate(text, nth: 0) = {
+        let match = body.text.matches(text)
+        let match = match.at(nth)
+        let len = match.end - match.start - 1
+        let col = match.start
+        let line = 0
+        for linewidth in linebreaks {
+          if col >= linewidth {
+            col -= linewidth
+            line += 1
+          } else {
+            break
+          }
+        }
+        (line, col, len)
+      }
+      rect(
+        stroke: none,
+        line-col(0, 0, anchor: "north-west"),
+        line-col(linebreaks.len(), calc.max(..linebreaks) - 1, anchor: "north-west")
+      )
+      do((
+        line-col: line-col,
+        highlight: highlight,
+        locate: locate,
+      ))
+    })]
+  ]
+}
+
+== A typical optimization
+
+#slide[
+  #codebox(
+  ```rs
+  fn write_both(x: &mut i32, y: &mut i32) -> i32 {
+    *x = 13;
+    *y = 20;
+    *x
+  }
+  ```)
+]
+
 == Strong guarantees for references
 
 #slide[
@@ -96,178 +235,37 @@
 
   ```rs &mut``` $->$ mutation, no aliasing
 
-  ```rs &``` $->$ aliasing, no mutation #footnote[for non-interior-mutable types]
+  ```rs &``` $->$ aliasing, no mutation
 ]
 
-== Absence of aliasing + mutability allows optimizations
-#slide[
-
-  // Some blank to align the code with the next slide
-  ```
-
-
-
-  ```
-  #v(0.52em)
-  #grid(columns: (40%, 15%, 35%),
-    alternatives[][][][][```rs
-      fn foo(y: &mut u64) {
-          let val = *y;
-          *y = 42;
-
-          *y = val;
-      }
-      ```][```rs
-      fn foo(y: &mut u64) {
-          let val = *y;
-          *y = 42;
-          opaque();
-          *y = val;
-      }
-      ```],
-      align(horizon)[#alternatives[][][][][$==>^"optimized"$][$==>^"optimized"$]],
-      alternatives[```rs
-        fn foo(y: &mut u64) {
-            let val = *y;
-            *y = 42;
-
-            *y = val;
-        }
-        ```][```rs
-        fn foo(y: &mut u64) {
-            let val = *y;
-          //*y = 42;
-
-            *y = val;
-        }
-        ```][```rs
-        fn foo(y: &mut u64) {
-            let val = *y;
-          //*y = 42;
-
-          //*y = val;
-        }
-        ```][```rs
-        fn foo(y: &mut u64) {
-          //let val = *y;
-          //*y = 42;
-
-          //*y = val;
-        }
-        ```][```rs
-        fn foo(y: &mut u64) {
-          //let val = *y;
-          //*y = 42;
-
-          //*y = val;
-        }
-        ```][```rs
-        fn foo(y: &mut u64) {
-          //let val = *y;
-          //*y = 42;
-            opaque();
-          //*y = val;
-        }
-        ```]
-  )
-]
+== Unfortunately there is ```rs unsafe```
 
 #slide[
-  #layout[#alternatives[```rs
+  #codebox(
+    do: ctx => {
+      let (highlight, locate) = ctx
+      highlight(..locate("unsafe"))
+    },
+  ```rs
+  fn write_both(x: &mut i32, y: &mut i32) -> i32 {
+    *x = 13;
+    *y = 20;
+    *x
+  }
 
-
-
-
-
-
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
-        opaque();
-        *y = val;
-    }
-    ```][```rs
-    static mut X: u64 = 0;
-
-
-
-
-
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
-        opaque();
-        *y = val;
-    }
-    ```][```rs
-    static mut X: u64 = 0;
-
-    fn main() {
-        foo(unsafe { &mut X });
-    }
-
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
-        opaque();
-        *y = val;
-    }
-    ```][```rs
-    static mut X: u64 = 0;
-
-    fn main() {
-        foo(unsafe { &mut X });
-    }
-
-    fn foo(y: &mut u64) {
-        let val = *y;
-        *y = 42;
-        println!("{}", unsafe { X }); // prints 42
-        *y = val;
-    }
-    ```][```rs
-    static mut X: u64 = 0;
-
-    fn main() {
-        foo(unsafe { &mut X });
-    }
-
-    fn foo(y: &mut u64) {
-      //let val = *y;
-      //*y = 42;
-        println!("{}", unsafe { X }); // prints 0
-      //*y = val;
-    }
-    ```][```rs
-    static mut X: u64 = 0;
-
-    fn main() {
-        foo(unsafe { &mut X });
-    }
-
-    fn foo(y: &mut u64) {
-      //let val = *y;
-      //*y = 42;
-        println!("{}", unsafe { X }); // prints 0
-      //*y = val;
-    }
-    ```]]
-
-  #only(6)[
-    #place(center + bottom)[
-      #box(fill: color.mix(red.darken(-40%), gray).darken(-60%), inset: 12pt, radius: 12pt)[
-        #align(left)[
-          Optimization *changes observable behavior*... \
-          Is the optimization incorrect?
-        ]
-      ]
-    ]
-  ]
+  fn main() {
+    let mut x = 42;
+    let ptr = addr_of_mut!(x);
+    let val = unsafe { write_both(&mut *ptr, &mut *ptr) };
+    println!("{val}")
+  }
+  ```)
 ]
 
 == It's not the optimization that is wrong, it's the code
+
 #slide[
-  Tree Borrows enforces aliasing rules by adding proof obligations to ```rs unsafe``` blocks.
+  Tree Borrows enforces aliasing rules by adding *proof obligations* to ```rs unsafe``` blocks.
 
   Code that violates these rules is declared *Undefined Behavior*.
 
@@ -283,6 +281,8 @@
     ]
   ]
 ]
+
+/*
 
 == Stacked Borrows
 #slide[
@@ -376,14 +376,14 @@
   ==== Enough UB
   - strict enough that interesting *optimizations* are possible \
     $->$ guided by desirable optimizations, and expected UB \
-    $->$ _formalized in Coq, ongoing work to prove correctness_ \
+    $->$ _formalized in Rocq: optimizations proven correct_ \
 
   #pause
 
   ==== Not too much
   - permissive enough that *existing libraries* are correct \
     $->$ guided by common patterns, complaints about Stacked Borrows \
-    $->$ _implemented in the Miri interpreter, checked against libraries_
+    $->$ _implemented in the Miri interpreter, checked against the stdlib_
 ]
 
 #let tag-tree(draw-node, data, ..style) = {
@@ -1228,54 +1228,10 @@
     - use the flag `-Zmiri-tree-borrows`
     - *test* your unsafe code, *report* any surprises!
 
-    #place(top + right)[#image("qr-treebor.png", width: 20%)]
-    #place(bottom + right)[#image("qr-miri.png", width: 20%)]
+    //#place(top + right)[#image("qr-treebor.png", width: 20%)]
+    //#place(bottom + right)[#image("qr-miri.png", width: 20%)]
   ]
 ]
+*/
 
-// Notes
-//
-// Update affiliation
-//
-// ~Coq~ Rocq
-//
-// Start with code (concrete)
-// Slide 3: unsafe more prominent, be clear that unsafe is the issue
-// Consider choosing examples from the intro of the paper
-// SB examples are a little too complex... should SB be mentioned this early ?
-//    This is the gap, it's important to talk about SB's issues.
-// A slide on the positive impact of SB (impl in miri, included in CI, detect bugs)
-//    Then overview of the main complaints.
-//
-// "Design constraints" goes right before the evaluation section
-//    Reverse the causality:
-//      - we want optimizations => enough UB => proof
-//      - we want libraries => enough accepted code => crater
-//
-// Smoother transition to explaining the relationships
-//   Right after motivating the tree
-//   pick a concrete example
-//
-// To introduce the state machine, go through an example step by step.
-//    Example 6 from the paper.
-//
-// Raw pointers nope.
-//
-// At some point, explain briefly how we solve SB's three issues (one slide).
-//    can't explain all of them, but I'll show one of them in detail.
-//    the one that motivates the tree.
-//
-// Add evaluation
-//    It deserves time.
-//
-//
-// Examples should not need protectors
-// Start with Example 1, probably.
-//
-// Example 5 introduces the tree
-// Example 6 introduces the state machine
-// Example 7 is 1 again
-// Probably no further than that.
-//
-// TB in the playground
-// update the QR code to the paper website.
+
