@@ -1,17 +1,34 @@
-#import "@preview/touying:0.5.3": *
-#import "@preview/cetz:0.3.1"
-#import cetz: canvas, plot, draw, tree
-#import "@preview/numbly:0.1.0": numbly
-
+#import "@preview/touying:0.6.1": *
+#import "@preview/cetz:0.3.2"
+#import "lib.typ": *
 #import themes.university: *
 
 #set text(font: "Inria Sans")
-#show raw: text.with(font: "JetBrains Mono")
+
+#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
+#show: university-theme.with(
+  aspect-ratio: "16-9",
+  config-info(
+    title: text(size: 39pt)[Verifying Parameterized Networks \
+                            #text(size: 28pt)[Specified by] \
+                            Vertex-Replacement Graph Grammars],
+    author: [#underline[Neven Villani], Radu Iosif, Arnaud Sangnier],
+    date: [2025-05-21; NETYS (Rabat)],
+    institution: [Univ. Grenoble Alpes, Verimag],
+  ),
+  footer-a: self => [
+    Neven Villani
+  ],
+  footer-b: self => {
+    [Parameterized Networks Specified by VR Grammars]
+  },
+  footer-c: self => {
+    context utils.slide-counter.display()
+  },
+)
 
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 
-// Register university theme
-// You can replace it with other themes and it can still work normally
 #show: university-theme.with(
   aspect-ratio: "16-9",
   config-info(
@@ -36,44 +53,9 @@
   },
 )
 
-//#set heading(numbering: numbly("{1}.", default: none))
-
-#show heading.where(level: 2): it => [
-  #set text(fill: aqua.darken(30%))
-  #it
+#let section-slide(title) = focus-slide[
+  = #title
 ]
-#show heading.where(level: 3): it => [
-  #set text(fill: aqua.darken(50%))
-  #it
-]
-
-// Set this to true to print some bounding boxes and layout lines to help align content.
-#let show-layout-boundaries = false
-#let rect-if-show-layout(ul, br) = {
-  draw.rect(ul, br, stroke: if show-layout-boundaries { black } else { none })
-}
-#let box-if-show-layout(c) = {
-  rect(
-    inset: 0pt,
-    fill: if show-layout-boundaries { green.darken(-50%) } else { none },
-    stroke: none,
-  )[#c]
-}
-#let layout(c) = box-if-show-layout(c)
-
-
-#let full-slide-overlay(c) = {
-  place(center + horizon)[
-    #rect(width: 120%, height: 101%, fill: white.transparentize(20%))
-  ]
-  place(center + horizon)[
-    #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
-      #text(size: 40pt)[
-        #align(left)[#c]
-      ]
-    ]
-  ]
-}
 
 #title-slide()
 
@@ -119,91 +101,6 @@
 // TB in the playground
 // update the QR code to the paper website.
 
-#let body_color = gray.darken(-90%)
-#let line_color = gray.darken(50%)
-#let box_text_color = black
-
-#let codebox(body, do: _ => {}) = {
-  rect(
-    width: auto,
-    radius: 6pt,
-    fill: body_color,
-    inset: (y: 8pt, x: 5pt),
-    stroke: (top: 0.8pt + line_color, left: 0.8pt + line_color)
-  )[
-    #text(
-      fill: box_text_color, 
-      body,
-    )
-    #let linebreaks = ()
-    #{
-      for line in body.text.split("\n") {
-        linebreaks.push(line.len() + 1)
-      }
-    }
-    #place(top + left, dy: -6pt)[#cetz-canvas({
-      import cetz.draw: *
-      let cell-width = 12pt
-      let cell-height = 27.5pt
-      let line-col(line, col, anchor: "center") = {
-        let x = cell-width * (col + 0.5)
-        let y = - cell-height * (line + 0.5)
-        if anchor.contains("north") {
-          y += cell-height * 0.5
-        } else if anchor.contains("south") {
-          y -= cell-height * 0.5
-        }
-        if anchor.contains("east") {
-          x += cell-width * 0.5
-        } else if anchor.contains("west") {
-          x -= cell-width * 0.5
-        }
-        (x, y)
-      }
-      let dummy-highlight(line, col, len) = {
-        rect(
-          line-col(line, col, anchor: "north-west"),
-          line-col(line, col + len, anchor: "south-east")
-        )
-      }
-      let highlight(line, col, len) = {
-        rect(
-          stroke: none,
-          fill: yellow.transparentize(80%),
-          line-col(line, col, anchor: "north-west"),
-          line-col(line, col + len, anchor: "south-east")
-        )
-      }
-      let locate(text, nth: 0) = {
-        let match = body.text.matches(text)
-        let match = match.at(nth)
-        let len = match.end - match.start - 1
-        let col = match.start
-        let line = 0
-        for linewidth in linebreaks {
-          if col >= linewidth {
-            col -= linewidth
-            line += 1
-          } else {
-            break
-          }
-        }
-        (line, col, len)
-      }
-      rect(
-        stroke: none,
-        line-col(0, 0, anchor: "north-west"),
-        line-col(linebreaks.len(), calc.max(..linebreaks) - 1, anchor: "north-west")
-      )
-      do((
-        line-col: line-col,
-        highlight: highlight,
-        locate: locate,
-      ))
-    })]
-  ]
-}
-
 == A typical optimization
 
 #slide[
@@ -221,10 +118,11 @@
 
 #slide[
   #align(center)[
-    #canvas({
-      draw.circle((0, 0), radius: 2.5, stroke: (paint: red, thickness: 5pt), name: "circ")
-      draw.line("circ.south-west", "circ.north-east", stroke: (paint: red, thickness: 5pt))
-      draw.content((0, 0))[
+    #cetz-canvas({
+      import cetz.draw: *
+      circle((0, 0), radius: 2.5, stroke: (paint: red, thickness: 5pt), name: "circ")
+      line("circ.south-west", "circ.north-east", stroke: (paint: red, thickness: 5pt))
+      content((0, 0))[
         #align(center)[
         aliasing \
           & \
@@ -241,25 +139,29 @@
 == Unfortunately there is ```rs unsafe```
 
 #slide[
-  #codebox(
-    do: ctx => {
-      let (highlight, locate) = ctx
-      highlight(..locate("unsafe"))
-    },
-  ```rs
-  fn write_both(x: &mut i32, y: &mut i32) -> i32 {
-    *x = 13;
-    *y = 20;
-    *x
-  }
+  #codebox(cetz-canvas({
+    let ctx = from-code(
+      ```rs
+      fn write_both(x: &mut i32, y: &mut i32) -> i32 {
+        *x = 13;
+        *y = 20;
+        *x
+      }
 
-  fn main() {
-    let mut x = 42;
-    let ptr = addr_of_mut!(x);
-    let val = unsafe { write_both(&mut *ptr, &mut *ptr) };
-    println!("{val}")
-  }
-  ```)
+      fn main() {
+        let mut root = 42;
+        let ptr = addr_of_mut!(root);
+        let x = unsafe { &mut *ptr };
+        let y = unsafe { &mut *ptr };
+        let val = write_both(x, y);
+        println!("{val}")
+      }
+      ```
+    )
+    let (block, highlight, locate) = ctx
+    block
+    for loc in locate("unsafe") { highlight(..loc) }
+  }))
 ]
 
 == It's not the optimization that is wrong, it's the code
@@ -270,121 +172,185 @@
   Code that violates these rules is declared *Undefined Behavior*.
 
   #pause
-  #align(center)[
-    #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
-      #align(left)[
-        === Sounds familiar?
+  #aside[
+    === Sounds familiar?
 
-        *Stacked Borrows* has the same purpose, \
-        Tree Borrows is its successor.
+    *Stacked Borrows* has the same purpose, \
+    Tree Borrows is its successor.
+  ]
+]
+
+#section-slide[Stacked Borrows]
+
+#slide[
+  Use a *stack* to track permissions of pointers \
+  $->$ ensures that borrows are well-bracketed.
+
+  #table(columns: (1fr, 1fr), stroke: none)[
+    #codebox(
+      ```rs
+      let mut root = 42;
+      let ptr = addr_of_mut!(root);
+      let x = unsafe { &mut *ptr };
+      let y = unsafe { &mut *ptr };
+      let val = write_both(x, y);
+      ```
+    )
+  ][
+    #align(center)[
+      #table(align: center)[
+        y / x
+      ][
+        ptr
+      ][
+        root
       ]
     ]
   ]
 ]
 
-/*
-
-== Stacked Borrows
 #slide[
-  Adds *extra state* to the abstract machine to track provenance.
-  Distinguishes pointers to the same location with a *tag*. \
+  - detected several bugs
+  - implemented in Miri $->$ included in many projects' CI
 
-  #pause
-  Uses a *stack* to store permissions. \
-  Enforces that borrows are well-bracketed.
+  *However...*
+  - prohibits reordering reads
+  - references are restricted to a static range
+  - ignores two-phased borrows
+
+  #aside[
+    === In general
+
+    Stacked Borrows is *too strict*, \
+    and has some *unintuitive* rules.
+  ]
 ]
 
-==
 #slide[
-  However, Stacked Borrows...
+  #codebox(cetz-canvas({
+    let ctx = from-code(
+      ```rs
 
-  - does not handle two-phase borrows (gives up on any optimization)
-    #pause
-    ```rs
-        vec.push(vec[0]);
-    //  ^^^ 1. implicit &mut in function arguments
-    //           ^^^^^^ 2. read-only operation before function
-    //                     entry does not invalidate the &mut
-    ```
-  #pause
+      let from = data.as_ptr();
 
-  - forbids common ```rs unsafe``` patterns (declared UB)
-    #pause
-    ```rs
-    let from = data.as_ptr();
-    // SB inserts an implicit write, killing the raw pointer
-    let to = data.as_mut_ptr();
-    copy_nonoverlapping(from, to.add(1), 1); // UB
-    ```
+      let to = data.as_mut_ptr();
 
-  #pause
-  #place(bottom)[
-    #canvas({
-      draw.rect((0, 0), (25, 6), stroke: none)
-      draw.rect((0, 0), (25, 6), stroke: none,
-        fill: white.transparentize(30%))
-      draw.content((3.196, 3.45), name: "text-from")[`from`]
-      draw.content((6.158, 3.45), name: "text-data1")[`data`]
-      draw.content((2.77, 1.5), name: "text-to")[`to`]
-      draw.content((5.31, 1.5), name: "text-data2")[`data`]
+      copy_nonoverlapping(from, to.add(1), 1);
+      ```
+    )
+    let (block, highlight, locate) = ctx
+    block
+    for loc in locate("data") { highlight(..loc) }
+    highlight(..locate("from").at(0))
+    highlight(..locate("to").at(0))
+  }))
+
+  #placed(bottom + right)[
+    #cetz-canvas({
+      import cetz.draw: *
+      rect((-2, 1.5), (6, -4.5), stroke: none)
+      cetz.tree.tree((`data`, `from`, `to`),
+        spread: 4,
+        grow: 3,
+        draw-node: (node, ..) => {
+          circle((), radius: 1, stroke: black)
+          content((), node.content)
+        },
+        draw-edge: (from, to, ..) => {
+          let (a, b) = (from + ".center", to + ".center")
+          line((a, 1, b), (b, 1, a))
+        }
+      )
     })
-    #v(0.8em)
   ]
-  #place(bottom + right)[
-    #box(radius: 10pt, fill: blue.darken(-70%))[
-      #canvas({
-        draw.rect((-2, 1.5), (6, -4.5), stroke: none)
-        tree.tree((`data`, `from`, `to`),
-          spread: 4,
-          grow: 3,
-          draw-node: (node, ..) => {
-            draw.circle((), radius: 1, stroke: black)
-            draw.content((), node.content)
-          },
-          draw-edge: (from, to, ..) => {
-            let (a, b) = (from + ".center", to + ".center")
-            draw.line((a, 1, b), (b, 1, a))
-          }
-        )
-      })
-   ]
-  ]
-
   #pause
   #full-slide-overlay[
-    The stack is too rigid to represent the exact relationship
+    The stack is *too rigid* to represent the exact relationship
   ]
 ]
 
-== Stacked Borrows $arrow.squiggly$ Tree Borrows
-#slide[
-  Stack is not precise enough. \
+== From Stacks to Trees
 
-  Use a *tree* instead
-  $->$ accurate tracking of pointer ancestry
+#slide(repeat: 2, self => [
+  #cetz-canvas({
+    import cetz.draw: *
+    let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
+    let (uncover,) = utils.methods(self)
+    let ctx = from-code(
+      ```rs
+      let mut root = 42;
 
-  #pause
-  Results in
-  - accurate handling of two-phase borrows
-  - more permitted patterns
-  - simpler rules, fewer exceptions
-]
+      let ref1 = &mut root;
+
+      let ref2 = &mut *ref1;
+
+      let ref3 = &mut root;
+      ```
+    )
+    let (block, highlight, locate, rel-to, start-of, end-of, line-col) = ctx
+    block
+
+    uncover("2", {
+      highlight(..locate("root").at(0), color: green)
+      let style = (mark: (end: ">"), stroke: (paint: orange, thickness: 3pt))
+      for (from, to) in (
+        (locate("ref1").at(0), locate("root").at(1)),
+        (locate("ref2").at(0), locate("ref1").at(1)),
+        (locate("ref3").at(0), locate("root").at(2))
+      ) {
+        highlight(..from)
+        highlight(..to)
+        line(line-col(..end-of(from), anchor: "north-east"),
+            line-col(..start-of(to), anchor: "north-west"),
+            ..style)
+      }
+    })
+  })
+  #placed(bottom + right, neutral: true)[
+    #cetz-canvas({
+      import cetz.draw: *
+      rect((-2, 1.5), (6, -7.5), stroke: none)
+      cetz.tree.tree((`root`, (`ref1`, `ref2`), `ref3`),
+        spread: 4,
+        grow: 3,
+        draw-node: (node, ..) => {
+          circle((), radius: 1, stroke: black)
+          content((), node.content)
+        },
+        draw-edge: (from, to, ..) => {
+          let (a, b) = (from + ".center", to + ".center")
+          line((a, 1, b), (b, 1, a))
+        }
+      )
+    })
+  ]
+])
 
 ==
 #slide[
-  === Design constraints
-  ==== Enough UB
-  - strict enough that interesting *optimizations* are possible \
-    $->$ guided by desirable optimizations, and expected UB \
-    $->$ _formalized in Rocq: optimizations proven correct_ \
-
-  #pause
-
-  ==== Not too much
-  - permissive enough that *existing libraries* are correct \
-    $->$ guided by common patterns, complaints about Stacked Borrows \
-    $->$ _implemented in the Miri interpreter, checked against the stdlib_
+  #codebox(
+  ```rs
+  let mut root = 42;
+  let x = &mut root;
+  *x += 1;
+  root = 0
+  ```
+  )
 ]
+
+#section-slide[Evaluation]
+
+#slide[
+  === Design constraints
+  - Allows optimizations \
+    $->$ enough UB to rule out problematic patterns
+
+  - Convenient for library writers \
+    $->$ intuitive rules \
+    $->$ permissive of standard patterns
+]
+
+/*
 
 #let tag-tree(draw-node, data, ..style) = {
   let grow = style.named().at("grow", default: 2)
@@ -412,153 +378,6 @@
     draw.circle((), radius: 0.8, stroke: black, fill: fill)
     draw.content((), node.content.content)
 }
-
-#let dim(c) = color.mix(c, gray)
-#let strict_color = blue.darken(-50%)
-#let self_color = blue.darken(5%)
-#let parent_color = red.darken(10%)
-#let cousin_color = red.darken(-50%)
-#let child_color = dim(blue.darken(-20%))
-#let foreign_color = dim(red.darken(-20%))
-#let mixed_color = dim(purple.darken(-40%))
-#let alloc_color = dim(green.darken(50%))
-#let standard_color_picker(rel) = {
-  if rel == "T" { self_color }
-  else if rel == "S" { strict_color }
-  else if rel == "P" { parent_color }
-  else if rel == "C" { cousin_color }
-  else { none }
-}
-#let standard_color_picker_restrict(..r) = (rel) => if rel in r.pos() { standard_color_picker(rel) } else { none }
-
-#focus-slide[
-  Tracking relationships
-]
-
-#slide[
-  #let structure = (
-    (content: [], rel: "P"),
-        ((content: [], rel: "P"),
-            ((content: [], rel:  "C"),
-                (content: [],  rel: "C"),
-                ((content: [], rel:  "C"),
-                    (content: [], rel:  "C")
-                ),
-                (content: [], rel:  "C")
-            ),
-            ((content: [self], rel:  "T"),
-                ((content: [], rel:  "S"),
-                    (content: [], rel: "S")
-                ),
-                ((content: [], rel:  "S"),
-                    ((content: [], rel:  "S"),
-                          (content: [], rel:  "S")
-                    )
-                ),
-                (content: [], rel: "S"),
-             )
-        ),
-        ((content: [], rel:  "C"),
-            (content: [], rel:  "C"),
-            ((content: [], rel:  "C"),
-                (content: [], rel:  "C"),
-                (content: [], rel:  "C")
-            )
-        )
-    )
-
-    #grid(
-    columns: (70%, 30%),
-    layout[#{
-      alternatives[#canvas({
-          tag-tree(
-            (node) => {
-              draw-node-highlight((rel) => if rel == "H" { alloc_color } else { none }, node)
-            },
-            ((content: [], rel: ""),
-                ((content: [], rel: ""),
-                    ((content: [], rel:  ""),
-                       (content: [],  rel: ""),
-                       ((content: [], rel:  ""),
-                          (content: [], rel:  "")
-                       ),
-                       (content: [], rel:  "")
-                    ),
-                    ((content: [self], rel:  ""),
-                       ((content: [], rel:  ""),
-                          (content: [], rel: "")
-                       ),
-                      ((content: [], rel:  ""),
-                        ((content: [], rel:  ""),
-                           (content: [], rel:  "")
-                        )
-                      ),
-                      (content: [new], rel: "H"),
-                    )
-                ),
-                ((content: [], rel:  ""),
-                    (content: [], rel:  ""),
-                    ((content: [], rel:  ""),
-                       (content: [], rel:  ""),
-                       (content: [], rel:  "")
-                    )
-                )
-            )
-        )
-      })][#canvas({
-        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("T"), node) }, structure)
-      })][#canvas({
-        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("S"), node) }, structure)
-      })][#canvas({
-        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("T", "S"), node) }, structure)
-      })][#canvas({
-        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P"), node) }, structure)
-      })][#canvas({
-        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("C"), node) }, structure)
-      })][#canvas({
-        tag-tree( (node) => { draw-node-highlight(standard_color_picker_restrict("P", "C"), node) }, structure)
-      })][#canvas({
-          tag-tree( (node) => { draw-node-highlight(standard_color_picker, node) }, structure)
-      })]
-    }],
-    layout[
-      #only(1)[
-        #align(center)[
-          #text(fill: alloc_color)[reborrows] \
-          create \
-          #text(fill: child_color)[immediate children]
-        ]
-
-        #v(1em)
-
-        ```rs
-        let new = &*self;
-        ```
-      ]
-
-      #only((2,3,4,8))[
-        #text(fill: self_color)[self] & #text(fill: strict_color)[strict children] \
-        #text(fill: child_color)[$->$ children]
-      ]
-
-      #only((5,6,7,8))[
-        #text(fill: parent_color)[parents] & #text(fill: cousin_color)[cousins] \
-        #text(fill: foreign_color)[$->$ foreign]
-      ]
-    ]
-  )
-]
-
-#focus-slide[
-  State machine
-]
-
-== Per-location permission
-#slide[
-  After creation each pointer experiences a sequence of \
-  child/foreign read/write accesses and gains/loses permissions \
-  in consequence
-]
 
 #let state(x, y, name, label) = {
   let name = name + "-box"
