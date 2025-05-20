@@ -6,28 +6,6 @@
 #set text(font: "Inria Sans")
 
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#show: university-theme.with(
-  aspect-ratio: "16-9",
-  config-info(
-    title: text(size: 39pt)[Verifying Parameterized Networks \
-                            #text(size: 28pt)[Specified by] \
-                            Vertex-Replacement Graph Grammars],
-    author: [#underline[Neven Villani], Radu Iosif, Arnaud Sangnier],
-    date: [2025-05-21; NETYS (Rabat)],
-    institution: [Univ. Grenoble Alpes, Verimag],
-  ),
-  footer-a: self => [
-    Neven Villani
-  ],
-  footer-b: self => {
-    [Parameterized Networks Specified by VR Grammars]
-  },
-  footer-c: self => {
-    context utils.slide-counter.display()
-  },
-)
-
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
@@ -58,6 +36,17 @@
 ]
 
 #title-slide()
+
+#let point-to-code = (mark: (end: ">"), stroke: (paint: orange, thickness: 3pt))
+#let annotate-code(t) = text(fill: orange)[#t]
+
+#let sb-stack(..cols) = {
+  table(columns: 1, inset: 2.5mm, align: center, ..cols.pos().rev(), [#v(-4.5mm)], [#v(-4.5mm)])
+}
+
+#let split(a, b, fraction: 0.5) = table(columns: (fraction * 1fr, (1 - fraction) * 1fr), stroke: none, align: left)[#a][#b]
+
+#let textred(t) = text(fill: red)[#t]
 
 // Notes
 //
@@ -103,16 +92,62 @@
 
 == A typical optimization
 
-#slide[
-  #codebox(
-  ```rs
-  fn write_both(x: &mut i32, y: &mut i32) -> i32 {
-    *x = 13;
-    *y = 20;
-    *x
-  }
-  ```)
-]
+#slide(repeat: 4, self => [
+  #codebox(cetz-canvas({
+    import cetz.draw: *
+    let ctx = from-code(```rs
+      fn write_both(x: &mut i32, y: &mut i32) -> i32 {
+
+        *x = 13;
+
+        *y = 20;
+
+        *x
+
+      }
+      ```, self: self)
+    let (block, locate, patch, uncover, highlight, end-of, start-of, rel-to, line-col) = ctx
+    block
+    uncover("2-3", {
+      // Point to both &mut
+      let (mut1, mut2) = locate("&mut i32")
+      highlight(..mut1)
+      highlight(..mut2)
+      let pt1 = rel-to(end-of(mut1), 1, 0)
+      let pt2 = rel-to(start-of(mut2), 1, 0)
+      let pt = rel-to(pt1, 1, 3)
+      line(line-col(..pt), line-col(..pt1, anchor: "north"), ..point-to-code)
+      line(line-col(..pt), line-col(..pt2, anchor: "north"), ..point-to-code)
+      content(line-col(..pt, anchor: "south"))[#annotate-code[mutable thus disjoint]]
+      // Point to *y
+      let val = locate("*y").at(0)
+      let pt1 = rel-to(end-of(val), 0, 1)
+      let pt = rel-to(pt1, 2, 5)
+      highlight(..val)
+      line(line-col(..pt), line-col(..pt1, anchor: "south-east"), ..point-to-code)
+      content(line-col(..pt), anchor: "north-west")[#annotate-code[`*x` is unchanged]]
+    })
+    uncover("3", {
+      // Point to 13
+      let val = locate("13").at(0)
+      let pt1 = rel-to(end-of(val), 0, 1)
+      let pt = rel-to(pt1, 2, 5)
+      highlight(..val)
+      line(line-col(..pt), line-col(..pt1, anchor: "south-east"), ..point-to-code)
+      content(line-col(..pt), anchor: "north-west")[#annotate-code[`*x` has known value]]
+            // Point to *x
+      let val = locate("*x").at(1)
+      let pt1 = rel-to(end-of(val), 0, 1)
+      let pt = rel-to(pt1, 2, 5)
+      highlight(..val)
+      line(line-col(..pt), line-col(..pt1, anchor: "south-east"), ..point-to-code)
+      content(line-col(..pt), anchor: "north-west")[#annotate-code[always returns `13`]]
+    })
+    uncover("4", {
+      patch(locate("*x").at(1), ```rs 13```)
+    })
+  }))
+])
 
 == Strong guarantees for references
 
@@ -139,9 +174,16 @@
 == Unfortunately there is ```rs unsafe```
 
 #slide[
+  ```rs unsafe``` code can *bypass typechecks* for the purpose
+  of implementing low-level manipulations
+
+  ...but what happens when ```rs unsafe``` code violates an invariant
+  that optimizations depend on ?
+]
+
+#slide(repeat: 3, self => [
   #codebox(cetz-canvas({
-    let ctx = from-code(
-      ```rs
+    let ctx = from-code(```rs
       fn write_both(x: &mut i32, y: &mut i32) -> i32 {
         *x = 13;
         *y = 20;
@@ -153,26 +195,38 @@
         let ptr = addr_of_mut!(root);
         let x = unsafe { &mut *ptr };
         let y = unsafe { &mut *ptr };
-        let val = write_both(x, y);
-        println!("{val}")
-      }
-      ```
-    )
-    let (block, highlight, locate) = ctx
+        println!("{}", write_both(x, y));
+      }```, self: self)
+    let (block, highlight, locate, highlight-lines, uncover, patch) = ctx
     block
-    for loc in locate("unsafe") { highlight(..loc) }
+    uncover("2", {
+      highlight-lines((0,5))
+      highlight(..locate("write_both(x, y)").at(0))
+    })
+    uncover("3", {
+      highlight-lines(9, 10, color: yellow)
+    })
   }))
-]
+])
 
-== It's not the optimization that is wrong, it's the code
+
+== The optimization is valid, it's the code that's wrong
 
 #slide[
-  Tree Borrows enforces aliasing rules by adding *proof obligations* to ```rs unsafe``` blocks.
+  Tree Borrows enforces aliasing rules by *proof obligations* on ```rs unsafe```.
+
+  Within ```rs unsafe``` blocks you must already guarantee that...
+  - pointers are non-null
+  - memory is initialized
+  - ...
+  #pause
+  - the reborrows comply with Tree Borrows#h(-3mm)#box[#super[#strong[#textred[#rotate(30deg)[NEW!]]]]]
+
 
   Code that violates these rules is declared *Undefined Behavior*.
 
   #pause
-  #aside[
+  #full-slide-overlay[
     === Sounds familiar?
 
     *Stacked Borrows* has the same purpose, \
@@ -182,42 +236,80 @@
 
 #section-slide[Stacked Borrows]
 
-#slide[
+#slide(repeat: 7, self => [
   Use a *stack* to track permissions of pointers \
   $->$ ensures that borrows are well-bracketed.
 
   #table(columns: (1fr, 1fr), stroke: none)[
-    #codebox(
-      ```rs
-      let mut root = 42;
-      let ptr = addr_of_mut!(root);
-      let x = unsafe { &mut *ptr };
-      let y = unsafe { &mut *ptr };
-      let val = write_both(x, y);
-      ```
-    )
+    #codebox(cetz-canvas({
+      import cetz.draw: *
+      let ctx = from-code(```rs
+        let mut root = 42;
+        let ptr = addr_of_mut!(root);
+        let x = unsafe { &mut *ptr };
+        let y = unsafe { &mut *ptr };
+        let val = write_both(x, y);
+        ```, self: self)
+      let (block, uncover, highlight-lines, line-col, locate, start-of) = ctx
+      block
+      for i in range(5) {
+        uncover(str(i+2), {
+          highlight-lines(i, color: yellow)
+        })
+      }
+      uncover("7", {
+        highlight-lines(4, color: red)
+        content(line-col(3, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
+      })
+    }))
   ][
     #align(center)[
-      #table(align: center)[
-        y / x
+      #split(fraction: 0.3)[
+        #align(center)[
+          #sb-stack[
+            #uncover("2-")[`root`]
+          ][
+            #uncover("3-")[`ptr`]
+          ][
+            #v(6mm)
+            #only("4")[#v(-6mm) `x`]
+            #only("5-7")[#v(-6mm) `y`]
+          ]
+        ]
       ][
-        ptr
-      ][
-        root
+        #alternatives[][
+          - new stack at `root`
+        ][
+          - pop until `root`
+          - push `ptr`
+        ][
+          - pop until `ptr`
+          - push `x`
+        ][
+          - pop until `ptr`
+          - push `y`
+        ][
+          - #textred[#strike[search for `x`]]
+          - search for `y`
+        ][
+          #textred[#strong[#textred[UB:]] cannot use `x` when it is not in the stack]
+        ]
       ]
     ]
   ]
-]
+])
 
 #slide[
   - detected several bugs
   - implemented in Miri $->$ included in many projects' CI
 
+  #pause
   *However...*
   - prohibits reordering reads
   - references are restricted to a static range
   - ignores two-phased borrows
 
+  #pause
   #aside[
     === In general
 
@@ -230,26 +322,25 @@
   #codebox(cetz-canvas({
     let ctx = from-code(
       ```rs
-
-      let from = data.as_ptr();
-
-      let to = data.as_mut_ptr();
-
-      copy_nonoverlapping(from, to.add(1), 1);
+      let ptr1 = root.as_ptr();
+      let ptr2 = root.as_mut_ptr();
       ```
     )
     let (block, highlight, locate) = ctx
     block
-    for loc in locate("data") { highlight(..loc) }
-    highlight(..locate("from").at(0))
-    highlight(..locate("to").at(0))
+    for loc in locate("root") { highlight(..loc) }
+    highlight(..locate("ptr1").at(0))
+    highlight(..locate("ptr2").at(0))
   }))
 
+  #sb-stack[root][ptr1][ptr2]
+
+  #pause
   #placed(bottom + right)[
     #cetz-canvas({
       import cetz.draw: *
       rect((-2, 1.5), (6, -4.5), stroke: none)
-      cetz.tree.tree((`data`, `from`, `to`),
+      cetz.tree.tree((`root`, `ptr1`, `ptr2`),
         spread: 4,
         grow: 3,
         draw-node: (node, ..) => {
@@ -272,7 +363,7 @@
 == From Stacks to Trees
 
 #slide(repeat: 2, self => [
-  #cetz-canvas({
+  #codebox(cetz-canvas({
     import cetz.draw: *
     let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
     let (uncover,) = utils.methods(self)
@@ -292,7 +383,6 @@
 
     uncover("2", {
       highlight(..locate("root").at(0), color: green)
-      let style = (mark: (end: ">"), stroke: (paint: orange, thickness: 3pt))
       for (from, to) in (
         (locate("ref1").at(0), locate("root").at(1)),
         (locate("ref2").at(0), locate("ref1").at(1)),
@@ -302,10 +392,10 @@
         highlight(..to)
         line(line-col(..end-of(from), anchor: "north-east"),
             line-col(..start-of(to), anchor: "north-west"),
-            ..style)
+            ..point-to-code)
       }
     })
-  })
+  }))
   #placed(bottom + right, neutral: true)[
     #cetz-canvas({
       import cetz.draw: *
