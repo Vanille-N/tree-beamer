@@ -289,7 +289,7 @@
           - pop until `ptr`
           - push `y`
         ][
-          - #textred[#strike[search for `x`]]
+          - search for `x`
           - search for `y`
         ][
           #textred[#strong[#textred[UB:]] cannot use `x` when it is not in the stack]
@@ -300,7 +300,7 @@
 ])
 
 #slide[
-  - detected several bugs
+  - several bugs detected (stdlib and other libraries)
   - implemented in Miri $->$ included in many projects' CI
 
   #pause
@@ -318,7 +318,9 @@
   ]
 ]
 
-#slide[
+#section-slide[From Stacks to Trees]
+
+#slide(repeat: 3, [
   #codebox(cetz-canvas({
     let ctx = from-code(
       ```rs
@@ -333,10 +335,23 @@
     highlight(..locate("ptr2").at(0))
   }))
 
-  #sb-stack[root][ptr1][ptr2]
-
-  #pause
-  #placed(bottom + right)[
+  #table(columns: (1fr, 1fr), stroke: none)[#align(center + bottom)[
+    #sb-stack[root][ptr2]
+    #uncover("2-")[
+      #place[#line(start: (20%, 0%), end: (80%, -20%), stroke: (paint: red, thickness: 3pt))]
+      #place[#line(start: (80%, 0%), end: (20%, -20%), stroke: (paint: red, thickness: 3pt))]
+    ]
+  ]][#align(center + bottom)[
+    #uncover("2-")[#sb-stack[root][ptr1][ptr2]]
+    #uncover("3")[
+      #place[#line(start: (20%, 0%), end: (80%, -30%), stroke: (paint: red, thickness: 3pt))]
+      #place[#line(start: (80%, 0%), end: (20%, -30%), stroke: (paint: red, thickness: 3pt))]
+    ]
+  ]]
+], self => [
+  #let (uncover,) = utils.methods(self)
+  #uncover("3")[
+  #placed(center, neutral: true)[
     #cetz-canvas({
       import cetz.draw: *
       rect((-2, 1.5), (6, -4.5), stroke: none)
@@ -354,55 +369,35 @@
       )
     })
   ]
-  #pause
-  #full-slide-overlay[
-    The stack is *too rigid* to represent the exact relationship
   ]
-]
+])
 
-== From Stacks to Trees
+== Relative positions in the tree
 
-#slide(repeat: 2, self => [
+#slide(repeat: 5, self => [
   #codebox(cetz-canvas({
     import cetz.draw: *
-    let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
-    let (uncover,) = utils.methods(self)
-    let ctx = from-code(
-      ```rs
+    let ctx = from-code(```rs
       let mut root = 42;
-
       let ref1 = &mut root;
-
       let ref2 = &mut *ref1;
-
       let ref3 = &mut root;
-      ```
-    )
-    let (block, highlight, locate, rel-to, start-of, end-of, line-col) = ctx
+      ```, self: self)
+    let (block, highlight, locate, rel-to, start-of, end-of, line-col, uncover, highlight-lines) = ctx
     block
-
-    uncover("2", {
-      highlight(..locate("root").at(0), color: green)
-      for (from, to) in (
-        (locate("ref1").at(0), locate("root").at(1)),
-        (locate("ref2").at(0), locate("ref1").at(1)),
-        (locate("ref3").at(0), locate("root").at(2))
-      ) {
-        highlight(..from)
-        highlight(..to)
-        line(line-col(..end-of(from), anchor: "north-east"),
-            line-col(..start-of(to), anchor: "north-west"),
-            ..point-to-code)
-      }
-    })
+    for i in range(4) {
+      uncover(str(i+2), { highlight-lines(i) })
+    }
   }))
-  #placed(bottom + right, neutral: true)[
-    #cetz-canvas({
+], self => [
+  #let (alternatives,) = utils.methods(self)
+  #placed(center, neutral: true)[
+    #let draw-tree(structure) = {
       import cetz.draw: *
-      rect((-2, 1.5), (6, -7.5), stroke: none)
-      cetz.tree.tree((`root`, (`ref1`, `ref2`), `ref3`),
+      cetz.tree.tree(structure,
         spread: 4,
         grow: 3,
+        name: "tree",
         draw-node: (node, ..) => {
           circle((), radius: 1, stroke: black)
           content((), node.content)
@@ -410,13 +405,40 @@
         draw-edge: (from, to, ..) => {
           let (a, b) = (from + ".center", to + ".center")
           line((a, 1, b), (b, 1, a))
-        }
+        },
       )
-    })
+    }
+    #let bounding-box(orig) = cetz.draw.rect(stroke: none, rel(orig, -5, 1), rel((), 10, -8))
+    #alternatives[
+      #cetz-canvas({
+        bounding-box((0,0))
+      })
+    ][
+      #cetz-canvas({
+        draw-tree((`root`,))
+        bounding-box("tree.0")
+      })
+    ][
+      #cetz-canvas({
+        draw-tree((`root`, `ref1`))
+        bounding-box("tree.0")
+      })
+    ][
+      #cetz-canvas({
+        draw-tree((`root`, (`ref1`, `ref2`)))
+        bounding-box("tree.0")
+      })
+    ][
+      #cetz-canvas({
+        draw-tree((`root`, (`ref1`, `ref2`), `ref3`))
+        bounding-box("tree.0")
+      })
+    ]
   ]
 ])
 
-==
+#section-slide[The TB state machine]
+
 #slide[
   #codebox(
   ```rs
