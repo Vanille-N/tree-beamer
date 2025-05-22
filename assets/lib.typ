@@ -16,7 +16,7 @@
 // Set this to true to print some bounding boxes and layout lines to help align content.
 #let show-layout-boundaries = false
 #let rect-if-show-layout(ul, br) = {
-  draw.rect(ul, br, stroke: if show-layout-boundaries { black } else { none })
+  cetz.draw.rect(ul, br, stroke: if show-layout-boundaries { black } else { none })
 }
 #let box-if-show-layout(c) = {
   rect(

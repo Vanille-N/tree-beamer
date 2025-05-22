@@ -1,6 +1,7 @@
 #import "@preview/touying:0.6.1": *
 #import "@preview/cetz:0.3.2"
 #import "lib.typ": *
+#import "tb.typ"
 #import themes.university: *
 
 #set text(font: "Inria Sans")
@@ -46,7 +47,7 @@
 
 #let split(a, b, fraction: 0.5) = table(columns: (fraction * 1fr, (1 - fraction) * 1fr), stroke: none, align: left)[#a][#b]
 
-#let textred(t) = text(fill: red)[#t]
+#let tcolor(c, t) = text(fill: c)[#t]
 
 // Notes
 //
@@ -220,11 +221,13 @@
   - memory is initialized
   - ...
   #pause
-  - the reborrows comply with Tree Borrows#h(-3mm)#box[#super[#strong[#textred[#rotate(30deg)[NEW!]]]]]
+  - the reborrows comply with Tree Borrows#h(-3mm)#box[#super[#strong[#tcolor(red)[#rotate(30deg)[NEW!]]]]]
 
 
+  #meanwhile
   Code that violates these rules is declared *Undefined Behavior*.
 
+  #pause
   #pause
   #full-slide-overlay[
     === Sounds familiar?
@@ -292,7 +295,7 @@
           - search for `x`
           - search for `y`
         ][
-          #textred[#strong[#textred[UB:]] cannot use `x` when it is not in the stack]
+          #tcolor(red)[#strong[#tcolor(red)[UB:]] cannot use `x` when it is not in the stack]
         ]
       ]
     ]
@@ -374,7 +377,7 @@
 
 == Relative positions in the tree
 
-#slide(repeat: 5, self => [
+#slide(repeat: 6, self => [
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
@@ -388,52 +391,50 @@
     for i in range(4) {
       uncover(str(i+2), { highlight-lines(i) })
     }
+    uncover("6", highlight(..locate("ref1").at(0), color: green))
   }))
 ], self => [
-  #let (alternatives,) = utils.methods(self)
+  #let (alternatives, uncover, only) = utils.methods(self)
   #placed(center, neutral: true)[
-    #let draw-tree(structure) = {
-      import cetz.draw: *
-      cetz.tree.tree(structure,
-        spread: 4,
-        grow: 3,
-        name: "tree",
-        draw-node: (node, ..) => {
-          circle((), radius: 1, stroke: black)
-          content((), node.content)
-        },
-        draw-edge: (from, to, ..) => {
-          let (a, b) = (from + ".center", to + ".center")
-          line((a, 1, b), (b, 1, a))
-        },
-      )
+    #import cetz.draw: *
+    #let bounding-box(orig) = cetz.draw.rect(stroke: none, rel(orig, -5, 3), rel((), 10, -12))
+    #let arrow-in-tree(start, end, name: none) = {
+      line((start, 1, end), (end, 1, start), stroke: (paint: green, thickness: 3pt, dash: "dashed"), mark: (end: ">"), name: name,)
     }
-    #let bounding-box(orig) = cetz.draw.rect(stroke: none, rel(orig, -5, 1), rel((), 10, -8))
-    #alternatives[
-      #cetz-canvas({
-        bounding-box((0,0))
+    #cetz-canvas({
+      let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
+      let (uncover,) = utils.methods(self)
+      bounding-box((0,0))
+      uncover("2", {
+        tb.draw-tree((`root`,))
       })
-    ][
-      #cetz-canvas({
-        draw-tree((`root`,))
-        bounding-box("tree.0")
+      uncover("3", {
+        tb.draw-tree((`root`, `ref1`))
+        arrow-in-tree("tree.0-0", "tree.0", name: "parent")
+        content("parent.mid", anchor: "east", padding: 2mm)[#tcolor(green)[parent]] 
       })
-    ][
-      #cetz-canvas({
-        draw-tree((`root`, `ref1`))
-        bounding-box("tree.0")
+      uncover("4", {
+        tb.draw-tree((`root`, (`ref1`, `ref2`)))
+        arrow-in-tree("tree.0-0", "tree.0-0-0", name: "child")
+        content("child.mid", anchor: "east", padding: 2mm)[#tcolor(green)[child]]
       })
-    ][
-      #cetz-canvas({
-        draw-tree((`root`, (`ref1`, `ref2`)))
-        bounding-box("tree.0")
+      uncover("5-", {
+        set-origin((-2,0))
+        tb.draw-tree((`root`, (`ref1`, `ref2`), `ref3`))
+        uncover("5", {
+          arrow-in-tree("tree.0-0", "tree.0-1", name: "cousin")
+          content("cousin.mid", anchor: "north-west", padding: 2mm, angle: -30deg)[#tcolor(green)[cousin]]
+        })
+        uncover("6", {
+          circle("tree.0-0", fill: tb.c.child.transparentize(60%))
+          circle("tree.0-0-0", fill: tb.c.child.transparentize(60%))
+          circle("tree.0", fill: tb.c.foreign.transparentize(60%))
+          circle("tree.0-1", fill: tb.c.foreign.transparentize(60%))
+          content(rel("tree.0-0-0", 0, -2), anchor: "north-west")[#tcolor(tb.c.child)[child accesses]]
+          content(rel("tree.0", 0, 2), anchor: "south")[#tcolor(tb.c.foreign)[foreign accesses]]
+        })
       })
-    ][
-      #cetz-canvas({
-        draw-tree((`root`, (`ref1`, `ref2`), `ref3`))
-        bounding-box("tree.0")
-      })
-    ]
+    })
   ]
 ])
 
@@ -450,218 +451,145 @@
   )
 ]
 
-#section-slide[Evaluation]
-
 #slide[
-  === Design constraints
-  - Allows optimizations \
-    $->$ enough UB to rule out problematic patterns
-
-  - Convenient for library writers \
-    $->$ intuitive rules \
-    $->$ permissive of standard patterns
+  #cetz-canvas({
+    tb.state-machine-normal()
+  })
 ]
 
-/*
+#section-slide[Evaluation]
 
-#let tag-tree(draw-node, data, ..style) = {
-  let grow = style.named().at("grow", default: 2)
-  let spread = style.named().at("spread", default: 2)
-  tree.tree(
-    data,
-    grow: grow,
-    spread: spread,
-    name: "tags",
-    draw-node: (node, ..) => draw-node(node),
-    draw-edge: (from, to, ..) => {
-      let (a, b) = (from + ".center", to + ".center")
-      draw.line((a, 0.8, b), (b, 0.8, a))
-    }
-  )
-}
+== Design constraints
 
-#let draw-node-default(node) = {
-    draw.circle((), radius: 0.8, stroke: black)
-    draw.content((), node.content.content)
-}
-#let draw-node-highlight(check, node) = {
-    let color = check(node.content.at("rel", default: ""))
-    let fill = if color != none { color } else { white }
-    draw.circle((), radius: 0.8, stroke: black, fill: fill)
-    draw.content((), node.content.content)
-}
-
-#let state(x, y, name, label) = {
-  let name = name + "-box"
-  draw.rect((x, y), (x+4, y+1), name: name)
-  draw.content(name + ".center", anchor: "center", label)
-}
-
-#let bezier-between-states(start, end, dir) = {
-  let name = "arr-" + start + "-" + end
-  let start = start + "-box"
-  let end = end + "-box"
-  draw.bezier(
-    start + "." + dir,
-    end + ".north",
-    (start + "." + dir, "-|", end + ".north"),
-    mark: (end: ">"),
-    name: name,
-  )
-}
-
-#let straight-down(start, end, dir, label, ..style) = {
-  let name = "arr-" + start + "-" + end
-  let start = start + "-box"
-  let end = end + "-box"
-  let sign = if dir == "west" { 1 } else { -1 }
-  draw.line(
-    start + ".south",
-    end + ".north",
-    mark: (end: ">"),
-    name: name,
-  )
-  let text-color = style.named().at("text-color", default: gray)
-  draw.content(
-    (rel: (sign * 0.2, 0), to: name + ".mid"),
-    anchor: dir,
-    text(fill: text-color)[#label]
-  )
-}
-#let self-loop(box, dir, label, ..style) = {
-  let name = box + "-loop"
-  let box = box + "-box"
-  let sign = if dir == "east" { 1 } else { -1 }
-  draw.bezier(
-    box + "." + dir,
-    box + "." + dir,
-    (rel: (sign * 1.5, 1.5), to: box + "." + dir),
-    (rel: (sign * 1.5, -1.5), to: box + "." + dir),
-    name: name,
-    mark: (end: ">"),
-  )
-  let text-color = style.named().at("text-color", default: gray)
-  draw.content(
-    (rel: (sign * 0.2, 0), to: name + ".mid"),
-    anchor: if dir == "east" { "west" } else { "east" },
-    text(fill: text-color)[#label]
-  )
-}
-
-#let state-machine-normal = {
-    state(0, 0, "res", `Reserved`)
-    state(0, -3, "act", `Active`)
-    state(0, -6, "frz", `Frozen`)
-    state(3, -9, "dis", `Disabled`)
-
-    bezier-between-states("res", "dis", "east")
-    bezier-between-states("act", "dis", "east")
-    bezier-between-states("frz", "dis", "east")
-    draw.content(
-      (rel: (0.7, -1.1), to: "arr-res-dis.ctrl-0"),
-      anchor: "center", angle: -60deg,
-      text(fill: foreign_color)[foreign write],
-    )
-
-    straight-down("res", "act", "east", [child write], text-color: child_color)
-    straight-down("act", "frz", "east", [foreign read], text-color: foreign_color)
-
-    self-loop("res", "west", [any read], text-color: mixed_color)
-    self-loop("act", "west", [child r/w], text-color: child_color)
-    self-loop("frz", "west", [any read], text-color: mixed_color)
-    self-loop("dis", "west", [foreign r/w], text-color: foreign_color)
-}
-
-==
 #slide[
-  #align(right)[
-    #let marker(to, ldist) = {
-      draw.line(
-        (rel: (-ldist - 1, 0), to: to + "-box.west"),
-        (rel: (-ldist, 0), to: to + "-box.west"),
-        mark: (end: "o"),
-        name: to + "-line",
+  - Allows optimizations \
+    $->$ enough UB to rule out problematic patterns \
+    $->$ which optimizations are gained/lost compared to SB?
+    #pause
+    #tcolor(red)[Mechanized proof of optimizations (Rocq + Simuliris)]
+
+  #meanwhile
+  - Convenient for library writers \
+    $->$ intuitive rules \
+    $->$ permissive of standard patterns \
+    #pause
+    #tcolor(red)[Implementation in Miri] \
+    #tcolor(red)[Execute top libraries of `crates.io`] \
+    #tcolor(red)[Community feedback]
+]
+
+== Empirical evaluation
+
+#slide[
+  "How much less UB is there in Tree Borrows
+  compared to Stacked Borrows?"
+
+  #pause
+  We must
+  - count cases of UB that are specifically due to TB/SB
+  - only among crates that actually work
+
+  #pause
+  Solution
+  - 3 Miri runs
+    - Filter
+    - Stacked Borrows
+    - Tree Borrows
+]
+
+== Interpretation
+
+#slide[
+  #let diamond(upper: [], left: (), right: (), inner: ()) = {
+    let fill-cells = (:)
+    let inner_rot = ()
+    for (i, line) in inner.enumerate() {
+      let line_rot = ()
+      for (j, cell) in line.enumerate() {
+        let (fill, content) = cell
+        fill-cells.insert(str(i)+"_"+str(j), fill)
+        line_rot.push(
+          rotate(-45deg, reflow: true, content)
+        )
+      }
+      inner_rot.push(line_rot)
+    }
+    let right_rot = right.map(x => rotate(-90deg, reflow: true, x))
+    rotate(45deg, reflow: true,
+      table(
+        fill: (x,y) => {
+          let true-x = x + if right.len() > 0 { -1 } else { 0 }
+          let true-y = y + if left.len() > 0 { -1 } else { 0 }
+          fill-cells.at(str(true-y)+"_"+str(true-x), default: none)
+        },
+        inset: 1mm,
+        align: center + horizon,
+        columns: right.len() + 1,
+        ..{
+          if right_rot.len() > 0 {
+            (rotate(-45deg, reflow: true, upper), ..right_rot)
+          } else {
+            ()
+          }
+        },
+        ..{
+          if left.len() > 0 {
+            left.zip(inner_rot).flatten()
+          } else {
+            inner_rot.flatten()
+          }
+        }
       )
-    }
-    #let rel-to-line(to, rel, anchor) = {
-      (rel: rel, to: to + "-line." + anchor)
-    }
-    #let bounding-box = {
-      draw.rect((rel: (5, 2), to: "res-box.center"), (rel: (-22.5, -10), to: "res-box.center"), stroke: none)
-    }
-    #alternatives[
-      #canvas({
-        state-machine-normal
-        bounding-box
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("res", 5)
-        marker("act", 5)
-        draw.content(rel-to-line("res", (-0.5, 0), "start"), anchor: "east")[`&mut` not yet written to]
-        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[`&mut` already written]
-        draw.line(
-          rel-to-line("res", (-0.1, -0.5), "start"),
-          rel-to-line("act", (-0.1, 0.5), "start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[write to it]
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("act", 5)
-        marker("frz", 5)
-        draw.content(rel-to-line("act", (-0.5, 0), "start"), anchor: "east")[exclusive access]
-        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
-        draw.line(
-          rel-to-line("act", (-0.1, -0.5), "start"),
-          rel-to-line("frz", (-0.1, 0.5), "start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains access]
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("frz", 5)
-        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
-        draw.bezier(
-          (rel: (-0.1, -0.5), to: "frz-line.start"),
-          (rel: (0.1, -0.5), to: "frz-line.start"),
-          (rel: (-1.5, -2.5), to: "frz-line.start"),
-          (rel: (1.5, -2.5), to: "frz-line.start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[any read-only operation]
-      })
-    ][
-      #canvas({
-        state-machine-normal
-        bounding-box
-        marker("frz", 5)
-        marker("dis", 8)
-        draw.content(rel-to-line("frz", (-0.5, 0), "start"), anchor: "east")[shared access]
-        draw.content(rel-to-line("dis", (-0.5, 0), "start"), anchor: "east")[no access]
-        draw.line(
-          rel-to-line("frz", (-0.1, -0.5), "start"),
-          rel-to-line("dis", (-0.1, 0.5), "start"),
-          mark: (end: ">"),
-          name: "transform",
-        )
-        draw.content((rel: (-0.5, 0), to: "transform.mid"), anchor: "east")[other pointer gains exclusive access]
-      })
+    )
+  }
+
+  #let regress(t) = (fill: red.darken(-30%), content: t)
+  #let progress(t) = (fill: green.darken(-30%), content: t)
+  #let same = (fill: gray.darken(-50%), content: [=])
+  #let bad = (fill: gray, content: [$bot$])
+
+  #v(-1cm)
+  #diamond(
+    upper: [TB | SB],
+    right: ([Crash], [UB], [Bor], [Time], [Pass]),
+    left: ([Crash], [UB], [Bor], [Time], [Pass]),
+    inner: (
+      (same, bad, bad, bad, bad),
+      (bad, same, bad, bad, bad),
+      (bad, bad, same, progress[time], regress[bor]),
+      (bad, bad, regress[time], same, regress[time]),
+      (bad, bad, progress[bor], progress[time], same)
+    ),
+  )
+  #place(top + right)[
+    #align(left)[
+    #box(diamond(inner: ((same,),))) Status quo \
+    #box(diamond(inner: ((bad,),))) Unexploitable \
+    #box(diamond(inner: ((regress[X],),))) Regressions \
+    #box(diamond(inner: ((progress[X],),))) Improvements
     ]
   ]
 ]
 
+== Results over 10 000 top crates (674 748 tests)
+
+#slide[
+  - Borrow
+    - regressions: 31 ($<1%$)
+    - borrow improvements: 3564 of 6568 ($54%$)
+  Overall: $-54%$\
+  *Fixes more than half of cases of borrowing UB*
+
+  #pause
+  - Time
+    - regressions: 438
+    - improvements: 51
+  Overall: $+0.5%$\
+  *Ongoing work on performance*
+]
+
+
+/*
 #focus-slide[
   First example contains UB
 ]
@@ -675,12 +603,12 @@
       #grid(
         columns: (30%, 70%),
         layout[
-          #let executing-loc(i, content) = canvas({
+          #let executing-loc(i, content) = cetz.canvas({
+            import cetz.draw: *
             let y = 1 - 0.86 * i
-            rect-if-show-layout((1, 1.3), (-3, -3.8))
-            draw.line((0, y), (1, y), name: "line", mark: (end: "o"))
-            let content = text(size: 20pt)[#content]
-            draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
+            line((0, y), (1, y), name: "line", mark: (end: "o"))
+            let inner = text(size: 20pt)[#content]
+            content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#inner]
           })
           #alternatives(repeat-last: true)[
                       ][#executing-loc(0, [Alloc `X`])
@@ -714,21 +642,25 @@
       )
 
       #let previous-state(anchor, content) = {
+        import cetz.draw: *
         let content = text(fill: gray.darken(30%), size: 13pt)[old: #content]
-        draw.content((rel: (1, 0.5), to: "tags." + anchor), anchor: "south-west")[#content]
+        content((rel: (1, 0.5), to: "tags." + anchor), anchor: "south-west")[#content]
       }
       #let current-state(anchor, content) = {
-        draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
+        import cetz.draw: *
+        content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
       }
       #let accessed-tag(anchor, content) = {
-        draw.content((rel: (-4, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
-        draw.line((rel: (-4, -0.1), to: "tags." + anchor),
+        import cetz.draw: *
+        content((rel: (-4, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
+        line((rel: (-4, -0.1), to: "tags." + anchor),
                   (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: "o"))
       }
       #let transition-summary(anchor, content, ..style) = {
+        import cetz.draw: *
         let text-color = style.named().at("text-color", default: gray)
         let content = text(fill: text-color, size: 13pt)[#content]
-        draw.content((rel: (1.7, 0), to: "tags." + anchor), anchor: "south-west")[#content]
+        content((rel: (1.7, 0), to: "tags." + anchor), anchor: "south-west")[#content]
       }
       #let bounding-box = rect-if-show-layout(
         (rel: (-6.2, -2.8), to: "tags.0"),
@@ -738,62 +670,62 @@
       #v(2em)
 
       #scale(130%)[
-      #alternatives(repeat-last: true)[][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight((rel) => none, node),
+      #alternatives(repeat-last: true)[][#align(top + right)[#cetz.canvas({
+        tb.draw-tree(
           (
-            (content: [`X`], rel: ""),
+            `X`,
           )
         )
-        current-state("0")[`Active`]
-        accessed-tag("0")[Alloc]
-        transition-summary("0", text-color: alloc_color)[new]
+        //current-state("0")[`Active`]
+        //accessed-tag("0")[Alloc]
+        //transition-summary("0", text-color: alloc_color)[new]
         bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight((rel) => none, node),
+      })]][#align(top + right)[#cetz.canvas({
+        tb.draw-tree(
+          (
+            `X`,
+              `y`
+          )
+        )
+        //previous-state("0")[Active]
+        //current-state("0")[`Active`]
+        //current-state("0-0")[`Reserved`]
+        //accessed-tag("0-0")[Borrow]
+        //transition-summary("0", text-color: child_color)[$arrow.b$child read]
+        //transition-summary("0-0", text-color: alloc_color)[new]
+        bounding-box
+      })]][#align(top + right)[#cetz.canvas({
+        tb.draw-tree(
+          (
+            `X`,
+              `y`
+          )
+        )
+        //previous-state("0")[Active]
+        //previous-state("0-0")[Reserved]
+        //current-state("0")[`Active`]
+        //current-state("0-0")[`Reserved`]
+        //accessed-tag("0-0")[Read]
+        //transition-summary("0", text-color: child_color)[$arrow.b$child read]
+        //transition-summary("0-0", text-color: child_color)[$arrow.b$child read]
+        bounding-box
+      })]][#align(top + right)[#cetz.canvas({
+        tb.draw-tree(
           (
             (content: [`X`], rel: ""),
               (content: [`y`], rel: ""),
           )
         )
-        previous-state("0")[Active]
-        current-state("0")[`Active`]
-        current-state("0-0")[`Reserved`]
-        accessed-tag("0-0")[Borrow]
-        transition-summary("0", text-color: child_color)[$arrow.b$child read]
-        transition-summary("0-0", text-color: alloc_color)[new]
+        //previous-state("0")[Active]
+        //previous-state("0-0")[Reserved]
+        //current-state("0")[`Active`]
+        //current-state("0-0")[`Active`]
+        //accessed-tag("0-0")[Write]
+        //transition-summary("0", text-color: child_color)[$arrow.b$child write]
+        //transition-summary("0-0", text-color: child_color)[$arrow.b$child write]
         bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`X`], rel: ""),
-              (content: [`y`], rel: ""),
-          )
-        )
-        previous-state("0")[Active]
-        previous-state("0-0")[Reserved]
-        current-state("0")[`Active`]
-        current-state("0-0")[`Reserved`]
-        accessed-tag("0-0")[Read]
-        transition-summary("0", text-color: child_color)[$arrow.b$child read]
-        transition-summary("0-0", text-color: child_color)[$arrow.b$child read]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`X`], rel: ""),
-              (content: [`y`], rel: ""),
-          )
-        )
-        previous-state("0")[Active]
-        previous-state("0-0")[Reserved]
-        current-state("0")[`Active`]
-        current-state("0-0")[`Active`]
-        accessed-tag("0-0")[Write]
-        transition-summary("0", text-color: child_color)[$arrow.b$child write]
-        transition-summary("0-0", text-color: child_color)[$arrow.b$child write]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
+      })]][#align(top + right)[#cetz.canvas({
+        tb.draw-tree(
           (
             (content: [`X`], rel: ""),
               (content: [`y`], rel: ""),
@@ -807,7 +739,7 @@
         transition-summary("0", text-color: child_color)[$arrow.b$child read]
         transition-summary("0-0", text-color: foreign_color)[$arrow.b$foreign read]
         bounding-box
-      })]][#align(top + right)[#canvas({
+      })]][#align(top + right)[#cetz.canvas({
         tag-tree((node) => draw-node-highlight(standard_color_picker, node),
           (
             (content: [`X`], rel: ""),
@@ -825,7 +757,7 @@
       })]]]
      ],
 
-     layout[#only((2,3,4,5,6,7,8))[#scale(90%)[#canvas({state-machine-normal})]]],
+     layout[#only((2,3,4,5,6,7,8))[#scale(90%)[#cetz.canvas({state-machine-normal})]]],
   )
   #only(8)[#full-slide-overlay[
     - Exclusively owned ```rs &mut``` is `Active`
@@ -833,318 +765,9 @@
       violations of uniqueness
   ]]
 ]
+*/
 
-#focus-slide[
-  Raw pointers
-]
-
-#slide[
-  #grid(
-    columns: (5%, 60%, 25%),
-    layout[],
-    layout[
-      #grid(
-        columns: (30%, 20%),
-        [
-          #let executing-loc(i, content) = canvas({
-            let y = 0.75 - 0.86 * i
-            rect-if-show-layout((1, 1), (-3.6, -3))
-            draw.line((0, y), (1, y), name: "line", mark: (end: "o"))
-            let content = text(size: 20pt)[#content]
-            draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
-          })
-          #alternatives(repeat-last: true)[
-                      ][#executing-loc(0, [Alloc `x`])
-                      ][#executing-loc(1, [Raw `r`])
-                      ][#executing-loc(2, [Write `x`])
-                      ][#executing-loc(3, [Write `r`])
-                      ]
-        ],
-        text(size: 22pt)[
-        #alternatives(repeat-last: true)[```rs
-          let mut x = 0u64;
-          let r = addr_of_mut!(x);
-          x = 42; // x and r should be interchangeable
-          r.write(50);
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let r = addr_of_mut!(x);
-          x = 42;
-          r.write(50);
-          ```
-        ]
-
-      ])
-
-      #let previous-state(anchor, content) = {
-        let content = text(fill: gray.darken(30%), size: 11pt)[old: #content]
-        draw.content((rel: (0.85, 0.4), to: "tags." + anchor), anchor: "south-west")[#content]
-      }
-      #let current-state(anchor, content) = {
-        let content = text(size: 21pt)[#content]
-        draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
-      }
-      #let accessed-tag(anchor, content) = {
-        let content = text(size: 16pt)[#content]
-        draw.content((rel: (-3, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
-        draw.line((rel: (-3, -0.1), to: "tags." + anchor),
-                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: "o"))
-      }
-      #let transition-summary(anchor, content, ..style) = {
-        let text-color = style.named().at("text-color", default: gray)
-        let content = text(fill: text-color, size: 11pt)[#content]
-        draw.content((rel: (1.7, 0), to: "tags." + anchor), anchor: "south-west")[#content]
-      }
-      #let bounding-box = rect-if-show-layout(
-        (rel: (-6.5, -4), to: "tags.0"),
-        (rel: (7.2, 0.8), to: "tags.0"),
-      )
-
-      #v(2em)
-      #scale(130%)[
-      #alternatives(repeat-last: true)[
-      ][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        current-state("0")[`Active`]
-        accessed-tag("0")[Alloc]
-        transition-summary("0", text-color: alloc_color)[new]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`,`r`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        previous-state("0")[Active]
-        current-state("0")[`Active`]
-        accessed-tag("0")[Raw]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`,`r`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        previous-state("0")[Active]
-        current-state("0")[`Active`]
-        accessed-tag("0")[Write]
-        transition-summary("0", text-color: child_color)[$arrow.b$child write]
-        bounding-box
-      })]]]
-   ],
-   layout[#only((2,3,4,5,6))[#scale(80%)[#canvas({state-machine-normal})]]],
-  )
-
-  #only(6)[
-    #full-slide-overlay[
-      - Raw pointers inherit tag \ (and permissions with it)
-      - Same approach for interior mutability
-    ]
-  ]
-]
-
-
-#focus-slide[
-  All mutable references are two-phase borrows
-]
-
-#slide[
-  #grid(
-    columns: (5%, 60%, 25%),
-    layout[],
-    layout[
-      #grid(
-        columns: (30%, 20%),
-        [
-          #let executing-loc(i, content) = canvas({
-            let y = 0.75 - 0.86 * i
-            rect-if-show-layout((1, 1), (-3.6, -3))
-            draw.line((0, y), (1, y), name: "line", mark: (end: "o"))
-            let content = text(size: 20pt)[#content]
-            draw.content((rel: (-0.2, 0), to: "line.start"), anchor: "east")[#content]
-          })
-          #alternatives(repeat-last: true)[
-                      ][
-                      ][#executing-loc(0, [Alloc `x`])
-                      ][#executing-loc(1, [Borrow `y`])
-                      ][#executing-loc(2, [Borrow `z`])
-                      ][#executing-loc(3, [Read `z`])
-                      ][#executing-loc(4, [Write `y`])
-                      ]
-        ],
-        text(size: 22pt)[
-        #alternatives(repeat-last: true)[```rs
-          let mut x = 0u64;
-          let y = &*addr_of!(x);
-          let z = &mut x;  // Create mutable reference
-          let v = read(y);
-          write(z, 42);    // Use it mutably
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = &*addr_of!(x);
-          let z = &mut x;
-          let v = read(y); // Read accesses still allowed
-          write(z, 42);
-
-          ```
-        ][```rs
-          let mut x = 0u64;
-          let y = &*addr_of!(x);
-          let z = &mut x;
-          let v = read(y);
-          write(z, 42);
-          ```
-        ]
-      ])
-
-      #v(2em)
-      #let previous-state(anchor, content) = {
-        let content = text(fill: gray.darken(30%), size: 11pt)[old: #content]
-        draw.content((rel: (0.85, 0.4), to: "tags." + anchor), anchor: "south-west")[#content]
-      }
-      #let current-state(anchor, content) = {
-        let content = text(size: 21pt)[#content]
-        draw.content((rel: (0.8, -0.1), to: "tags." + anchor), anchor: "north-west")[#content]
-      }
-      #let accessed-tag(anchor, content) = {
-        let content = text(size: 16pt)[#content]
-        draw.content((rel: (-3, 0.1), to: "tags." + anchor), anchor: "south-west")[#content]
-        draw.line((rel: (-3, -0.1), to: "tags." + anchor),
-                  (rel: (-1, -0.1), to: "tags." + anchor), mark: (end: "o"))
-      }
-      #let transition-summary(anchor, content, ..style) = {
-        let text-color = style.named().at("text-color", default: gray)
-        let content = text(fill: text-color, size: 11pt)[#content]
-        draw.content((rel: (1.5, 0), to: "tags." + anchor), anchor: "south-west")[#content]
-      }
-      #let bounding-box = rect-if-show-layout(
-        (rel: (-6.5, -4), to: "tags.0"),
-        (rel: (7.6, 0.8), to: "tags.0"),
-      )
-
-      #scale(130%)[
-      #alternatives(repeat-last: true)[][
-      ][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        current-state("0")[`Active`]
-        accessed-tag("0")[Alloc]
-        transition-summary("0", text-color: alloc_color)[new]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        previous-state("0")[Active]
-        current-state("0")[`Active`]
-        current-state("0-0")[`Frozen`]
-        accessed-tag("0-0")[Borrow]
-        transition-summary("0", text-color: child_color)[$arrow.b$child read]
-        transition-summary("0-0", text-color: alloc_color)[new]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-              (content: [`z`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        previous-state("0")[Active]
-        previous-state("0-0")[Frozen]
-        current-state("0")[`Active`]
-        current-state("0-0")[`Frozen`]
-        current-state("0-1")[`Reserved`]
-        accessed-tag("0-1")[Borrow]
-        transition-summary("0", text-color: child_color)[$arrow.b$child read]
-        transition-summary("0-0", text-color: foreign_color)[$arrow.b$foreign read]
-        transition-summary("0-1", text-color: alloc_color)[new]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-              (content: [`z`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        previous-state("0")[Active]
-        previous-state("0-0")[Frozen]
-        previous-state("0-1")[Reserved]
-        current-state("0")[`Active`]
-        current-state("0-0")[`Frozen`]
-        current-state("0-1")[`Reserved`]
-        accessed-tag("0-0")[Read]
-        transition-summary("0", text-color: child_color)[$arrow.b$child read]
-        transition-summary("0-0", text-color: child_color)[$arrow.b$child read]
-        transition-summary("0-1", text-color: foreign_color)[$arrow.b$foreign read]
-        bounding-box
-      })]][#align(top + right)[#canvas({
-        tag-tree((node) => draw-node-highlight(standard_color_picker, node),
-          (
-            (content: [`x`], rel: ""),
-              (content: [`y`], rel: ""),
-              (content: [`z`], rel: ""),
-          ),
-          spread: 7,
-          grow: 3,
-        )
-        previous-state("0")[Active]
-        previous-state("0-0")[Frozen]
-        previous-state("0-1")[Reserved]
-        current-state("0")[`Active`]
-        current-state("0-0")[`Disabled`]
-        current-state("0-1")[`Active`]
-        accessed-tag("0-1")[Write]
-        transition-summary("0", text-color: child_color)[$arrow.b$child write]
-        transition-summary("0-0", text-color: foreign_color)[$arrow.b$foreign write]
-        transition-summary("0-1", text-color: child_color)[$arrow.b$child write]
-        bounding-box
-      })]]
-    ]
-   ],
-   layout[#only((3,4,5,6,7,8))[#scale(80%)[#canvas({state-machine-normal})]]],
-  )
-  #only(8)[
-    #full-slide-overlay[
-      - ```rs &mut``` starts `Reserved`
-      - `Reserved` tolerates all read accesses
-      - Tree structure makes this possible
-    ]
-  ]
-]
-
-#focus-slide[
-  Conclusion
-]
-
+/*
 #slide[
   #align(horizon)[
     *Learn more:* \
