@@ -75,8 +75,8 @@
   ]
 }
 
-#let placed(at, content, neutral: false) = {
-  place(at)[
+#let placed(at, content, neutral: false, dx: 0pt, dy: 0pt) = {
+  place(at, dx: dx, dy: dy)[
     #box(
       inset: 12pt, radius: 12pt,
       fill: if neutral { gray.darken(-75%) } else { color.mix(aqua.darken(-40%), gray).darken(-20%) },

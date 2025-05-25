@@ -1,5 +1,6 @@
 #import "@preview/touying:0.6.1": *
 #import "@preview/cetz:0.3.2"
+#import "@preview/cades:0.3.0": qr-code
 #import "lib.typ": *
 #import "tb.typ"
 #import themes.university: *
@@ -303,6 +304,7 @@
 ])
 
 #slide[
+  *Thanks to Stacked Borrows:*
   - several bugs detected (stdlib and other libraries)
   - implemented in Miri $->$ included in many projects' CI
 
@@ -435,26 +437,61 @@
         })
       })
     })
+    #v(-6mm)
+    Tree
   ]
 ])
 
 #section-slide[The TB state machine]
 
-#slide[
-  #codebox(
-  ```rs
-  let mut root = 42;
-  let x = &mut root;
-  *x += 1;
-  root = 0
-  ```
-  )
-]
+#slide(repeat: 6, self => [
+  #codebox(cetz-canvas({
+    let ctx = from-code(```rs
+      let mut root = 42;
+      let x = &mut root;
+      *x += 1;
+      let v = root;
+      root = 0
+      ```, self: self)
+    let (block, uncover, highlight-lines) = ctx
+    block
+    for i in range(5) {
+      uncover(str(i+2), { highlight-lines(i) })
+    }
+  }))
+], self => [
+  #placed(left, neutral: true)[
+    #let bounding-box(orig) = cetz.draw.rect(stroke: none, rel(orig, -5, 3), rel((), 10, -12))
+
+    #cetz-canvas({
+      import cetz.draw: *
+      let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
+      let (uncover,) = utils.methods(self)
+      uncover("2", {
+        tb.draw-tree((`root`,))
+      })
+      uncover("3-", {
+        tb.draw-tree((`root`, `x`))
+      })
+    })
+    Tree
+  ]
+  #placed(left, dx: 5cm, neutral: true)[
+    #v(8mm)
+    #alternatives[#v(1.6cm)][`root`: Reserved (r/w)][`root`: Active (r/w)]
+    #v(1cm)
+    #alternatives[#v(1.6cm)][#v(1.6cm)][`x`: Reserved (r/w)][`x`: Active (r/w)][`x`: Frozen (r)][`x`: Disabled]
+    #v(1cm)
+    Permissions
+  ]
+])
 
 #slide[
-  #cetz-canvas({
-    tb.state-machine-normal()
-  })
+  #align(center)[
+    #cetz-canvas({
+      tb.state-machine-normal()
+    })
+  ]
 ]
 
 #section-slide[Evaluation]
@@ -588,6 +625,25 @@
   *Ongoing work on performance*
 ]
 
+#focus-slide[Conclusion]
+
+==
+
+#slide[
+  #let url = "play.rust-lang.org"
+  *Try it out:* #text(size: 24pt)[#raw(url)]
+  #image("playground.png")
+  #v(5cm)
+  #place(bottom + left)[#qr-code(url, width: 30%)]
+][
+  #let url = "plf.inf.ethz.ch/research/pldi25-tree-borrows.html"
+  *Learn more:* \ #text(size: 24pt)[#raw(url)]
+  - dynamic ranges
+  - raw pointers
+  - interior mutability
+  #v(5cm)
+  #place(bottom + right)[#qr-code(url, width: 30%)]
+]
 
 /*
 #focus-slide[
