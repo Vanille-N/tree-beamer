@@ -4,7 +4,7 @@
 
 #let c = (
   foreign: orange,
-  child: green,
+  local: green,
   both: purple,
 )
 
@@ -95,7 +95,7 @@
 #let state-machine-normal(with-text: true) = {
     import cetz.draw: *
     state(0, 0, "res", `Reserved`)
-    state(0, -3, "act", `Active`)
+    state(0, -3, "act", `Unique`)
     state(0, -6, "frz", `Frozen`)
     state(3, -9, "dis", `Disabled`)
 
@@ -111,11 +111,11 @@
       )
     }
 
-    straight-down("res", "act", "east", [child write], text-color: c.child, with-text: with-text)
+    straight-down("res", "act", "east", [local write], text-color: c.local, with-text: with-text)
     straight-down("act", "frz", "east", [foreign read], text-color: c.foreign, with-text: with-text)
 
     self-loop("res", "west", [any read], text-color: c.both, with-text: with-text)
-    self-loop("act", "west", [child r/w], text-color: c.child, with-text: with-text)
+    self-loop("act", "west", [local r/w], text-color: c.local, with-text: with-text)
     self-loop("frz", "west", [any read], text-color: c.both, with-text: with-text)
     self-loop("dis", "west", [foreign r/w], text-color: c.foreign, with-text: with-text)
 }

@@ -128,7 +128,7 @@
       line-col(..se, anchor: "south-east"),
     )
   }
-  let highlight(nw, se, color: orange) = {
+  let highlight(nw, se, color: yellow) = {
     rect(
       stroke: none,
       fill: color.transparentize(80%),
@@ -136,7 +136,7 @@
       line-col(..se, anchor: "south-east"),
     )
   }
-  let highlight-lines(..args, color: orange) = {
+  let highlight-lines(min-width: 0, color: yellow, ..args) = {
     let lines = args.pos()
     let expanded-lines = ()
     for arg in lines {
@@ -148,7 +148,7 @@
         }
       }
     }
-    let max-width = 0
+    let max-width = min-width
     for ln in expanded-lines {
       max-width = calc.max(max-width, linebreaks.at(ln) - 2)
     }
@@ -165,6 +165,15 @@
       line-col(..se, anchor: "south-east"),
     )
     content(rel(line-col(..nw, anchor: "north-west"), 0, -7pt), anchor: "north-west")[#code]
+  }
+  let patch-line(ln, new) = {
+    let len = linebreaks.at(ln)
+    rect(
+      stroke: none,
+      fill: body_color,
+      line-col(ln, 0, anchor: "north-west"),
+      line-col(ln, len, anchor: "south-east"),
+    )
   }
   let locate(text) = {
     let match = body.text.matches(text)
@@ -209,6 +218,7 @@
     rel-to: rel-to,
     patch: patch,
     uncover: uncover,
+    patch-line: patch-line,
   )
 }
 
