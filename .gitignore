@@ -1,6 +1,4 @@
 # Presentation artifacts
-main.pdf
-build/
 
 # Examples artifacts
 examples/**/Cargo.lock
