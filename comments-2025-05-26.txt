@@ -1,0 +1,82 @@
+Too many details on SB
+  - don't go over the example
+  - spend more time on limitations
+
+Run the first example back in TB
+  - ignore the protectors
+  - or inline it
+
+State machine wrong level of detail
+
+On the problems of SB
+  - more details
+  - explain the solution
+
+~~Child~~ -> Local
+~~Active~~ -> Unique
+
+== Slide per slide
+1.
+  Guarantee is from the type system (not from the compiler)
+  Get back to the type system later
+
+2.
+  They are not copies, they are multiple references
+  There is space
+
+3.
+  Too much text
+
+4.
+  &raw mut
+
+5.
+  Makes sense
+  Reword it, don't use the word "reborrow"
+
+6.
+  delete ? maybe not.
+  Too much detail on SB
+  > "It uses a stack, which seems natural because of the nested nature of references"
+
+7.
+  We want to go into one of the problems in details.
+  Maybe ranges ? But we don't come back to ranges later.
+    > One array, a ref to the start and a ref to the end
+    > locations in between are not yet assigned
+    > tree accounts for multiple universes of stacks
+
+12.
+  We should say (briefly) which optimizations are gained/lost
+  should be 2 slides.
+  "Convenient for library writers" -> Make unsafe code possible to write
+  ~~intuitive rules~~ don't mention that
+
+14.
+  Delete the diamond, it's too hard to explain
+
+15.
+  it's not 10 000 but 30 000
+  -> it's a lot of code, make it prominent
+  Don't show absolute numbers if you can avoid them
+    - those that I do, I should round them
+  percentages are on tests not crates
+  performance is *miri*!!!
+  don't talk about the time at all
+  don't say "fixes more than half of the cases of UB"
+    - it's not half of all UB
+    - we don't "fix" it
+    say instead: "reduces the amount of borrow UB by over 50%"
+
+slide 9: cousin -> siblings in the tree
+child acccesses vs "foreign pointers"?
+This went a bit fast.
+
+slide 10:
+put the titles ("tree", "permissions") above
+"state machine" comes out of nowhere
+"loses uniqueness becomes frozen" should say "when there's a foreign read" or so
+same for the transition to disabled
+
+
+

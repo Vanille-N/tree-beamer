@@ -1,0 +1,84 @@
+I will be introduced
+  find sth else to say
+
+Consider citing the paper that praises ours
+- in the eval section: similar result was found by [?]
+
+7.
+  frontload evaluation
+  - big impressive numbers
+  "SB has technical limitations, but before that let me show the impact of solving those limitations"
+  and show the -50% UB
+
+  high-level story:
+    - too much UB
+    - forbids basic optimizations
+
+  then a slide at the end for the technical improvements
+
+Terms I used that were not defined
+- aliasing model -> "a new semantics for aliasing in Rust"
+- reborrow
+
+1.
+  Not a typical optimization, in fact
+  this is an amazing optimization
+
+Make changes more obvious
+  and say it out loud
+  e.g. slide 1: say "we replace the load of x with a constant"
+
+3.
+  too much stuff
+  question goes to next slide
+
+5.
+  TB has not been defined
+  say instead "compliance with aliasing rules"
+  TB: defines the aliasing rules
+
+6.
+  In safe Rust, it is a fact of the borchk that mutable references are well-bracketed
+  SB extends this well-bracketed discipline to unsafe Rust.
+  pop doesn't occur until the last step, which is weird
+  say that root is the bottom
+  only show boxes for parts that exist
+
+7.
+  no one known Miri
+  say that it's the official Rust interpreter that checks your code for UB
+  + high level limitations
+  + teaser of the evaluation
+
+8.
+  actually extend the example
+  "it's a toy example, but the evaluation shows us that this does occur for real"
+  needs more careful explanation
+  - say which one SB picks
+  - animate the fact that neither works
+
+  -> what we really want is to have them next to each other,
+     impossible with a stack but possible with a tree
+
+  SB chooses [v], because what else would you choose ?
+  -> no good reason for one or the other
+  explain why this is a real-life pattern
+
+  this overrides slide 9,
+    no strict children, no demo of the state machine,
+    just explain that when we use x0, x2 receives a "bad" access
+    and gets killed, and it collapses into a stack.
+
+9.
+  don't show the state machine, just say "there is a state machine".
+  mark in the tree the node whose perspective we take
+  aimless
+
+come back to the technical limitations of SB
+  go over how we fix them by adding new states (intuition only)
+
+10.
+  layout issue, permission next to the tree
+
+13.
+  31 (<1%) so that it's clear
