@@ -220,7 +220,7 @@
       import cetz.draw: *
       let ctx = from-code(```rs
         let mut root = 42;
-        let ptr = addr_of_mut!(root);
+        let ptr = &raw mut root;
         let x = unsafe { &mut *ptr };
         let y = unsafe { &mut *ptr };
         let val = write_both(x, y);
@@ -281,9 +281,9 @@
 
   #pause
   *However...*
-  - prohibits reordering reads
+  - #alternatives[references have static range][*references have static range*]
   - ignores two-phased borrows
-  - #alternatives[references are restricted to a static range][*references are restricted to a static range*]
+  - prohibits reordering reads
 ]
 
 #section-slide[From Stacks to Trees]
@@ -296,6 +296,7 @@
       let mut v = vec![0, 1, 2];
       let x0 = &raw mut v[0];
       let x2 = &raw mut v[2];
+      ...
       ```, self: self)
     let (block, uncover, highlight-lines) = ctx
     block
@@ -311,11 +312,11 @@
       ][
         #sb-stack[`v`][`x0`]
       ][
-        #sb-stack[`v`][`x0`][`x1`]
+        #sb-stack[`v`][`x0`][`x2`]
       ][
-        #sb-stack[`v`][`x1`][`x0`]
+        #sb-stack[`v`][`x2`][`x0`]
       ][
-        #sb-stack[`v`][`x1`]
+        #sb-stack[`v`][`x2`]
       ]
     ]
     #place(center + horizon, dx: -3mm, dy: -4mm)[
@@ -489,6 +490,24 @@
   ]
 ])
 
+== Addressing Stacked Borrows' limitations
+
+#slide[
+  - references have static range \
+    #tcolor(red)[$->$ tree structure]
+  - ignores two-phased borrows \
+    #tcolor(red)[$->$ Reserved]
+  - prohibits reordering reads \
+    #tcolor(red)[$->$ Frozen]
+][
+  #align(center)[
+    #cetz-canvas({
+      tb.state-machine-normal()
+    })
+  ]
+]
+
+
 #section-slide[Evaluation]
 
 == TB should enable desired optimizations
@@ -533,11 +552,12 @@
 ==
 
 #slide[
-  #let url = "play.rust-lang.org"
-  *Try it out:* #text(size: 24pt)[#raw(url)]
+  #let shorturl = "play.rust-lang.org"
+  #let longurl = "https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=b2b0cb067b73b987f071fe90e10d06bf"
+  *Try it out:* #text(size: 24pt)[#raw(shorturl)]
   #image("playground.png")
   #v(5cm)
-  #place(bottom + left)[#qr-code(url, width: 30%)]
+  #place(bottom + left)[#qr-code(longurl, width: 30%)]
 ][
   #let url = "plf.inf.ethz.ch/research/pldi25-tree-borrows.html"
   *Learn more:* \ #text(size: 24pt)[#raw(url)]
