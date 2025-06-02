@@ -51,7 +51,7 @@
 
 #let tcolor(c, t) = text(fill: c)[#t]
 
-== A typical optimization
+== Rust's type system provides powerful optimizations
 
 #slide(repeat: 4, self => [
   #codebox(cetz-canvas({
@@ -105,7 +105,7 @@
       content(line-col(..pt), anchor: "north-west")[#annotate-code[always returns `13`]]
     })
     uncover("4", {
-      patch(locate("*x").at(1), ```rs 13```)
+      patch(locate("*x").at(1), ```rs 13 // formerly *x: one fewer load from memory```)
     })
   }))
 ])
@@ -140,6 +140,7 @@
 == Escape hatch: ```rs unsafe```
 
 #slide[
+  Can *bypass typechecks* to implement *low-level manipulations*
   ```rs
   unsafe {
     // Code within this block has relaxed typechecking
@@ -147,15 +148,16 @@
   }
   ```
 
-  - can *bypass typechecks*
-  - necessary for *low-level manipulations*
-  - within ```rs unsafe``` it is *the programmer's responsibility* to check
-    - that pointers are non-null
-    - that memory is initialized
-    - ...
+  #v(2cm)
 
-  What if ```rs unsafe``` code violates an invariant required for optimizations ?
+  Within ```rs unsafe``` it is *the programmer's responsibility* to check
+  - that pointers are non-null
+  - that memory is initialized
+  - ...
+
 ]
+
+== What if ```rs unsafe``` code violates a necessary invariant ?
 
 #slide(repeat: 3, self => [
   #codebox(cetz-canvas({
@@ -186,18 +188,17 @@
 ])
 
 
-== The optimization is valid, it's the code that's wrong
+== Not the compiler's responsibility
 
 #slide[
-  - within ```rs unsafe``` it is *the programmer's responsibility* to check
-    - that pointers are non-null
-    - that memory is initialized
-    - ...
-    - compliance with Tree Borrows#h(-3mm)#box[#super[#strong[#tcolor(red)[#rotate(30deg)[NEW!]]]]]
+  #v(1cm)
+  Within ```rs unsafe``` it is *the programmer's responsibility* to check
+    - #text(fill: gray)[that pointers are non-null]
+    - #text(fill: gray)[that memory is initialized]
+    - compliance with aliasing rules#h(-3mm)#box[#super[#strong[#tcolor(red)[#rotate(30deg)[NEW!]]]]]
   #v(3cm)
 
-  $->$ new *proof obligations* on ```rs unsafe``` blocks \
-  $->$ violation of these rules results in *Undefined Behavior*
+  *Tree Borrows (TB):* defines those aliasing rules
 
   #pause
   #full-slide-overlay[
@@ -208,12 +209,11 @@
   ]
 ]
 
-#section-slide[Stacked Borrows]
+#section-slide[Stacked Borrows (SB)]
 
-#slide(repeat: 7, self => [
-  A *stack* is a natural way to track reborrows \
-  because mutable references are *well-bracketed*.
-  
+#slide(repeat: 10, self => [
+  In safe Rust, the Borrow Checker makes borrows well-bracketed. \
+  Stacked Borrows extends the well-bracketedness to ```rs unsafe```.
 
   #table(columns: (1fr, 1fr), stroke: none)[
     #codebox(cetz-canvas({
@@ -227,41 +227,47 @@
         ```, self: self)
       let (block, uncover, highlight-lines, line-col, locate, start-of) = ctx
       block
-      for i in range(5) {
-        uncover(str(i+2), {
+      for (idx,i) in (0,1,1,2,3,3,3,4).enumerate() {
+        uncover(str(idx + 2), {
           highlight-lines(i)
         })
       }
-      uncover("7", {
+      uncover("10", {
         highlight-lines(4, color: red)
         content(line-col(3, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
       })
     }))
   ][
     #align(center)[
-      #split(fraction: 0.3)[
-        #align(center)[
-          #sb-stack[
-            #uncover("2-")[`root`]
-          ][
-            #uncover("3-")[`ptr`]
-          ][
-            #v(6mm)
-            #only("4")[#v(-6mm) `x`]
-            #only("5-7")[#v(-6mm) `y`]
-          ]
-        ]
-      ][
+      #align(center)[
+        #cetz-canvas({
+          import cetz.draw: *
+          let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
+          let (uncover,) = utils.methods(self)
+          uncover("2,3", content((0,0.15), anchor: "south", sb-stack[`root`]))
+          uncover("4,7", content((0,0), anchor: "south", sb-stack[`root`][`ptr`]))
+          uncover("5,6", content((0,0), anchor: "south", sb-stack[`root`][`ptr`][`x`]))
+          uncover("8,9,10", content((0,-0.15), anchor: "south", sb-stack[`root`][`ptr`][`y`]))
+          rect(stroke: none, (-2,-0.5), (2,4.5))
+        })
+      ]
+      #align(left)[
         #alternatives[][
           - new stack at `root`
         ][
-          - pop until `root`
+          - #sym.checkmark `root` is at the top
+        ][
+          - #sym.checkmark `root` is at the top
           - push `ptr`
         ][
-          - pop until `ptr`
+          - #sym.checkmark `ptr` is at the top
           - push `x`
         ][
-          - pop until `ptr`
+          - pop until `ptr` is at the top
+        ][
+          - pop until `ptr` is at the top
+        ][
+          - pop until `ptr` is at the top
           - push `y`
         ][
           - search for `x`
@@ -275,57 +281,54 @@
 ])
 
 #slide[
-  SB was *implemented* in Miri \
+  SB was *implemented* in Miri (official interpreter and UB detector) \
   $->$ included in many projects' CI \
   $->$ several bugs detected (e.g. in stdlib)
 
+  #v(1cm)
+
   #pause
-  *However...*
-  - #alternatives[references have static range][*references have static range*]
-  - ignores two-phased borrows
-  - prohibits reordering reads
+  *However Stacked Borrows is too strict* \
+  - analysis of 30 000 libraries
+  - 6000+ tests that should work are declared UB
+  #pause
+  - known technical limitations to the model, incl.
+    - handling of ranges
+    - two-phase borrows
+    - prohibits reordering reads
+]
+
+== Tree Borrows allows much more code
+
+#slide[
+  Tree Borrows uses a *tree* instead of a stack to track borrows
+  #v(2cm)
+  Out of 30 000 most downloaded libraries, \
+  *$>50%$ fewer* tests with aliasing UB when using Tree Borrows \
 ]
 
 #section-slide[From Stacks to Trees]
 
-#slide(repeat: 6, self => [
+#slide(repeat: 7, self => [
   #let (uncover,) = utils.methods(self)
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut v = vec![0, 1, 2];
-      let x0 = &raw mut v[0];
-      let x2 = &raw mut v[2];
-      ...
+      let mut root = vec![0, 1, 2];
+      let x0 = &raw mut root[0];
+      let x2 = &raw mut root[2];
+
+      let v1 = *x0.add(1);
       ```, self: self)
-    let (block, uncover, highlight-lines) = ctx
+    let (block, uncover, highlight-lines, patch-line) = ctx
     block
-    for i in range(3) {
+    for (idx,i) in (0,1,2).enumerate() {
       uncover(i+2, { highlight-lines(i) })
     }
+    uncover("-4", patch-line(4)[``])
+    uncover("7", patch-line(4)[```rs let v1 = *x2.sub(1);```])
+    uncover("5,6,7", highlight-lines(4))
   }))
-  #uncover("5-")[
-    What stack at offset `1` ?
-    #align(center)[
-      #table(columns: 5, stroke: none, inset: 5mm, align: bottom)[
-        #sb-stack[`v`]
-      ][
-        #sb-stack[`v`][`x0`]
-      ][
-        #sb-stack[`v`][`x0`][`x2`]
-      ][
-        #sb-stack[`v`][`x2`][`x0`]
-      ][
-        #sb-stack[`v`][`x2`]
-      ]
-    ]
-    #place(center + horizon, dx: -3mm, dy: -4mm)[
-      #line(start: (5%, 40%), end: (70%, 70%), stroke: (paint: red.transparentize(30%), thickness: 5pt))
-    ]
-    #place(center + horizon, dx: -3mm, dy: -4mm)[
-      #line(start: (5%, 70%), end: (70%, 40%), stroke: (paint: red.transparentize(30%), thickness: 5pt))
-    ]
-  ]
 ], self => [
   #align(center)[
     #cetz-canvas({
@@ -338,154 +341,95 @@
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(idx))]]
         }
         line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
-        content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`v`]
+        content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
       })
       uncover("3-", {
         line("v0.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_0")
         content("ptr_0.end", anchor: "north", padding: 1mm, name: "x0")[`x0`]
-        content(rel("ptr_0", 0, -3))[#sb-stack[`v`][`x0`]]
+        content(rel("ptr_0", 0, -3))[#sb-stack[`root`][`x0`]]
       })
       uncover("4-", {
         line("v2.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_2")
         content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
-        content(rel("ptr_2", 0, -3))[#sb-stack[`v`][`x2`]]
+        content(rel("ptr_2", 0, -3))[#sb-stack[`root`][`x2`]]
       })
-      uncover("5-", {
-        content(rel("v1", 0, -5))[#text(size: 60pt)[?]]
+      uncover("5", {
+        content(rel("v1", 0, -5.5))[#sb-stack[`root`]]
       })
-
-      uncover("6-", {
-        set-origin(rel("v1", -2, 6))
-        tb.draw-tree((`v`, `x0`, `x2`))
+      uncover("6", {
+        content(rel("v1", 0, -5))[#sb-stack[`root`][`x0`]]
+      })
+      uncover("7", {
+        content(rel("v1", 0, -4.5))[#sb-stack[`root`][`x0`][`x2`]]
       })
     })
   ]
 ])
 
-== Relative positions in the tree
-
-#slide(repeat: 10, self => [
+#slide(repeat: 7, self => [
+  #let (uncover,) = utils.methods(self)
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut root = 42;
-      let ref1 = &mut root;
-      let ref2 = &mut *ref1;
-      let ref3 = &mut root;
+      let mut root = vec![0, 1, 2];
+      let x0 = &raw mut root[0];
+      let x2 = &raw mut root[2];
 
-      let val = *ref2;
-      let val = *ref3;
-      *ref1 = 36;
-      root = 13;
+      let v1 = *x0.add(1);
       ```, self: self)
-    let (block, highlight, locate, rel-to, start-of, end-of, line-col, uncover, highlight-lines, patch, patch-line) = ctx
+    let (block, uncover, highlight-lines, patch-line) = ctx
     block
-    for i in range(4) {
-      uncover(str(i+2), { highlight-lines(i) })
+    for (idx,i) in (0,1,2).enumerate() {
+      uncover(i+2, { highlight-lines(i) })
     }
-    uncover("6-", highlight(..locate("ref1").at(0), color: green))
-    uncover("-6", { patch-line(5)[] })
-    uncover("-7", { patch-line(6)[] })
-    uncover("-8", { patch-line(7)[] })
-    uncover("-9", { patch-line(8)[] })
-    uncover("7-", {
-      highlight-lines(5, color: tb.c.local)
-    })
-    uncover("8-", {
-      highlight-lines(6, color: tb.c.foreign)
-    })
-    uncover("9-", {
-      highlight-lines(7, color: tb.c.local)
-    })
-    uncover("10-", {
-      highlight-lines(8, color: tb.c.foreign)
-    })
+    uncover("-5", patch-line(4)[``])
+    uncover("7", patch-line(4)[```rs let v1 = *x2.sub(1);```])
+    uncover("6,7", highlight-lines(4))
   }))
-], self => [
-  #let (alternatives, uncover, only) = utils.methods(self)
-  #uncover("2-")[
-  #placed(center, neutral: true)[
-    #import cetz.draw: *
-    #let bounding-box(orig) = cetz.draw.rect(stroke: none, rel(orig, -5, 3), rel((), 10, -12))
-    #let arrow-in-tree(start, end, name: none) = {
-      line((start, 1, end), (end, 1, start), stroke: (paint: green, thickness: 3pt, dash: "dashed"), mark: (end: ">"), name: name,)
-    }
-    #cetz-canvas({
-      let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
-      let (uncover,) = utils.methods(self)
-      bounding-box((0,0))
-      uncover("2", {
-        tb.draw-tree((`root`,))
-      })
-      uncover("3", {
-        tb.draw-tree((`root`, `ref1`))
-        arrow-in-tree("tree.0-0", "tree.0", name: "parent")
-        content("parent.mid", anchor: "east", padding: 2mm)[#tcolor(green)[parent]] 
-      })
-      uncover("4", {
-        tb.draw-tree((`root`, (`ref1`, `ref2`)))
-        arrow-in-tree("tree.0-0", "tree.0-0-0", name: "child")
-        content("child.mid", anchor: "east", padding: 2mm)[#tcolor(green)[child]]
-      })
-      uncover("5-", {
-        set-origin((-2,0))
-        tb.draw-tree((`root`, (`ref1`, `ref2`), `ref3`))
-        uncover("5", {
-          arrow-in-tree("tree.0-0", "tree.0-1", name: "sibling")
-          content("sibling.mid", anchor: "north-west", padding: 2mm, angle: -30deg)[#tcolor(green)[sibling]]
-        })
-        uncover("6-", {
-          circle("tree.0-0", fill: tb.c.local.transparentize(60%))
-          circle("tree.0-0-0", fill: tb.c.local.transparentize(60%))
-          circle("tree.0", fill: tb.c.foreign.transparentize(60%))
-          circle("tree.0-1", fill: tb.c.foreign.transparentize(60%))
-          content(rel("tree.0-0-0", 0, -2), anchor: "north-west")[#tcolor(tb.c.local)[local accesses]]
-          content(rel("tree.0", 0, 2), anchor: "south")[#tcolor(tb.c.foreign)[foreign accesses]]
-        })
-      })
-    })
-  ]
-  ]
-])
-
-#section-slide[Permissions]
-
-#slide(repeat: 7, self => [
-  #let (uncover, alternatives) = utils.methods(self)
-  #uncover("2-")[
-    #codebox(cetz-canvas({
-      let ctx = from-code(```rs
-        let mut root = 42;
-        let x = &mut root;
-        let v = *x;
-        *x = v + 1;
-        let w = root;
-        root = 0
-        ```, self: self)
-      let (block, uncover, highlight-lines) = ctx
-      block
-      uncover("3", highlight-lines(0, 1))
-      uncover("4", highlight-lines(2, color: tb.c.local))
-      uncover("5", highlight-lines(3, color: tb.c.local))
-      uncover("6", highlight-lines(4, color: tb.c.foreign))
-      uncover("7", highlight-lines(5, color: tb.c.foreign))
-    }))
-    #uncover("3-")[
-      #placed(right, neutral: true)[
-        #cetz-canvas({
-          import cetz.draw: *
-          tb.draw-tree((`root`, `x`))
-          circle("tree.0-0", fill: tb.c.local.transparentize(60%))
-          circle("tree.0", fill: tb.c.foreign.transparentize(60%))
-        })
-      ]
-    ]
-    #alternatives[][][`x`: Reserved (r/w)][`x`: Reserved (r/w)][`x`: Unique (r/w)][`x`: Frozen (r)][`x`: Disabled]
-  ]
 ], self => [
   #align(center)[
     #cetz-canvas({
-      tb.state-machine-normal()
+      import cetz.draw: *
+      let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
+      let (uncover,) = utils.methods(self)
+      uncover("2-", {
+        for idx in range(3) {
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(idx))]]
+        }
+        line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
+        content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
+      })
+      uncover("3-", {
+        line("v0.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_0")
+        content("ptr_0.end", anchor: "north", padding: 1mm, name: "x0")[`x0`]
+      })
+      uncover("4-", {
+        line("v2.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_2")
+        content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
+      })
+    })
+    #cetz-canvas({
+      import cetz.draw: *
+      let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
+      let (uncover,) = utils.methods(self)
+      rect(stroke: none, (-6.8,-6), (4,1))
+      uncover("2", tb.draw-tree((`root`)))
+      uncover("3", tb.draw-tree((`root`, `x0`)))
+      set-origin((-2,0))
+      uncover("4-", tb.draw-tree((`root`, `x0`, `x2`)))
+      uncover("5", {
+        content(rel("tree.0-0", 0, -1.4))[#text(size: 20pt)[Reserved]]
+        content(rel("tree.0-1", 0, -1.4))[#text(size: 20pt)[Reserved]]
+      })
+      uncover("6", {
+        content(rel("tree.0-0", 0, -1.4))[#text(size: 20pt)[Unique]]
+        content(rel("tree.0-1", 0, -1.4))[#text(size: 20pt)[Disabled]]
+      })
+      uncover("7", {
+        content(rel("tree.0-0", 0, -1.4))[#text(size: 20pt)[Disabled]]
+        content(rel("tree.0-1", 0, -1.4))[#text(size: 20pt)[Unique]]
+      })
     })
   ]
 ])
@@ -493,20 +437,44 @@
 == Addressing Stacked Borrows' limitations
 
 #slide[
-  - references have static range \
-    #tcolor(red)[$->$ tree structure]
-  - ignores two-phased borrows \
-    #tcolor(red)[$->$ Reserved]
-  - prohibits reordering reads \
-    #tcolor(red)[$->$ Frozen]
-][
-  #align(center)[
-    #cetz-canvas({
-      tb.state-machine-normal()
-    })
-  ]
+  *Ignores 2-phase borrows*
+
+  #codebox(```rs
+//        vvvvvvv shared borrow
+   v.push(v.len());
+// ^^^^^^ mutable borrow 
+  ```)
+
+  Mutable references can coexist with shared ones
+  if not written to.
+
+  In SB: this feature is not modelled.
+
+  In TB: multiple Reserved can exist simultaneously.
 ]
 
+#slide[
+  *Forbids reordering reads*
+
+  In SB:
+  #codebox(cetz-canvas({
+    import cetz.draw: *
+    let ctx = from-code(```rs
+    let x = &mut root;
+    let v1 = *x;
+    let v2 = root;
+    ```)
+    let (block, line-col, rel-to, locate, end-of) = ctx
+    block
+    bezier(line-col(..rel-to(end-of(locate(";").at(1)), 0, 3)),
+         line-col(..rel-to(end-of(locate(";").at(2)), 0, 1)),
+         rel((), 10mm, -5mm),
+         stroke: red + 1mm,
+         mark: (end: ">", start: ">"))
+  }))
+
+  In TB: a read never prevents another read.
+]
 
 #section-slide[Evaluation]
 
@@ -535,7 +503,7 @@
   #v(1cm)
 
   - implemented in Miri
-  - tested against 30 000 most downloaded crates on `crates.io`
+  - tested against 30 000 most downloaded libraries on `crates.io`
     - 400 000+ working tests
     - measure how many have UB from Stacked / Tree Borrows
 
@@ -544,7 +512,7 @@
 
   *Tree Borrows reduces aliasing-related UB by over 50%*
 
-  Only 31 tests are regressions, all easily fixable.
+  Only 31 ($<0.5%$) tests are regressions, all easily fixable.
 ]
 
 #focus-slide[Conclusion]
@@ -554,17 +522,18 @@
 #slide[
   #let shorturl = "play.rust-lang.org"
   #let longurl = "https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=b2b0cb067b73b987f071fe90e10d06bf"
-  *Try it out:* #text(size: 24pt)[#raw(shorturl)]
-  #image("playground.png")
-  #v(5cm)
-  #place(bottom + left)[#qr-code(longurl, width: 30%)]
+  *Try it out:* \ \
+  Rust Playground supports TB \
+  #text(size: 24pt)[#raw(shorturl)]
+  #image("playground.png", width: 11cm)
 ][
   #let url = "plf.inf.ethz.ch/research/pldi25-tree-borrows.html"
+  #align(right)[#qr-code(url, width: 30%)]
+  #v(-1.7cm)
   *Learn more:* \ #text(size: 24pt)[#raw(url)]
-  - dynamic ranges
+  #v(1cm)
+  - detailed state machine
   - raw pointers
   - interior mutability
-  #v(5cm)
-  #place(bottom + right)[#qr-code(url, width: 30%)]
 ]
 

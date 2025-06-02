@@ -174,6 +174,7 @@
       line-col(ln, 0, anchor: "north-west"),
       line-col(ln, len, anchor: "south-east"),
     )
+    content(rel(line-col(ln, 0, anchor: "north-west"), 0, -7pt), anchor: "north-west")[#new]
   }
   let locate(text) = {
     let match = body.text.matches(text)
