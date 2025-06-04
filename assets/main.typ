@@ -318,6 +318,7 @@
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
 
+      // Scenario 1
       let v1 = *x0.add(1);
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
@@ -326,8 +327,11 @@
       uncover(i+2, { highlight-lines(i) })
     }
     uncover("-4", patch-line(4)[``])
-    uncover("7", patch-line(4)[```rs let v1 = *x2.sub(1);```])
-    uncover("5,6,7", highlight-lines(4))
+    uncover("-4", patch-line(5)[``])
+    uncover("7", patch-line(4)[```rs // Scenario 2```])
+    uncover("7", patch-line(5)[```rs let v1 = *x2.sub(1);```])
+    uncover("5", highlight-lines(5, color: red))
+    uncover("6,7", highlight-lines(5))
   }))
 ], self => [
   #align(center)[
@@ -344,23 +348,29 @@
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
       })
       uncover("3-", {
-        line("v0.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_0")
+        line("v0.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_0")
         content("ptr_0.end", anchor: "north", padding: 1mm, name: "x0")[`x0`]
-        content(rel("ptr_0", 0, -3))[#sb-stack[`root`][`x0`]]
+        uncover("-4", {
+          content(rel("ptr_0", 0, -4))[#sb-stack[`root`][`x0`]]
+        })
       })
       uncover("4-", {
-        line("v2.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_2")
+        line("v2.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_2")
         content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
-        content(rel("ptr_2", 0, -3))[#sb-stack[`root`][`x2`]]
+        uncover("-4", {
+          content(rel("ptr_2", 0, -4))[#sb-stack[`root`][`x2`]]
+        })
       })
+      uncover("5,6", { line("v1.south", "ptr_0.end", mark: (start: ">")) })
+      uncover("7", { line("v1.south", "ptr_2.end", mark: (start: ">")) })
       uncover("5", {
-        content(rel("v1", 0, -5.5))[#sb-stack[`root`]]
+        content(rel("v1", 0, -6.5))[#sb-stack[`root`]]
       })
       uncover("6", {
-        content(rel("v1", 0, -5))[#sb-stack[`root`][`x0`]]
+        content(rel("v1", 0, -6))[#sb-stack[`root`][`x0`]]
       })
       uncover("7", {
-        content(rel("v1", 0, -4.5))[#sb-stack[`root`][`x0`][`x2`]]
+        content(rel("v1", 0, -5.5))[#sb-stack[`root`][`x0`][`x2`]]
       })
     })
   ]
@@ -375,6 +385,7 @@
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
 
+      // Scenario 1
       let v1 = *x0.add(1);
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
@@ -383,9 +394,14 @@
       uncover(i+2, { highlight-lines(i) })
     }
     uncover("-5", patch-line(4)[``])
-    uncover("7", patch-line(4)[```rs let v1 = *x2.sub(1);```])
-    uncover("6,7", highlight-lines(4))
+    uncover("-5", patch-line(5)[``])
+    uncover("7", patch-line(4)[```rs // Scenario 2```])
+    uncover("7", patch-line(5)[```rs let v1 = *x2.sub(1);```])
+    uncover("6,7", highlight-lines(5))
   }))
+  #uncover("5-")[#text(fill: blue)[?] "Reserved"] \
+  #uncover("6-")[#text(fill: green)[#sym.checkmark] "Unique"] \
+  #uncover("6-")[#text(fill: red)[#sym.crossmark.heavy] "Disabled"]
 ], self => [
   #align(center)[
     #cetz-canvas({
@@ -401,13 +417,15 @@
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
       })
       uncover("3-", {
-        line("v0.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_0")
+        line("v0.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_0")
         content("ptr_0.end", anchor: "north", padding: 1mm, name: "x0")[`x0`]
       })
       uncover("4-", {
-        line("v2.south", rel((), 0, -1), mark: (start: ">"), name: "ptr_2")
+        line("v2.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_2")
         content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
       })
+      uncover("6", line("v1.south", "ptr_0.end", mark: (start: ">")))
+      uncover("7", line("v1.south", "ptr_2.end", mark: (start: ">")))
     })
     #cetz-canvas({
       import cetz.draw: *
@@ -419,19 +437,67 @@
       set-origin((-2,0))
       uncover("4-", tb.draw-tree((`root`, `x0`, `x2`)))
       uncover("5", {
-        content(rel("tree.0-0", 0, -1.4))[#text(size: 20pt)[Reserved]]
-        content(rel("tree.0-1", 0, -1.4))[#text(size: 20pt)[Reserved]]
+        content(rel("tree.0-0", -1, 1))[#text(size: 40pt, fill: blue)[?]]
+        content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: blue)[?]]
       })
       uncover("6", {
-        content(rel("tree.0-0", 0, -1.4))[#text(size: 20pt)[Unique]]
-        content(rel("tree.0-1", 0, -1.4))[#text(size: 20pt)[Disabled]]
+        content(rel("tree.0-0", -1, 1))[#text(size: 40pt, fill: green)[#sym.checkmark]]
+        content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: red)[#sym.crossmark.heavy]]
       })
       uncover("7", {
-        content(rel("tree.0-0", 0, -1.4))[#text(size: 20pt)[Disabled]]
-        content(rel("tree.0-1", 0, -1.4))[#text(size: 20pt)[Unique]]
+        content(rel("tree.0-0", -1, 1))[#text(size: 40pt, fill: red)[#sym.crossmark.heavy]]
+        content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: green)[#sym.checkmark]]
       })
     })
   ]
+])
+
+== TB on the first example
+
+#slide(repeat: 7, self => [
+    #codebox(cetz-canvas({
+      import cetz.draw: *
+      let ctx = from-code(```rs
+        let mut root = 42;
+        let ptr = &raw mut root;
+        let x = unsafe { &mut *ptr };
+        let y = unsafe { &mut *ptr };
+        *x = 13;
+        *y = 20;
+        ```, self: self)
+      let (block, uncover, highlight-lines, line-col, locate, start-of) = ctx
+      block
+      for (idx,i) in (0,1,2,3,4).enumerate() {
+        uncover(str(idx + 2), {
+          highlight-lines(i)
+        })
+      }
+      uncover("7", {
+        highlight-lines(5, color: red)
+        content(line-col(5, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
+      })
+    }))
+], self => [
+    #cetz-canvas({
+      import cetz.draw: *
+      let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
+      let (uncover,) = utils.methods(self)
+      rect(stroke: none, (-6.8,-6), (4,1))
+      uncover("2", tb.draw-tree((`root`)))
+      uncover("3", tb.draw-tree((`root`, `ptr`)))
+      uncover("4", tb.draw-tree((`root`, (`ptr`, `x`))))
+      set-origin((-2,0))
+      uncover("5-", tb.draw-tree((`root`, (`ptr`, `x`, `y`))))
+      uncover("5", {
+        content(rel("tree.0-0-0", -1, 1))[#text(size: 40pt, fill: blue)[?]]
+        content(rel("tree.0-0-1", 1, 1))[#text(size: 40pt, fill: blue)[?]]
+      })
+      uncover("6,7", {
+        content(rel("tree.0-0-0", -1, 1))[#text(size: 40pt, fill: green)[#sym.checkmark]]
+        content(rel("tree.0-0-1", 1, 1))[#text(size: 40pt, fill: red)[#sym.crossmark.heavy]]
+      })
+    })
+
 ])
 
 == Addressing Stacked Borrows' limitations
@@ -450,28 +516,40 @@
 
   In SB: this feature is not modelled.
 
-  In TB: multiple Reserved can exist simultaneously.
+  In TB: multiple siblings can exist simultaneously.
 ]
 
 #slide[
   *Forbids reordering reads*
 
-  In SB:
+  In SB: \
+  #table(columns: 2, stroke: none)[
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
+    let mut root = 0;
     let x = &mut root;
     let v1 = *x;
     let v2 = root;
     ```)
-    let (block, line-col, rel-to, locate, end-of) = ctx
+    let (block, line-col, rel-to, locate, end-of, highlight) = ctx
     block
-    bezier(line-col(..rel-to(end-of(locate(";").at(1)), 0, 3)),
-         line-col(..rel-to(end-of(locate(";").at(2)), 0, 1)),
+    bezier(line-col(..rel-to(end-of(locate(";").at(2)), 0, 3)),
+         line-col(..rel-to(end-of(locate(";").at(3)), 0, 1)),
          rel((), 10mm, -5mm),
          stroke: red + 1mm,
          mark: (end: ">", start: ">"))
+    highlight(..locate("root").at(0))
+    highlight(..locate("root").at(1))
+    highlight(..locate("root").at(2))
+    highlight(..locate("x").at(0))
+    highlight(..locate("x").at(1))
   }))
+  ][
+  `root`, `root`, `x`, `x`, `root` #h(1cm) is well-bracketed \
+  `root`, `root`, `x`, `root`, `x` #h(1cm) is not
+  ]
+
 
   In TB: a read never prevents another read.
 ]
