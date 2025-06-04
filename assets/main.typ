@@ -223,7 +223,7 @@
         let ptr = &raw mut root;
         let x = unsafe { &mut *ptr };
         let y = unsafe { &mut *ptr };
-        let val = write_both(x, y);
+        *x = 13;
         ```, self: self)
       let (block, uncover, highlight-lines, line-col, locate, start-of) = ctx
       block
@@ -237,6 +237,7 @@
         content(line-col(3, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
       })
     }))
+    Desired outcome: UB
   ][
     #align(center)[
       #align(center)[
@@ -271,9 +272,8 @@
           - push `y`
         ][
           - search for `x`
-          - search for `y`
         ][
-          #tcolor(red)[#strong[#tcolor(red)[UB:]] cannot use `x` when it is not in the stack]
+          #tcolor(red)[Can't use `x` if it is not in the stack]
         ]
       ]
     ]
@@ -309,7 +309,7 @@
 
 #section-slide[From Stacks to Trees]
 
-#slide(repeat: 7, self => [
+#slide(repeat: 8, self => [
   #let (uncover,) = utils.methods(self)
   #codebox(cetz-canvas({
     import cetz.draw: *
@@ -328,11 +328,12 @@
     }
     uncover("-4", patch-line(4)[``])
     uncover("-4", patch-line(5)[``])
-    uncover("7", patch-line(4)[```rs // Scenario 2```])
-    uncover("7", patch-line(5)[```rs let v1 = *x2.sub(1);```])
-    uncover("5", highlight-lines(5, color: red))
-    uncover("6,7", highlight-lines(5))
+    uncover("7,8", patch-line(4)[```rs // Scenario 2```])
+    uncover("7,8", patch-line(5)[```rs let v1 = *x2.sub(1);```])
+    uncover("5,7", highlight-lines(5, color: red))
+    uncover("6,8", highlight-lines(5))
   }))
+  Desired outcome: not UB
 ], self => [
   #align(center)[
     #cetz-canvas({
@@ -362,15 +363,15 @@
         })
       })
       uncover("5,6", { line("v1.south", "ptr_0.end", mark: (start: ">")) })
-      uncover("7", { line("v1.south", "ptr_2.end", mark: (start: ">")) })
-      uncover("5", {
+      uncover("7,8", { line("v1.south", "ptr_2.end", mark: (start: ">")) })
+      uncover("5,7", {
         content(rel("v1", 0, -6.5))[#sb-stack[`root`]]
       })
       uncover("6", {
         content(rel("v1", 0, -6))[#sb-stack[`root`][`x0`]]
       })
-      uncover("7", {
-        content(rel("v1", 0, -5.5))[#sb-stack[`root`][`x0`][`x2`]]
+      uncover("8", {
+        content(rel("v1", 0, -6))[#sb-stack[`root`][`x2`]]
       })
     })
   ]
@@ -399,6 +400,8 @@
     uncover("7", patch-line(5)[```rs let v1 = *x2.sub(1);```])
     uncover("6,7", highlight-lines(5))
   }))
+  Desired outcome: not UB
+
   #uncover("5-")[#text(fill: blue)[?] "Reserved"] \
   #uncover("6-")[#text(fill: green)[#sym.checkmark] "Unique"] \
   #uncover("6-")[#text(fill: red)[#sym.crossmark.heavy] "Disabled"]
@@ -477,6 +480,7 @@
         content(line-col(5, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
       })
     }))
+    Desired outcome: UB
 ], self => [
     #cetz-canvas({
       import cetz.draw: *
@@ -500,6 +504,7 @@
 
 ])
 
+/*
 == Addressing Stacked Borrows' limitations
 
 #slide[
@@ -553,6 +558,7 @@
 
   In TB: a read never prevents another read.
 ]
+*/
 
 #section-slide[Evaluation]
 
