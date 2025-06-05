@@ -455,7 +455,7 @@
   ]
 ])
 
-== TB on the first example
+== A second look at the motivating example
 
 #slide(repeat: 7, self => [
     #codebox(cetz-canvas({
