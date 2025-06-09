@@ -582,16 +582,22 @@
   i.e. UB should be predictable and not too common
   #v(1cm)
 
-  - implemented in Miri
-  - tested against 30 000 most downloaded libraries on `crates.io`
-    - 400 000+ working tests
-    - measure how many have UB from Stacked / Tree Borrows
+  *Tree Borrows reduces aliasing-related UB by over 50%* \
+  Only 31 ($<0.5%$) tests are regressions, all easily fixable. \
+  (Out of 30 000 libraries, 400 000+ working tests)
 
-  #v(1.5cm)
+  #v(1cm)
 
-  *Tree Borrows reduces aliasing-related UB by over 50%*
 
-  Only 31 ($<0.5%$) tests are regressions, all easily fixable.
+  _"Tree Borrows accepts more real-world programs that
+  call foreign functions than Stacked Borrows due to differences
+  in handling pointer arithmetic."_ \
+  #text(size: 20pt)[
+  A Study of Undefined Behavior Across Foreign Function Boundaries in Rust Libraries,
+  by I. McCormack, J. Sunshine, J. Aldrich
+  \@ ICSE'25
+  ]
+
 ]
 
 #focus-slide[Conclusion]
