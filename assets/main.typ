@@ -306,7 +306,7 @@
 
   #v(2cm)
   #pause
-  fixes known technical limitations of TB, incl. *handling of ranges*
+  fixes known technical limitations of SB, incl. *handling of ranges*
 ]
 
 #section-slide[From Stacks to Trees]
