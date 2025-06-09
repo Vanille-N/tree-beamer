@@ -321,7 +321,7 @@
       let x2 = &raw mut root[2];
 
       // Scenario 1
-      let v1 = *x0.add(1);
+      unsafe { *x0.add(1) = 3; }
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
@@ -331,7 +331,7 @@
     uncover("-4", patch-line(4)[``])
     uncover("-4", patch-line(5)[``])
     uncover("7,8", patch-line(4)[```rs // Scenario 2```])
-    uncover("7,8", patch-line(5)[```rs let v1 = *x2.sub(1);```])
+    uncover("7,8", patch-line(5)[```rs unsafe { *x2.sub(1) = 3; }```])
     uncover("5,7", highlight-lines(5, color: red))
     uncover("6,8", highlight-lines(5))
   }))
@@ -347,6 +347,11 @@
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(idx))]]
         }
+        uncover("5-", {
+          let idx = 1
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
+        })
         line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
       })
@@ -389,7 +394,7 @@
       let x2 = &raw mut root[2];
 
       // Scenario 1
-      let v1 = *x0.add(1);
+      unsafe { *x0.add(1) = 3 };
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
@@ -399,7 +404,7 @@
     uncover("-5", patch-line(4)[``])
     uncover("-5", patch-line(5)[``])
     uncover("7", patch-line(4)[```rs // Scenario 2```])
-    uncover("7", patch-line(5)[```rs let v1 = *x2.sub(1);```])
+    uncover("7", patch-line(5)[```rs unsafe { *x2.sub(1) = 3; }```])
     uncover("6,7", highlight-lines(5))
   }))
   Desired outcome: not UB
@@ -418,6 +423,11 @@
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(idx))]]
         }
+        uncover("6-", {
+          let idx = 1
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
+        })
         line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
       })
@@ -577,7 +587,6 @@
     - 400 000+ working tests
     - measure how many have UB from Stacked / Tree Borrows
 
-  #pause
   #v(1.5cm)
 
   *Tree Borrows reduces aliasing-related UB by over 50%*
