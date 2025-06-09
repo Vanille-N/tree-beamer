@@ -20,7 +20,7 @@
       Derek Dreyer, #footnote[MPI-SWS] <mpi>
       Ralf Jung @eth
     ],
-    date: datetime(year: 2025, month: 6, day: 21),
+    date: datetime(year: 2025, month: 6, day: 19),
     institution: [PLDI'25],
   ),
   footer-a: self => {
@@ -291,11 +291,8 @@
   *However Stacked Borrows is too strict* \
   - analysis of 30 000 libraries
   - 6000+ tests that should work are declared UB
-  #pause
-  - known technical limitations to the model, incl.
-    - handling of ranges
-    - two-phase borrows
-    - prohibits reordering reads
+    //- two-phase borrows
+    //- prohibits reordering reads
 ]
 
 == Tree Borrows allows much more code
@@ -305,6 +302,10 @@
   #v(2cm)
   Out of 30 000 most downloaded libraries, \
   *$>50%$ fewer* tests with aliasing UB when using Tree Borrows \
+
+  #v(2cm)
+  #pause
+  fixes known technical limitations of TB, incl. *handling of ranges*
 ]
 
 #section-slide[From Stacks to Trees]
@@ -504,62 +505,6 @@
 
 ])
 
-/*
-== Addressing Stacked Borrows' limitations
-
-#slide[
-  *Ignores 2-phase borrows*
-
-  #codebox(```rs
-//        vvvvvvv shared borrow
-   v.push(v.len());
-// ^^^^^^ mutable borrow 
-  ```)
-
-  Mutable references can coexist with shared ones
-  if not written to.
-
-  In SB: this feature is not modelled.
-
-  In TB: multiple siblings can exist simultaneously.
-]
-
-#slide[
-  *Forbids reordering reads*
-
-  In SB: \
-  #table(columns: 2, stroke: none)[
-  #codebox(cetz-canvas({
-    import cetz.draw: *
-    let ctx = from-code(```rs
-    let mut root = 0;
-    let x = &mut root;
-    let v1 = *x;
-    let v2 = root;
-    ```)
-    let (block, line-col, rel-to, locate, end-of, highlight) = ctx
-    block
-    bezier(line-col(..rel-to(end-of(locate(";").at(2)), 0, 3)),
-         line-col(..rel-to(end-of(locate(";").at(3)), 0, 1)),
-         rel((), 10mm, -5mm),
-         stroke: red + 1mm,
-         mark: (end: ">", start: ">"))
-    highlight(..locate("root").at(0))
-    highlight(..locate("root").at(1))
-    highlight(..locate("root").at(2))
-    highlight(..locate("x").at(0))
-    highlight(..locate("x").at(1))
-  }))
-  ][
-  `root`, `root`, `x`, `x`, `root` #h(1cm) is well-bracketed \
-  `root`, `root`, `x`, `root`, `x` #h(1cm) is not
-  ]
-
-
-  In TB: a read never prevents another read.
-]
-*/
-
 #section-slide[Evaluation]
 
 == TB should enable desired optimizations
@@ -575,10 +520,48 @@
       [delete read through ```rs &mut``` or ```rs &```],
       [insert read through ```rs &``` in function],
       [move read down for ```rs &mut``` or ```rs &``` in function],
-      [move write up for Unique ```rs &mut``` in function],
     )
     ...
+  \
+  $+$ read-read reordering!
 ]
+
+#slide(repeat: 2, self => [
+  *On reordering reads*
+
+  In SB: \
+  #table(columns: 2, stroke: none)[
+  #codebox(cetz-canvas({
+    import cetz.draw: *
+    let ctx = from-code(```rs
+    let mut root = 0;
+    let x = &mut root;
+    let v1 = *x;
+    let v2 = root;
+    ```, self: self)
+    let (block, line-col, rel-to, locate, end-of, highlight, uncover, patch-line) = ctx
+    block
+    uncover("2", {
+      patch-line(2)[```rs let v2 = root;```]
+      patch-line(3)[```rs let v1 = *x;```]
+    })
+    bezier(line-col(..rel-to(end-of(locate(";").at(2)), 0, 3)),
+         line-col(..rel-to(end-of(locate(";").at(3)), 0, 1)),
+         rel((), 10mm, -5mm),
+         stroke: red + 1mm,
+         mark: (end: ">", start: ">"))
+
+  }))
+  ][
+  `root`, `root`, `x`, `x`, `root` #h(1cm) is well-bracketed \
+  #pause
+  `root`, `root`, `x`, `root`, `x` #h(1cm) is not well-bracketed
+  ]
+
+
+  In TB: a read never prevents another read.
+])
+
 
 == It should be possible to write ```rs unsafe``` code free of UB
 
