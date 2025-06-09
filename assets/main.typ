@@ -223,18 +223,19 @@
         let ptr = &raw mut root;
         let x = unsafe { &mut *ptr };
         let y = unsafe { &mut *ptr };
+        // inline write_both(x, y):
         *x = 13;
         ```, self: self)
       let (block, uncover, highlight-lines, line-col, locate, start-of) = ctx
       block
-      for (idx,i) in (0,1,1,2,3,3,3,4).enumerate() {
+      for (idx,i) in (0,1,1,2,3,3,3,5).enumerate() {
         uncover(str(idx + 2), {
           highlight-lines(i)
         })
       }
       uncover("10", {
-        highlight-lines(4, color: red)
-        content(line-col(3, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
+        highlight-lines(5, color: red)
+        content(line-col(6, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
       })
     }))
     Desired outcome: UB
@@ -466,19 +467,20 @@
         let ptr = &raw mut root;
         let x = unsafe { &mut *ptr };
         let y = unsafe { &mut *ptr };
+        // inline write_both(x, y):
         *x = 13;
         *y = 20;
         ```, self: self)
       let (block, uncover, highlight-lines, line-col, locate, start-of) = ctx
       block
-      for (idx,i) in (0,1,2,3,4).enumerate() {
+      for (idx,i) in (0,1,2,3,5).enumerate() {
         uncover(str(idx + 2), {
           highlight-lines(i)
         })
       }
       uncover("7", {
-        highlight-lines(5, color: red)
-        content(line-col(5, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
+        highlight-lines(6, color: red)
+        content(line-col(6, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
       })
     }))
     Desired outcome: UB
@@ -544,6 +546,7 @@
     uncover("2", {
       patch-line(2)[```rs let v2 = root;```]
       patch-line(3)[```rs let v1 = *x;```]
+      highlight((3,0), (3,11), color: red)
     })
     bezier(line-col(..rel-to(end-of(locate(";").at(2)), 0, 3)),
          line-col(..rel-to(end-of(locate(";").at(3)), 0, 1)),
