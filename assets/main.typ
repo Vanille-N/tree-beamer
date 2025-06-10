@@ -736,7 +736,7 @@
   i.e. UB should be predictable and not too common
   #v(1cm)
 
-  *Tree Borrows reduces aliasing-related UB by over 50%* \
+  *Tree Borrows finds 50% fewer cases of aliasing UB* \
   Only 31 ($<0.01%$) tests are regressions, all easily fixable. \
   (Out of 30 000 libraries, 400 000+ working tests)
 
