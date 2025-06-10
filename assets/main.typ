@@ -614,18 +614,56 @@
       let self = utils.merge-dicts(self, config-methods(cover: utils.method-wrapper(hide.with(bounds: true))))
       let (uncover,) = utils.methods(self)
       rect(stroke: none, (-6.8,-6), (4,1))
+
+      let permbox(color, symbol) = {
+        textrect(inset: 0pt, width: 7mm, height: 6mm, stroke: none,
+          text(size: 28pt, fill: color, symbol)
+        )
+      }
+      let unique = permbox(green)[#sym.checkmark]
+      let reserved = permbox(blue)[?]
+      let disabled = permbox(red)[#sym.crossmark.heavy]
+
       uncover("2", tb.draw-tree((`root`)))
       uncover("3", tb.draw-tree((`root`, `ptr`)))
       uncover("4", tb.draw-tree((`root`, (`ptr`, `x`))))
+
+      uncover("2-", {
+        content(rel("tree.0", -1.1, 0), anchor: "south-east", {
+          table(columns: 1, align: center + horizon)[#unique]
+        })
+      })
+      uncover("3-5", {
+        content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 1, align: center + horizon)[#reserved]
+        })
+      })
+      uncover("4", {
+        content(rel("tree.0-0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 1, align: center + horizon)[#reserved]
+        })
+      })
+
       set-origin((-2,0))
       uncover("5-", tb.draw-tree((`root`, (`ptr`, `x`, `y`))))
       uncover("5", {
-        content(rel("tree.0-0-0", -1, 1))[#text(size: 40pt, fill: blue)[?]]
-        content(rel("tree.0-0-1", 1, 1))[#text(size: 40pt, fill: blue)[?]]
+        content(rel("tree.0-0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 1, align: center + horizon)[#reserved]
+        })
+        content(rel("tree.0-0-1", 1.1, 0), anchor: "south-west", {
+          table(columns: 1, align: center + horizon)[#reserved]
+        })
       })
       uncover("6,7", {
-        content(rel("tree.0-0-0", -1, 1))[#text(size: 40pt, fill: green)[#sym.checkmark]]
-        content(rel("tree.0-0-1", 1, 1))[#text(size: 40pt, fill: red)[#sym.crossmark.heavy]]
+        content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 1, align: center + horizon)[#unique]
+        })
+        content(rel("tree.0-0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 1, align: center + horizon)[#unique]
+        })
+        content(rel("tree.0-0-1", 1.1, 0), anchor: "south-west", {
+          table(columns: 1, align: center + horizon)[#disabled]
+        })
       })
     })
 
