@@ -686,10 +686,11 @@
       [move read down for ```rs &mut``` or ```rs &``` in function],
     )
     ...
-  \
-  $+$ read-read reordering!
+  //\
+  //$+$ read-read reordering!
 ]
 
+/*
 #slide(repeat: 2, self => [
   *On reordering reads*
 
@@ -726,6 +727,7 @@
 
   In TB: a read never prevents another read.
 ])
+*/
 
 
 == It should be possible to write ```rs unsafe``` code free of UB
@@ -741,6 +743,7 @@
   #v(1cm)
 
 
+  #text(fill: gray.darken(30%))[
   _"Tree Borrows accepts more real-world programs that
   call foreign functions than Stacked Borrows due to differences
   in handling pointer arithmetic."_ \
@@ -748,6 +751,7 @@
   A Study of Undefined Behavior Across Foreign Function Boundaries in Rust Libraries,
   by I. McCormack, J. Sunshine, J. Aldrich
   \@ ICSE'25
+  ]
   ]
 
 ]
