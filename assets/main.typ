@@ -316,24 +316,26 @@
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut root = vec![0, 1, 2];
+      let mut root = vec![0, 0, 0];
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
+      unsafe { *x0 = 1 };
+      unsafe { *x2 = 3 };
 
       // Scenario 1
-      unsafe { *x0.add(1) = 3; }
+      unsafe { *x0.add(1) = 2; }
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
-    for (idx,i) in (0,1,2).enumerate() {
-      uncover(i+2, { highlight-lines(i) })
+    uncover("-4", patch-line(6)[``])
+    uncover("-4", patch-line(7)[``])
+    uncover("7,8", patch-line(6)[```rs // Scenario 2```])
+    uncover("7,8", patch-line(7)[```rs unsafe { *x2.sub(1) = 2; }```])
+    for (i,idxs) in ((0,),(1,3),(2,4)).enumerate() {
+      uncover(i+2, { highlight-lines(..idxs) })
     }
-    uncover("-4", patch-line(4)[``])
-    uncover("-4", patch-line(5)[``])
-    uncover("7,8", patch-line(4)[```rs // Scenario 2```])
-    uncover("7,8", patch-line(5)[```rs unsafe { *x2.sub(1) = 3; }```])
-    uncover("5,7", highlight-lines(5, color: red))
-    uncover("6,8", highlight-lines(5))
+    uncover("5,7", highlight-lines(7, color: red))
+    uncover("6,8", highlight-lines(7))
   }))
   #uncover("5-")[
   Desired outcome: not UB
@@ -347,12 +349,22 @@
       uncover("2-", {
         for idx in range(3) {
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(idx))]]
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(0))]]
         }
+        uncover("3-", {
+          let idx = 0
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(1))]]
+        })
+        uncover("4-", {
+          let idx = 2
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
+        })
         uncover("5-", {
           let idx = 1
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(2))]]
         })
         line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
@@ -400,35 +412,54 @@
     })
   ]
 ])
+/*
+let ctx = from-code(```rs
+      let mut root = vec![0, 0, 0];
+      let x0 = &raw mut root[0];
+      let x2 = &raw mut root[2];
+      unsafe { *x0 = 1 };
+      unsafe { *x2 = 3 };
 
-#slide(repeat: 7, self => [
+      // Scenario 1
+      unsafe { *x0.add(1) = 2; }
+      ```, self: self)
+    let (block, uncover, highlight-lines, patch-line) = ctx
+    block
+    uncover("-4", patch-line(6)[``])
+    uncover("-4", patch-line(7)[``])
+    uncover("7,8", patch-line(6)[```rs // Scenario 2```])
+    uncover("7,8", patch-line(7)[```rs unsafe { *x2.sub(1) = 2; }```])
+    for (i,idxs) in ((0,),(1,3),(2,4)).enumerate() {
+      uncover(i+2, { highlight-lines(..idxs) })
+    }
+*/
+
+#slide(repeat: 6, self => [
   #let (uncover,) = utils.methods(self)
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut root = vec![0, 1, 2];
+      let mut root = vec![0, 0, 0];
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
+      unsafe { *x0 = 1 };
+      unsafe { *x2 = 3 };
 
       // Scenario 1
-      unsafe { *x0.add(1) = 3 };
+      unsafe { *x0.add(1) = 2 };
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
-    for (idx,i) in (0,1,2).enumerate() {
-      uncover(i+2, { highlight-lines(i) })
+    uncover("-4", patch-line(6)[``])
+    uncover("-4", patch-line(7)[``])
+    uncover("6", patch-line(6)[```rs // Scenario 2```])
+    uncover("6", patch-line(7)[```rs unsafe { *x2.sub(1) = 2; }```])
+    for (i,idxs) in ((0,),(1,3),(2,4)).enumerate() {
+      uncover(i+2, { highlight-lines(..idxs) })
     }
-    uncover("-5", patch-line(4)[``])
-    uncover("-5", patch-line(5)[``])
-    uncover("7", patch-line(4)[```rs // Scenario 2```])
-    uncover("7", patch-line(5)[```rs unsafe { *x2.sub(1) = 3; }```])
-    uncover("6,7", highlight-lines(5))
+    uncover("5,6", highlight-lines(7))
   }))
   Desired outcome: not UB
-
-  #uncover("5-")[#text(fill: blue)[?] "Reserved"] \
-  #uncover("6-")[#text(fill: green)[#sym.checkmark] "Unique"] \
-  #uncover("6-")[#text(fill: red)[#sym.crossmark.heavy] "Disabled"]
 ], self => [
   #align(center)[
     #cetz-canvas({
@@ -438,12 +469,22 @@
       uncover("2-", {
         for idx in range(3) {
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(idx))]]
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(0))]]
         }
-        uncover("6-", {
-          let idx = 1
+        uncover("3-", {
+          let idx = 0
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(1))]]
+        })
+        uncover("4-", {
+          let idx = 2
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
+        })
+        uncover("5-", {
+          let idx = 1
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
+          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(2))]]
         })
         line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
@@ -456,8 +497,8 @@
         line("v2.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_2")
         content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
       })
-      uncover("6", line("v1.south", "ptr_0.end", mark: (start: ">")))
-      uncover("7", line("v1.south", "ptr_2.end", mark: (start: ">")))
+      uncover("5", line("v1.south", "ptr_0.end", mark: (start: ">")))
+      uncover("6", line("v1.south", "ptr_2.end", mark: (start: ">")))
     })
     #cetz-canvas({
       import cetz.draw: *
@@ -466,9 +507,59 @@
       rect(stroke: none, (-6.8,-6), (4,1))
       uncover("2", tb.draw-tree((`root`)))
       uncover("3", tb.draw-tree((`root`, `x0`)))
+      let unique = text(size: 28pt, fill: green)[#sym.checkmark]
+      let reserved = text(size: 28pt, fill: blue)[#h(1.6mm)?#h(1.6mm)]
+      let disabled = text(size: 28pt, fill: red)[#h(0.8mm)#sym.crossmark.heavy#h(0.8mm)]
+      uncover("2-", {
+        content(rel("tree.0", 0, 0), anchor: "south-east", {
+          table(columns: 3)[#unique][#unique][#unique]
+        })
+      })
+      uncover("3", {
+        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
+          table(columns: 3)[#unique][#reserved][#reserved]
+        })
+      })
+
+      // Addition of a sibling moves everything
       set-origin((-2,0))
       uncover("4-", tb.draw-tree((`root`, `x0`, `x2`)))
+      uncover("4", {
+        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
+          table(columns: 3)[#unique][#reserved][#disabled]
+        })
+      })
+      uncover("4", {
+        content(rel("tree.0-1", 0, 0), anchor: "south-west", {
+          table(columns: 3)[#disabled][#reserved][#unique]
+        })
+      })
       uncover("5", {
+        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
+          table(columns: 3)[#unique][#unique][#disabled]
+        })
+      })
+      uncover("5", {
+        content(rel("tree.0-1", 0, 0), anchor: "south-west", {
+          table(columns: 3)[#disabled][#disabled][#unique]
+        })
+      })
+      uncover("6", {
+        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
+          table(columns: 3)[#unique][#disabled][#disabled]
+        })
+      })
+      uncover("6", {
+        content(rel("tree.0-1", 0, 0), anchor: "south-west", {
+          table(columns: 3)[#disabled][#unique][#unique]
+        })
+      })
+
+
+
+
+
+      /*uncover("5", {
         content(rel("tree.0-0", -1, 1))[#text(size: 40pt, fill: blue)[?]]
         content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: blue)[?]]
       })
@@ -477,9 +568,9 @@
         content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: red)[#sym.crossmark.heavy]]
       })
       uncover("7", {
-        content(rel("tree.0-0", -1, 1))[#text(size: 40pt, fill: red)[#sym.crossmark.heavy]]
         content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: green)[#sym.checkmark]]
       })
+      */
     })
   ]
 ])
@@ -600,7 +691,7 @@
   #v(1cm)
 
   *Tree Borrows reduces aliasing-related UB by over 50%* \
-  Only 31 ($<0.5%$) tests are regressions, all easily fixable. \
+  Only 31 ($<0.01%$) tests are regressions, all easily fixable. \
   (Out of 30 000 libraries, 400 000+ working tests)
 
   #v(1cm)
