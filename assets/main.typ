@@ -568,7 +568,7 @@
   ][
   `root`, `root`, `x`, `x`, `root` #h(1cm) is well-bracketed \
   #pause
-  `root`, `root`, `x`, `root`, `x` #h(1cm) is not well-bracketed
+  `root`, `root`, `x`, `root`, #highlight(fill: red.transparentize(75%))[`x`] #h(1cm) is not well-bracketed
   ]
 
 
