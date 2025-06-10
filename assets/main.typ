@@ -328,7 +328,7 @@
 
   #uncover("5-")[
   #full-slide-overlay(dim: false)[
-  *Supported by data:*
+  *Anecdotal evidence supported by data:*
   - analysis of 30 000 libraries
   - 6000+ tests that otherwise work are declared UB under Stacked Borrows
   ]
