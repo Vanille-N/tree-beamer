@@ -293,11 +293,11 @@
     place(center + horizon, dx: dx, dy: dy,
       rotate(alpha,
         scale(size,
-          //rect(
+          rect(inset: 0.5pt,
             //hide(
               image("sb-issue-"+str(num)+".png")
             //)
-          //)
+          )
         )
       )
     )
