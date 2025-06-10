@@ -157,7 +157,7 @@
 
 ]
 
-== What if ```rs unsafe``` code violates a necessary invariant ?
+== What if ```rs unsafe``` code is misused ?
 
 #slide(repeat: 3, self => [
   #codebox(cetz-canvas({
@@ -306,7 +306,7 @@
 
   #v(2cm)
   #pause
-  fixes known technical limitations of SB, incl. *handling of ranges*
+  fixes known technical limitations of SB, incl. *pointer offsets*
 ]
 
 #section-slide[From Stacks to Trees]
@@ -335,7 +335,9 @@
     uncover("5,7", highlight-lines(5, color: red))
     uncover("6,8", highlight-lines(5))
   }))
+  #uncover("5-")[
   Desired outcome: not UB
+  ]
 ], self => [
   #align(center)[
     #cetz-canvas({
@@ -358,20 +360,28 @@
       uncover("3-", {
         line("v0.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_0")
         content("ptr_0.end", anchor: "north", padding: 1mm, name: "x0")[`x0`]
-        uncover("-4", {
-          content(rel("ptr_0", 0, -4))[#sb-stack[`root`][`x0`]]
-        })
-      })
+             })
       uncover("4-", {
         line("v2.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_2")
         content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
-        uncover("-4", {
-          content(rel("ptr_2", 0, -4))[#sb-stack[`root`][`x2`]]
-        })
       })
       uncover("5,6", { line("v1.south", "ptr_0.end", mark: (start: ">")) })
       uncover("7,8", { line("v1.south", "ptr_2.end", mark: (start: ">")) })
-      uncover("5,7", {
+
+      // Show all the stacks
+      uncover("2", {
+        content(rel("v0", 0, -6.5))[#sb-stack[`root`]]
+      })
+      uncover("2-3", {
+        content(rel("v2", 0, -6.5))[#sb-stack[`root`]]
+      })
+      uncover("3-", {
+        content(rel("v0", 0, -6))[#sb-stack[`root`][`x0`]]
+      })
+      uncover("4-", {
+        content(rel("v2", 0, -6))[#sb-stack[`root`][`x2`]]
+      })
+      uncover("2-5,7", {
         content(rel("v1", 0, -6.5))[#sb-stack[`root`]]
       })
       uncover("6", {
@@ -380,6 +390,13 @@
       uncover("8", {
         content(rel("v1", 0, -6))[#sb-stack[`root`][`x2`]]
       })
+
+      // Dim the stacks at indexes 0 and 2 when we focus on 1
+      uncover("5-", {
+        rect(rel("v0", -1.5, -4.5), rel((), 3, -3), fill: white.transparentize(30%), stroke: none)
+        rect(rel("v2", -1.5, -4.5), rel((), 3, -3), fill: white.transparentize(30%), stroke: none)
+      })
+
     })
   ]
 ])
