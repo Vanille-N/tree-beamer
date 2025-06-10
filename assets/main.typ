@@ -281,20 +281,59 @@
   ]
 ])
 
-#slide[
+#slide(repeat: 5, [
   SB was *implemented* in Miri (official interpreter and UB detector) \
   $->$ included in many projects' CI \
   $->$ several bugs detected (e.g. in stdlib)
 
   #v(1cm)
 
-  #pause
-  *However Stacked Borrows is too strict* \
+
+   #let img(num, dx: 0cm, dy: 0cm, alpha: 0deg, size: 100%) = {
+    place(center + horizon, dx: dx, dy: dy,
+      rotate(alpha,
+        scale(size,
+          //rect(
+            //hide(
+              image("sb-issue-"+str(num)+".png")
+            //)
+          //)
+        )
+      )
+    )
+  }
+
+  // Too strict
+  #uncover("4-")[
+  #img(10, dy: -5.7cm, dx: -6cm, size: 60%)
+  #img(8, dy: -4cm, dx: 5cm, size: 60%)
+  #img(7, dy: -2.5cm, dx: -8cm, size: 60%)
+  #img(3, dy: -0.5cm, dx: 8cm, alpha: 5deg, size: 60%)
+  #img(11, dy: 0.6cm, dx: -6.5cm, alpha: 2deg, size: 60%)
+  ]
+
+  // Open questions
+  #uncover("3-")[
+  #img(6, dy: 3.8cm, dx: -7cm, alpha: -3deg, size: 60%)
+  #img(9, dy: 2.7cm, dx: 8cm, alpha: 5deg, size: 60%)
+  ]
+
+  // Confusing
+  #uncover("2-")[
+  #img(5, dy: 6.8cm, dx: -3cm, alpha: 2deg, size: 60%)
+  #img(4, dy: 5.8cm, dx: 8cm, size: 60%)
+  #img(2, dy: 9cm, dx: -6cm, alpha: -2deg, size: 60%)
+  #img(1, dy: 9cm, dx: 8cm, alpha: 5deg, size: 60%)
+  ]
+
+  #uncover("5-")[
+  #full-slide-overlay(dim: false)[
+  *Supported by data:*
   - analysis of 30 000 libraries
-  - 6000+ tests that should work are declared UB
-    //- two-phase borrows
-    //- prohibits reordering reads
-]
+  - 6000+ tests that otherwise work are declared UB under Stacked Borrows
+  ]
+  ]
+])
 
 == Tree Borrows allows much more code
 
@@ -412,27 +451,6 @@
     })
   ]
 ])
-/*
-let ctx = from-code(```rs
-      let mut root = vec![0, 0, 0];
-      let x0 = &raw mut root[0];
-      let x2 = &raw mut root[2];
-      unsafe { *x0 = 1 };
-      unsafe { *x2 = 3 };
-
-      // Scenario 1
-      unsafe { *x0.add(1) = 2; }
-      ```, self: self)
-    let (block, uncover, highlight-lines, patch-line) = ctx
-    block
-    uncover("-4", patch-line(6)[``])
-    uncover("-4", patch-line(7)[``])
-    uncover("7,8", patch-line(6)[```rs // Scenario 2```])
-    uncover("7,8", patch-line(7)[```rs unsafe { *x2.sub(1) = 2; }```])
-    for (i,idxs) in ((0,),(1,3),(2,4)).enumerate() {
-      uncover(i+2, { highlight-lines(..idxs) })
-    }
-*/
 
 #slide(repeat: 6, self => [
   #let (uncover,) = utils.methods(self)
@@ -554,23 +572,6 @@ let ctx = from-code(```rs
           table(columns: 3)[#disabled][#unique][#unique]
         })
       })
-
-
-
-
-
-      /*uncover("5", {
-        content(rel("tree.0-0", -1, 1))[#text(size: 40pt, fill: blue)[?]]
-        content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: blue)[?]]
-      })
-      uncover("6", {
-        content(rel("tree.0-0", -1, 1))[#text(size: 40pt, fill: green)[#sym.checkmark]]
-        content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: red)[#sym.crossmark.heavy]]
-      })
-      uncover("7", {
-        content(rel("tree.0-1", 1, 1))[#text(size: 40pt, fill: green)[#sym.checkmark]]
-      })
-      */
     })
   ]
 ])

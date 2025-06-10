@@ -52,10 +52,12 @@
 
 // Overlays
 
-#let full-slide-overlay(c) = {
-  place(center + horizon)[
-    #rect(width: 120%, height: 101%, fill: white.transparentize(20%))
-  ]
+#let full-slide-overlay(c, dim: true) = {
+  if dim {
+    place(center + horizon)[
+      #rect(width: 120%, height: 101%, fill: white.transparentize(20%))
+    ]
+  }
   place(center + horizon)[
     #box(fill: color.mix(aqua.darken(-40%), gray).darken(-20%), inset: 12pt, radius: 12pt)[
       #text(size: 40pt)[
