@@ -12,6 +12,8 @@
   #it
 ]
 
+#let textrect = rect
+
 // Debug help
 // Set this to true to print some bounding boxes and layout lines to help align content.
 #let show-layout-boundaries = false

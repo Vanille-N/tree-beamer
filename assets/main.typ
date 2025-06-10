@@ -525,17 +525,22 @@
       rect(stroke: none, (-6.8,-6), (4,1))
       uncover("2", tb.draw-tree((`root`)))
       uncover("3", tb.draw-tree((`root`, `x0`)))
-      let unique = text(size: 28pt, fill: green)[#sym.checkmark]
-      let reserved = text(size: 28pt, fill: blue)[#h(1.6mm)?#h(1.6mm)]
-      let disabled = text(size: 28pt, fill: red)[#h(0.8mm)#sym.crossmark.heavy#h(0.8mm)]
+      let permbox(color, symbol) = {
+        textrect(inset: 0pt, width: 7mm, height: 6mm, stroke: none,
+          text(size: 28pt, fill: color, symbol)
+        )
+      }
+      let unique = permbox(green)[#sym.checkmark]
+      let reserved = permbox(blue)[?]
+      let disabled = permbox(red)[#sym.crossmark.heavy]
       uncover("2-", {
-        content(rel("tree.0", 0, 0), anchor: "south-east", {
-          table(columns: 3)[#unique][#unique][#unique]
+        content(rel("tree.0", -1.1, 0), anchor: "south-east", {
+          table(columns: 3, align: center + horizon)[#unique][#unique][#unique]
         })
       })
       uncover("3", {
-        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
-          table(columns: 3)[#unique][#reserved][#reserved]
+        content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 3, align: center + horizon)[#unique][#reserved][#reserved]
         })
       })
 
@@ -543,33 +548,33 @@
       set-origin((-2,0))
       uncover("4-", tb.draw-tree((`root`, `x0`, `x2`)))
       uncover("4", {
-        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
-          table(columns: 3)[#unique][#reserved][#disabled]
+        content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 3, align: center + horizon)[#unique][#reserved][#disabled]
         })
       })
       uncover("4", {
-        content(rel("tree.0-1", 0, 0), anchor: "south-west", {
-          table(columns: 3)[#disabled][#reserved][#unique]
+        content(rel("tree.0-1", 1.1, 0), anchor: "south-west", {
+          table(columns: 3, align: center + horizon)[#disabled][#reserved][#unique]
         })
       })
       uncover("5", {
-        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
-          table(columns: 3)[#unique][#unique][#disabled]
+        content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 3, align: center + horizon)[#unique][#unique][#disabled]
         })
       })
       uncover("5", {
-        content(rel("tree.0-1", 0, 0), anchor: "south-west", {
-          table(columns: 3)[#disabled][#disabled][#unique]
+        content(rel("tree.0-1", 1.1, 0), anchor: "south-west", {
+          table(columns: 3, align: center + horizon)[#disabled][#disabled][#unique]
         })
       })
       uncover("6", {
-        content(rel("tree.0-0", 0, 0), anchor: "south-east", {
-          table(columns: 3)[#unique][#disabled][#disabled]
+        content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
+          table(columns: 3, align: center + horizon)[#unique][#disabled][#disabled]
         })
       })
       uncover("6", {
-        content(rel("tree.0-1", 0, 0), anchor: "south-west", {
-          table(columns: 3)[#disabled][#unique][#unique]
+        content(rel("tree.0-1", 1.1, 0), anchor: "south-west", {
+          table(columns: 3, align: center + horizon)[#disabled][#unique][#unique]
         })
       })
     })
