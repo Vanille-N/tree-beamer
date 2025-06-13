@@ -355,26 +355,24 @@
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut root = vec![0, 0, 0];
+      let mut root = vec![1, 0, 3];
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
-      unsafe { *x0 = 1 };
-      unsafe { *x2 = 3 };
 
       // Scenario 1
       unsafe { *x0.add(1) = 2; }
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
-    uncover("-4", patch-line(6)[``])
-    uncover("-4", patch-line(7)[``])
-    uncover("7,8", patch-line(6)[```rs // Scenario 2```])
-    uncover("7,8", patch-line(7)[```rs unsafe { *x2.sub(1) = 2; }```])
-    for (i,idxs) in ((0,),(1,3),(2,4)).enumerate() {
+    uncover("-4", patch-line(4)[``])
+    uncover("-4", patch-line(5)[``])
+    uncover("7,8", patch-line(4)[```rs // Scenario 2```])
+    uncover("7,8", patch-line(5)[```rs unsafe { *x2.sub(1) = 2; }```])
+    for (i,idxs) in ((0,),(1,),(2,)).enumerate() {
       uncover(i+2, { highlight-lines(..idxs) })
     }
-    uncover("5,7", highlight-lines(7, color: red))
-    uncover("6,8", highlight-lines(7))
+    uncover("5,7", highlight-lines(5, color: red))
+    uncover("6,8", highlight-lines(5))
   }))
   #uncover("5-")[
   Desired outcome: not UB
@@ -390,12 +388,12 @@
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(0))]]
         }
-        uncover("3-", {
+        uncover("2-", {
           let idx = 0
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(1))]]
         })
-        uncover("4-", {
+        uncover("2-", {
           let idx = 2
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
@@ -452,30 +450,28 @@
   ]
 ])
 
-#slide(repeat: 6, self => [
+#slide(repeat: 7, self => [
   #let (uncover,) = utils.methods(self)
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut root = vec![0, 0, 0];
+      let mut root = vec![1, 0, 3];
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
-      unsafe { *x0 = 1 };
-      unsafe { *x2 = 3 };
 
       // Scenario 1
       unsafe { *x0.add(1) = 2 };
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
-    uncover("-4", patch-line(6)[``])
-    uncover("-4", patch-line(7)[``])
-    uncover("6", patch-line(6)[```rs // Scenario 2```])
-    uncover("6", patch-line(7)[```rs unsafe { *x2.sub(1) = 2; }```])
-    for (i,idxs) in ((0,),(1,3),(2,4)).enumerate() {
+    uncover("-5", patch-line(4)[``])
+    uncover("-5", patch-line(5)[``])
+    uncover("7", patch-line(4)[```rs // Scenario 2```])
+    uncover("7", patch-line(5)[```rs unsafe { *x2.sub(1) = 2; }```])
+    for (i,idxs) in ((0,),(1,),(2,)).enumerate() {
       uncover(i+2, { highlight-lines(..idxs) })
     }
-    uncover("5,6", highlight-lines(7))
+    uncover("6,7", highlight-lines(5))
   }))
   Desired outcome: not UB
 ], self => [
@@ -489,17 +485,17 @@
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(0))]]
         }
-        uncover("3-", {
+        uncover("2-", {
           let idx = 0
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(1))]]
         })
-        uncover("4-", {
+        uncover("2-", {
           let idx = 2
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
         })
-        uncover("5-", {
+        uncover("6-", {
           let idx = 1
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
           content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(2))]]
@@ -515,8 +511,8 @@
         line("v2.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_2")
         content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
       })
-      uncover("5", line("v1.south", "ptr_0.end", mark: (start: ">")))
-      uncover("6", line("v1.south", "ptr_2.end", mark: (start: ">")))
+      uncover("6", line("v1.south", "ptr_0.end", mark: (start: ">")))
+      uncover("7", line("v1.south", "ptr_2.end", mark: (start: ">")))
     })
     #cetz-canvas({
       import cetz.draw: *
@@ -533,46 +529,40 @@
       let unique = permbox(green)[#sym.checkmark]
       let reserved = permbox(blue)[?]
       let disabled = permbox(red)[#sym.crossmark.heavy]
-      uncover("2-", {
+      uncover("5-", {
         content(rel("tree.0", -1.1, 0), anchor: "south-east", {
           table(columns: 3, align: center + horizon)[#unique][#unique][#unique]
         })
       })
-      uncover("3", {
-        content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
-          table(columns: 3, align: center + horizon)[#unique][#reserved][#reserved]
-        })
-      })
-
       // Addition of a sibling moves everything
       set-origin((-2,0))
       uncover("4-", tb.draw-tree((`root`, `x0`, `x2`)))
-      uncover("4", {
+      uncover("5", {
         content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
           table(columns: 3, align: center + horizon)[#unique][#reserved][#disabled]
         })
       })
-      uncover("4", {
+      uncover("5", {
         content(rel("tree.0-1", 1.1, 0), anchor: "south-west", {
           table(columns: 3, align: center + horizon)[#disabled][#reserved][#unique]
         })
       })
-      uncover("5", {
+      uncover("6", {
         content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
           table(columns: 3, align: center + horizon)[#unique][#unique][#disabled]
         })
       })
-      uncover("5", {
+      uncover("6", {
         content(rel("tree.0-1", 1.1, 0), anchor: "south-west", {
           table(columns: 3, align: center + horizon)[#disabled][#disabled][#unique]
         })
       })
-      uncover("6", {
+      uncover("7", {
         content(rel("tree.0-0", -1.1, 0), anchor: "south-east", {
           table(columns: 3, align: center + horizon)[#unique][#disabled][#disabled]
         })
       })
-      uncover("6", {
+      uncover("7", {
         content(rel("tree.0-1", 1.1, 0), anchor: "south-west", {
           table(columns: 3, align: center + horizon)[#disabled][#unique][#unique]
         })

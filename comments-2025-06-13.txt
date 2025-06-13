@@ -1,0 +1,57 @@
+intro sentence must be more accessible
+- no aliasing yet
+"we're going to talk about Rust optimizations"
+
+1:
+the compiler actually does this
+
+3:
+leave it at getting access to unchecked operations,
+nothing to imply that the borchk is turned off, because it isn't.
+after the list, introduce concept of UB
+
+4:
+show program behavior
+prints 20
+animation to apply
+prints 13
+
+5:
+"introduce UB" is weird
+have the concept of UB appear on the slide. (maybe even earlier)
+overall, make the slides match what I say.
+
+6:
+do not say "detects" UB.
+"declare" instead ?
+
+7:
+remove "How precise should UnsafeCell be tracked"
+use a 2-phase example instead.
+"backwards compatibility" meh. Frame it as aligning with programmers' expectations & intuitions.
+
+8:
+be clear on tests vs libraries
+don't be inflamatory (I said "notoriously bad at pointer arithmetic")
+  => let's look at a representative example of code that people write that is rejected by SB.
+
+9:
+use values that can't be confused with indices
+also show the index as e.g. [0], [1], [2] above.
+some visual support for "we want both x0 and x2 in the stack"
+  like both boxes next to each other, a little superimposed.
+dimmer number.
+
+10:
+same [0], [1], [2]
+also dim the big numbers.
+
+14:
+don't imply that the playground is the only way to test, just the easiest
+align the headers, move the QR code.
+
+somewhere:
+mention that TB has been merged into Miri
+- maybe that the last slide is the right place to mention it
+  "Try it out: available in Miri"
+
