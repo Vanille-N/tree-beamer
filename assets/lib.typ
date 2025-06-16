@@ -104,8 +104,8 @@
     linebreaks.push(line.len() + 1)
   }
   import cetz.draw: *
-  let cell-width = 12.1pt
-  let cell-height = 28pt
+  let cell-width = 12.05pt
+  let cell-height = 28.1pt
   let line-col(line, col, anchor: "center") = {
     let x = cell-width * (col + 0.5)
     let y = - cell-height * (line + 0.5)

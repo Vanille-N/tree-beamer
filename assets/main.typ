@@ -51,7 +51,7 @@
 
 #let tcolor(c, t) = text(fill: c)[#t]
 
-== Rust's type system provides powerful optimizations
+== Rust's type system enables powerful optimizations
 
 #slide(repeat: 4, self => [
   #codebox(cetz-canvas({
@@ -140,26 +140,48 @@
 == Escape hatch: ```rs unsafe```
 
 #slide[
-  Can *bypass typechecks* to implement *low-level manipulations*
+  Can use *unchecked operations* to do *low-level manipulations*
   ```rs
   unsafe {
-    // Code within this block has relaxed typechecking
+    // Code within this block can effectively
+    // bypass some parts of the typechecker.
     ...
   }
   ```
 
-  #v(2cm)
+  #v(1.5cm)
 
   Within ```rs unsafe``` it is *the programmer's responsibility* to check
   - that pointers are non-null
   - that memory is initialized
   - ...
+  #place(bottom + right)[
+    #cetz-canvas({
+      cetz.decorations.brace((0,2), (0,-2), name: "path", stroke: red.darken(30%))
+      cetz.draw.content("path", anchor: "west", padding: 1cm)[
+        #text(fill: red.darken(30%))[violations trigger UB]
+      ]
+    })
+  ]
+]
 
+== Why have UB in a language?
+
+#slide[
+  Code that contains UB can have *any behavior* \
+  $->$ even if an opmitization changes the behavior, it is still correct!
+
+  #v(2cm)
+  #pause
+
+  Too little UB $->$ weak optimizations
+
+  Too much UB $->$ hard to write correct programs
 ]
 
 == What if ```rs unsafe``` code is misused ?
 
-#slide(repeat: 3, self => [
+#slide(repeat: 5, self => [
   #codebox(cetz-canvas({
     let ctx = from-code(```rs
       fn write_both(x: &mut i32, y: &mut i32) -> i32 {
@@ -173,7 +195,7 @@
         let ptr = &raw mut root;
         let x = unsafe { &mut *ptr };
         let y = unsafe { &mut *ptr };
-        println!("{}", write_both(x, y));
+        println!("{}", write_both(x, y)); // prints 20
       }```, self: self)
     let (block, highlight, locate, highlight-lines, uncover, patch) = ctx
     block
@@ -183,6 +205,14 @@
     })
     uncover("3", {
       highlight-lines(9, 10)
+    })
+    uncover("5", {
+      patch(locate("*x").at(1))[```rs 13```]
+      patch(locate("// prints 20").at(0))[```rs // prints 13```]
+    })
+    uncover("4,5", {
+      highlight(..locate("*x").at(1))
+      highlight(..locate("20").at(1))
     })
   }))
 ])
@@ -197,6 +227,15 @@
     - #text(fill: gray)[that memory is initialized]
     - compliance with aliasing rules#h(-3mm)#box[#super[#strong[#tcolor(red)[#rotate(30deg)[NEW!]]]]]
   #v(3cm)
+  #place(right + horizon, dy: -3cm)[
+    #cetz-canvas({
+      cetz.decorations.brace((0,2), (0,-2), name: "path", stroke: red.darken(30%))
+      cetz.draw.content("path", anchor: "west", padding: 1cm)[
+        #text(fill: red.darken(30%))[violations trigger UB]
+      ]
+    })
+  ]
+
 
   *Tree Borrows (TB):* defines those aliasing rules
 
@@ -314,7 +353,7 @@
 
   // Open questions
   #uncover("3-")[
-  #img(6, dy: 3.8cm, dx: -7cm, alpha: -3deg, size: 60%)
+  #img(13, dy: 3.8cm, dx: -7cm, alpha: -3deg, size: 60%)
   #img(9, dy: 2.7cm, dx: 8cm, alpha: 5deg, size: 60%)
   ]
 
@@ -341,38 +380,41 @@
   Tree Borrows uses a *tree* instead of a stack to track borrows
   #v(2cm)
   Out of 30 000 most downloaded libraries, \
-  *$>50%$ fewer* tests with aliasing UB when using Tree Borrows \
+  *$>50%$ fewer tests* with aliasing UB when using Tree Borrows \
 
   #v(2cm)
   #pause
-  fixes known technical limitations of SB, incl. *pointer offsets*
+  fixes known technical limitations of SB, \
+  incl. 2-phase borrows, extern types, *pointer offsets*
 ]
 
 #section-slide[From Stacks to Trees]
 
-#slide(repeat: 8, self => [
+#slide(repeat: 9, composer: (15cm, auto), self => [
   #let (uncover,) = utils.methods(self)
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut root = vec![1, 0, 3];
+      let mut root = vec!['a','b','c'];
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
 
       // Scenario 1
-      unsafe { *x0.add(1) = 2; }
+      unsafe { *x0.add(1) = 'z'; }
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
     uncover("-4", patch-line(4)[``])
     uncover("-4", patch-line(5)[``])
     uncover("7,8", patch-line(4)[```rs // Scenario 2```])
-    uncover("7,8", patch-line(5)[```rs unsafe { *x2.sub(1) = 2; }```])
+    uncover("7,8", patch-line(5)[```rs unsafe { *x2.sub(1) = 'z'; }```])
+    uncover("9", patch-line(4)[```rs // Scenario 1 or 2```])
+    uncover("9", patch-line(5)[```rs unsafe { *??? = 'z'; }```])
     for (i,idxs) in ((0,),(1,),(2,)).enumerate() {
       uncover(i+2, { highlight-lines(..idxs) })
     }
     uncover("5,7", highlight-lines(5, color: red))
-    uncover("6,8", highlight-lines(5))
+    uncover("6,8,9", highlight-lines(5))
   }))
   #uncover("5-")[
   Desired outcome: not UB
@@ -386,22 +428,26 @@
       uncover("2-", {
         for idx in range(3) {
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(0))]]
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'b'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[1]`]]
         }
         uncover("2-", {
           let idx = 0
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(1))]]
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'a'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[0]`]]
         })
         uncover("2-", {
           let idx = 2
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'c'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[2]`]]
         })
         uncover("5-", {
           let idx = 1
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(2))]]
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'z'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[1]`]]
         })
         line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
@@ -414,8 +460,8 @@
         line("v2.south", rel((), 0, -2), mark: (start: ">"), name: "ptr_2")
         content("ptr_2.end", anchor: "north", padding: 1mm, name: "x2")[`x2`]
       })
-      uncover("5,6", { line("v1.south", "ptr_0.end", mark: (start: ">")) })
-      uncover("7,8", { line("v1.south", "ptr_2.end", mark: (start: ">")) })
+      uncover("5,6,9", { line("v1.south", "ptr_0.end", mark: (start: ">")) })
+      uncover("7,8,9", { line("v1.south", "ptr_2.end", mark: (start: ">")) })
 
       // Show all the stacks
       uncover("2", {
@@ -430,7 +476,7 @@
       uncover("4-", {
         content(rel("v2", 0, -6))[#sb-stack[`root`][`x2`]]
       })
-      uncover("2-5,7", {
+      uncover("2-5,7,9", {
         content(rel("v1", 0, -6.5))[#sb-stack[`root`]]
       })
       uncover("6", {
@@ -446,28 +492,34 @@
         rect(rel("v2", -1.5, -4.5), rel((), 3, -3), fill: white.transparentize(30%), stroke: none)
       })
 
+      uncover("9", {
+        rect(rel("v1", 0, -4.9), rel((), -1.5, -1), name: "both1")
+        rect(rel("v1", 0, -4.9), rel((), 1.5, -1), name: "both2")
+        content("both1.center")[```rs x0```]
+        content("both2.center")[```rs x2```]
+      })
     })
   ]
 ])
 
-#slide(repeat: 7, self => [
+#slide(repeat: 7, composer: (15cm, auto), self => [
   #let (uncover,) = utils.methods(self)
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
-      let mut root = vec![1, 0, 3];
+      let mut root = vec!['a','b','c'];
       let x0 = &raw mut root[0];
       let x2 = &raw mut root[2];
 
       // Scenario 1
-      unsafe { *x0.add(1) = 2 };
+      unsafe { *x0.add(1) = 'z' };
       ```, self: self)
     let (block, uncover, highlight-lines, patch-line) = ctx
     block
     uncover("-5", patch-line(4)[``])
     uncover("-5", patch-line(5)[``])
     uncover("7", patch-line(4)[```rs // Scenario 2```])
-    uncover("7", patch-line(5)[```rs unsafe { *x2.sub(1) = 2; }```])
+    uncover("7", patch-line(5)[```rs unsafe { *x2.sub(1) = 'z'; }```])
     for (i,idxs) in ((0,),(1,),(2,)).enumerate() {
       uncover(i+2, { highlight-lines(..idxs) })
     }
@@ -483,22 +535,30 @@
       uncover("2-", {
         for idx in range(3) {
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx))
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(0))]]
         }
+        uncover("2-", {
+          let idx = 1
+          rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'b'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[1]`]]
+        })
         uncover("2-", {
           let idx = 0
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(1))]]
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'a'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[0]`]]
         })
         uncover("2-", {
           let idx = 2
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(3))]]
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'c'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[2]`]]
         })
         uncover("6-", {
           let idx = 1
           rect((3*idx, 0), (3*idx+3, 3), name: "v"+str(idx), fill: white)
-          content("v"+str(idx)+".center")[#text(size: 60pt)[#raw(str(2))]]
+          content(rel("v"+str(idx)+".center", 0.5, -0.7))[#text(size: 30pt, fill: green.darken(-30%))[`'z'`]]
+          content(rel("v"+str(idx)+".center", -0.5, 0.7))[#text(size: 30pt)[`[1]`]]
         })
         line("v0.west", rel((), -1, 0), mark: (start: ">"), name: "ptr_v")
         content("ptr_v.end", anchor: "east", padding: 1mm, name: "v")[`root`]
@@ -570,6 +630,7 @@
     })
   ]
 ])
+
 
 == A second look at the motivating example
 
@@ -676,49 +737,7 @@
       [move read down for ```rs &mut``` or ```rs &``` in function],
     )
     ...
-  //\
-  //$+$ read-read reordering!
 ]
-
-/*
-#slide(repeat: 2, self => [
-  *On reordering reads*
-
-  In SB: \
-  #table(columns: 2, stroke: none)[
-  #codebox(cetz-canvas({
-    import cetz.draw: *
-    let ctx = from-code(```rs
-    let mut root = 0;
-    let x = &mut root;
-    let v1 = *x;
-    let v2 = root;
-    ```, self: self)
-    let (block, line-col, rel-to, locate, end-of, highlight, uncover, patch-line) = ctx
-    block
-    uncover("2", {
-      patch-line(2)[```rs let v2 = root;```]
-      patch-line(3)[```rs let v1 = *x;```]
-      highlight((3,0), (3,11), color: red)
-    })
-    bezier(line-col(..rel-to(end-of(locate(";").at(2)), 0, 3)),
-         line-col(..rel-to(end-of(locate(";").at(3)), 0, 1)),
-         rel((), 10mm, -5mm),
-         stroke: red + 1mm,
-         mark: (end: ">", start: ">"))
-
-  }))
-  ][
-  `root`, `root`, `x`, `x`, `root` #h(1cm) is well-bracketed \
-  #pause
-  `root`, `root`, `x`, `root`, #highlight(fill: red.transparentize(75%))[`x`] #h(1cm) is not well-bracketed
-  ]
-
-
-  In TB: a read never prevents another read.
-])
-*/
-
 
 == It should be possible to write ```rs unsafe``` code free of UB
 
@@ -753,18 +772,23 @@
 #slide[
   #let shorturl = "play.rust-lang.org"
   #let longurl = "https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=b2b0cb067b73b987f071fe90e10d06bf"
-  *Try it out:* \ \
+  *Try it out: available in Miri* \ \
   Rust Playground supports TB \
-  #text(size: 24pt)[#raw(shorturl)]
+  (#text(size: 24pt)[#raw(shorturl)])
   #image("playground.png", width: 11cm)
 ][
   #let url = "plf.inf.ethz.ch/research/pldi25-tree-borrows.html"
-  #align(right)[#qr-code(url, width: 30%)]
-  #v(-1.7cm)
-  *Learn more:* \ #text(size: 24pt)[#raw(url)]
+  *Learn more:*
+  #table(columns: (70%, auto), align: horizon, stroke: none)[
+    #text(size: 20pt)[#raw(url)]
+  ][
+    #qr-code(url, width: 100%)
+  ]
   #v(1cm)
+  #text(fill: gray.darken(20%))[
   - detailed state machine
   - raw pointers
   - interior mutability
+  ]
 ]
 
