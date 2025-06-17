@@ -788,11 +788,15 @@
   ][
     #qr-code(url, width: 100%)
   ]
+
+  #line(length: 100%)
+
   #v(1cm)
-  #text(fill: gray.darken(20%))[
-  - detailed state machine
-  - raw pointers
-  - interior mutability
+  *Get involved:* \
+  Postdoc positions available \
+  #text(size: 20pt)[
+    \@ ETH Zurich #h(1cm) #raw("ralf.jung" + "@inf.ethz.ch") \
+    \@ MPI-SWS #h(1cm) #raw("dreyer" + "@mpi-sws.org")
   ]
 ]
 
