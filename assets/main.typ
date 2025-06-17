@@ -791,8 +791,9 @@
 
   #line(length: 100%)
 
-  #v(1cm)
-  *Get involved:* \
+  #v(5mm)
+  *Get involved:*
+  #v(5mm)
   Postdoc positions available \
   #text(size: 20pt)[
     \@ ETH Zurich #h(1cm) #raw("ralf.jung" + "@inf.ethz.ch") \
