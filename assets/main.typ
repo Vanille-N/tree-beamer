@@ -165,11 +165,15 @@
   ]
 ]
 
-== Why have UB in a language?
+== Why have Undefined Behavior (UB) in a language?
 
 #slide[
-  Code that contains UB can have *any behavior* \
-  $->$ even if an opmitization changes the behavior, it is still correct!
+  Code that contains UB can have *any behavior*.
+
+  #v(2cm)
+
+  Relevance for optimizations: \
+  allowed to change the behavior of programs that contain UB.
 
   #v(2cm)
   #pause
@@ -369,7 +373,7 @@
   #full-slide-overlay(dim: false)[
   *Anecdotal evidence supported by data:*
   - analysis of 30 000 libraries
-  - 6000+ tests that otherwise work are declared UB under Stacked Borrows
+  - 6000+ tests have aliasing UB under Stacked Borrows
   ]
   ]
 ])
@@ -745,7 +749,7 @@
   i.e. UB should be predictable and not too common
   #v(1cm)
 
-  *Tree Borrows finds 50% fewer cases of aliasing UB* \
+  *50% fewer tests have aliasing UB according to Tree Borrows* \
   Only 31 ($<0.01%$) tests are regressions, all easily fixable. \
   (Out of 30 000 libraries, 400 000+ working tests)
 
