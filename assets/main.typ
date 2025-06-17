@@ -789,12 +789,11 @@
   ][
     #qr-code(url, width: 100%)
   ]
-
+  #text(fill: gray, size: 20pt)[
+    Includes e.g. handling of raw pointers and interior mutability.
+  ]
+  #v(1cm)
   #line(length: 100%, stroke: gray)
-
-  #v(5mm)
-  *Get involved:*
-  #v(5mm)
   Postdoc positions available \
   #text(size: 20pt)[
     \@ ETH Zurich #h(1cm) #raw("ralf.jung" + "@inf.ethz.ch") \
