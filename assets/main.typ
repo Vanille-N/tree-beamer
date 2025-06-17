@@ -780,6 +780,7 @@
   Rust Playground supports TB \
   (#text(size: 24pt)[#raw(shorturl)])
   #image("playground.png", width: 11cm)
+  #place(right + horizon)[#line(start: (100%, 0%), end: (100%, 100%), stroke: gray)]
 ][
   #let url = "plf.inf.ethz.ch/research/pldi25-tree-borrows.html"
   *Learn more:*
@@ -789,7 +790,7 @@
     #qr-code(url, width: 100%)
   ]
 
-  #line(length: 100%)
+  #line(length: 100%, stroke: gray)
 
   #v(5mm)
   *Get involved:*
