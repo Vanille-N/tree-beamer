@@ -34,8 +34,10 @@
   },
 )
 
-#let section-slide(title) = focus-slide[
+#let section-slide(title, aux: none) = focus-slide[
   = #title
+
+  #place(bottom + right)[#aux]
 ]
 
 #title-slide()
@@ -257,11 +259,10 @@
     TB is the successor of *Stacked Borrows*,
     which has the same purpose. \
 
-    #text(size: 23pt)[[Stacked Borrows; Jung et al., POPL'20]]
   ]
 ]
 
-#section-slide[Stacked Borrows (SB)]
+#section-slide(aux: text(size: 23pt)[[Jung et al., POPL'20]])[Stacked Borrows (SB)]
 
 #slide(repeat: 10, self => [
   In safe Rust, the Borrow Checker makes borrows well-bracketed. \
