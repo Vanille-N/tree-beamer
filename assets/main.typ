@@ -156,32 +156,6 @@
   - that memory is initialized
   - absence of data races
   - ...
-  #place(bottom + right)[
-    #cetz-canvas({
-      cetz.decorations.brace((0,2), (0,-2), name: "path", stroke: red.darken(30%))
-      cetz.draw.content("path", anchor: "west", padding: 1cm)[
-        #text(fill: red.darken(30%))[violations trigger UB]
-      ]
-    })
-  ]
-]
-
-== Why have Undefined Behavior (UB) in a language?
-
-#slide[
-  Code that contains UB can have *any behavior*.
-
-  #v(2cm)
-
-  Relevance for optimizations: \
-  allowed to change the behavior of programs that contain UB.
-
-  #v(2cm)
-  #pause
-
-  Too little UB $->$ weak optimizations
-
-  Too much UB $->$ hard to write correct programs
 ]
 
 == What if ```rs unsafe``` code is misused ?
@@ -222,8 +196,7 @@
   }))
 ])
 
-
-== Not the compiler's responsibility
+== UB: Not the compiler's responsibility
 
 #slide[
   #v(1cm)
@@ -232,18 +205,35 @@
     - #text(fill: gray)[that memory is initialized]
     - #text(fill: gray)[absence of data races]
     - compliance with aliasing rules#h(-3mm)#box[#super[#strong[#tcolor(red)[#rotate(30deg)[NEW!]]]]]
-  #v(3cm)
   #place(right + horizon, dy: -2.5cm)[
     #cetz-canvas({
-      cetz.decorations.brace((0,2), (0,-2), name: "path", stroke: red.darken(30%))
+      cetz.decorations.brace((0,2), (0,-2), name: "path", stroke: red.darken(10%))
       cetz.draw.content("path", anchor: "west", padding: 1cm)[
-        #text(fill: red.darken(30%))[violations trigger UB]
+        #text(fill: red.darken(10%))[violations trigger UB]
       ]
     })
   ]
 
+  #v(0.5cm)
+  *Tree Borrows (TB):* defines those aliasing rules \
+  Compiler *assumes absence of UB*, exploits this for optimizations
 
-  *Tree Borrows (TB):* defines those aliasing rules
+  #pause
+  #align(center + horizon)[
+    #cetz-canvas({
+      import cetz.draw: *
+      line((0, 0), (17, 0), name: "line", stroke: none)
+      line(rel("line.start", -1.9, 0), rel("line.end", 1.9, 0), stroke: (thickness: 0.9cm, paint: red),
+        mark: (start: ">", end: ">"))
+      line("line.start", "line.end",
+        stroke: (thickness: 1cm, paint: gradient.linear(red, yellow, green, yellow, red)),
+      )
+      content(rel("line.start", 0, -1))[less UB]
+      content(rel("line.end", 0, -1))[more UB]
+      content(rel("line.start", 0, 1))[#text(fill: red.darken(10%))[weak optimizations]]
+      content(rel("line.end", 0, 1))[#text(fill: red.darken(10%))[hard to write correct code]]
+    })
+  ]
 
   #pause
   #full-slide-overlay[
@@ -329,7 +319,7 @@
 #slide(repeat: 5, [
   SB was *implemented* in Miri (official interpreter and UB detector) \
   $->$ included in many projects' CI \
-  $->$ several bugs detected (e.g. in stdlib)
+  $->$ many bugs detected (e.g. in stdlib)
 
   #v(1cm)
 
@@ -376,6 +366,7 @@
   *Anecdotal evidence supported by data:*
   - analysis of 30 000 libraries
   - 6000+ tests have aliasing UB under Stacked Borrows
+    (leading cause of UB)
   ]
   ]
 ])
@@ -386,7 +377,7 @@
   Tree Borrows uses a *tree* instead of a stack to track borrows
   #v(2cm)
   Out of 30 000 most downloaded libraries, \
-  *$>50%$ fewer tests* with aliasing UB when using Tree Borrows \
+  *$54%$ fewer tests* with aliasing UB when using Tree Borrows \
 
   #v(2cm)
   #pause
@@ -752,27 +743,25 @@
   i.e. UB should be predictable and not too common
   #v(1cm)
 
-  *50% fewer tests have aliasing UB according to Tree Borrows* \
+  *54% fewer tests have aliasing UB according to Tree Borrows* \
   Only 31 ($<0.01%$) tests are regressions, all easily fixable. \
   (Out of 30 000 libraries, 400 000+ working tests)
 
   #v(1cm)
 
-
-  #text(fill: gray.darken(30%))[
-  _"Tree Borrows accepts more real-world programs that
-  call foreign functions than Stacked Borrows due to differences
-  in handling pointer arithmetic."_ \
-  #text(size: 20pt)[
-  A Study of Undefined Behavior Across Foreign Function Boundaries in Rust Libraries,
-  by I. McCormack, J. Sunshine, J. Aldrich
-  \@ ICSE'25
+  #text(fill: blue)[
+    _"Tree Borrows accepts more real-world programs that
+    call foreign functions than Stacked Borrows due to differences
+    in handling pointer arithmetic."_ \
+    #text(size: 20pt, fill: blue.transparentize(40%))[
+      A Study of Undefined Behavior Across Foreign Function Boundaries in Rust Libraries,
+      by I. McCormack, J. Sunshine, J. Aldrich
+      \@ ICSE'25
+    ]
   ]
-  ]
-
 ]
 
-#focus-slide[Conclusion]
+#section-slide[Conclusion]
 
 ==
 
@@ -785,6 +774,13 @@
   #image("playground.png", width: 11cm)
   #place(right + horizon)[#line(start: (100%, 0%), end: (100%, 100%), stroke: gray)]
 ][
+  Postdoc positions available \
+  #text(size: 20pt)[
+    \@ ETH Zurich #h(1cm) #raw("ralf.jung" + "@inf.ethz.ch") \
+    \@ MPI-SWS #h(1cm) #raw("dreyer" + "@mpi-sws.org")
+  ]
+
+  #line(length: 100%, stroke: gray)
   #let url = "plf.inf.ethz.ch/research/pldi25-tree-borrows.html"
   *Learn more:*
   #table(columns: (70%, auto), align: horizon, stroke: none)[
@@ -796,11 +792,5 @@
     Includes e.g. handling of raw pointers and interior mutability.
   ]
   #v(1cm)
-  #line(length: 100%, stroke: gray)
-  Postdoc positions available \
-  #text(size: 20pt)[
-    \@ ETH Zurich #h(1cm) #raw("ralf.jung" + "@inf.ethz.ch") \
-    \@ MPI-SWS #h(1cm) #raw("dreyer" + "@mpi-sws.org")
-  ]
-]
+ ]
 
