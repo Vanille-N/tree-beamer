@@ -149,11 +149,12 @@
   }
   ```
 
-  #v(1.5cm)
+  #v(1cm)
 
   Within ```rs unsafe``` it is *the programmer's responsibility* to check
   - that pointers are non-null
   - that memory is initialized
+  - absence of data races
   - ...
   #place(bottom + right)[
     #cetz-canvas({
@@ -229,9 +230,10 @@
   Within ```rs unsafe``` it is *the programmer's responsibility* to check
     - #text(fill: gray)[that pointers are non-null]
     - #text(fill: gray)[that memory is initialized]
+    - #text(fill: gray)[absence of data races]
     - compliance with aliasing rules#h(-3mm)#box[#super[#strong[#tcolor(red)[#rotate(30deg)[NEW!]]]]]
   #v(3cm)
-  #place(right + horizon, dy: -3cm)[
+  #place(right + horizon, dy: -2.5cm)[
     #cetz-canvas({
       cetz.decorations.brace((0,2), (0,-2), name: "path", stroke: red.darken(30%))
       cetz.draw.content("path", anchor: "west", padding: 1cm)[
@@ -469,10 +471,10 @@
 
       // Show all the stacks
       uncover("2", {
-        content(rel("v0", 0, -6.5))[#sb-stack[`root`]]
+        content(rel("v0", 0, -6.52))[#sb-stack[`root`]]
       })
       uncover("2-3", {
-        content(rel("v2", 0, -6.5))[#sb-stack[`root`]]
+        content(rel("v2", 0, -6.52))[#sb-stack[`root`]]
       })
       uncover("3-", {
         content(rel("v0", 0, -6))[#sb-stack[`root`][`x0`]]
@@ -481,7 +483,7 @@
         content(rel("v2", 0, -6))[#sb-stack[`root`][`x2`]]
       })
       uncover("2-5,7,9", {
-        content(rel("v1", 0, -6.5))[#sb-stack[`root`]]
+        content(rel("v1", 0, -6.52))[#sb-stack[`root`]]
       })
       uncover("6", {
         content(rel("v1", 0, -6))[#sb-stack[`root`][`x0`]]
@@ -497,10 +499,11 @@
       })
 
       uncover("9", {
-        rect(rel("v1", 0, -4.9), rel((), -1.5, -1), name: "both1")
-        rect(rel("v1", 0, -4.9), rel((), 1.5, -1), name: "both2")
+        rect(rel("v1", 0, -4.95), rel((), -1.5, -1), name: "both1")
+        rect(rel("v1", 0, -4.95), rel((), 1.5, -1), name: "both2")
         content("both1.center")[```rs x0```]
         content("both2.center")[```rs x2```]
+        content(rel("both1.center", 0.75, 0))[#text(fill: red.transparentize(50%), size: 70pt)[?]]
       })
     })
   ]
@@ -776,8 +779,8 @@
 #slide[
   #let shorturl = "play.rust-lang.org"
   #let longurl = "https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=b2b0cb067b73b987f071fe90e10d06bf"
-  *Try it out: available in Miri* \ \
-  Rust Playground supports TB \
+  *Try it out: supported by Miri* \ \
+  Also on the Rust Playground \
   (#text(size: 24pt)[#raw(shorturl)])
   #image("playground.png", width: 11cm)
   #place(right + horizon)[#line(start: (100%, 0%), end: (100%, 100%), stroke: gray)]
