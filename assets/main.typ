@@ -54,6 +54,7 @@
 == Rust's type system enables powerful optimizations
 
 #slide(repeat: 4, self => [
+  #align(center + horizon)[
   #codebox(cetz-canvas({
     import cetz.draw: *
     let ctx = from-code(```rs
@@ -108,12 +109,13 @@
       patch(locate("*x").at(1), ```rs 13 // formerly *x: one fewer load from memory```)
     })
   }))
+  ]
 ])
 
 == Type-level guarantees for references
 
 #slide[
-  #align(center)[
+  #align(center + horizon)[
     #scale(150%, reflow: true)[
     #cetz-canvas({
       import cetz.draw: *
@@ -141,27 +143,35 @@
 
 #slide[
   Can use *unchecked operations* to do *low-level manipulations*
-  ```rs
+  #align(center)[#codebox(```rs
   unsafe {
     // Code within this block can effectively
     // bypass some parts of the typechecker.
     ...
   }
-  ```
-
-  #v(1cm)
+  ```)]
 
   Within ```rs unsafe``` it is *the programmer's responsibility* to check
   - that pointers are non-null
   - that memory is initialized
   - absence of data races
   - ...
+  #place(right + bottom, dy: -0.5cm)[
+    #cetz-canvas({
+      cetz.decorations.brace((0,2), (0,-2), name: "path", stroke: red.darken(10%))
+      cetz.draw.content("path", anchor: "west", padding: 1cm)[
+        #text(fill: red.darken(10%))[violations trigger UB \ (Undefined Behavior)]
+      ]
+    })
+  ]
+
 ]
 
 == What if ```rs unsafe``` code is misused ?
 
-#slide(repeat: 5, self => [
-  #codebox(cetz-canvas({
+#slide(repeat: 6, self => [
+  #let (uncover,) = utils.methods(self)
+  #align(center)[#codebox(cetz-canvas({
     let ctx = from-code(```rs
       fn write_both(x: &mut i32, y: &mut i32) -> i32 {
         *x = 13;
@@ -193,10 +203,15 @@
       highlight(..locate("*x").at(1))
       highlight(..locate("20").at(1))
     })
-  }))
+  }))]
+  #uncover("6")[
+    #full-slide-overlay[
+      `unsafe` code can break the assumptions that optimizations need!
+    ]
+  ]
 ])
 
-== UB: Not the compiler's responsibility
+== Expanding our notion of UB
 
 #slide[
   #v(1cm)
@@ -214,11 +229,11 @@
     })
   ]
 
+  #pause
   #v(0.5cm)
   *Tree Borrows (TB):* defines those aliasing rules \
   Compiler *assumes absence of UB*, exploits this for optimizations
 
-  #pause
   #align(center + horizon)[
     #cetz-canvas({
       import cetz.draw: *
@@ -374,14 +389,15 @@
 == Tree Borrows allows much more code
 
 #slide[
+  #v(1cm)
   Tree Borrows uses a *tree* instead of a stack to track borrows
-  #v(2cm)
+  #v(5mm)
   Out of 30 000 most downloaded libraries, \
   *$54%$ fewer tests* with aliasing UB when using Tree Borrows \
 
-  #v(2cm)
   #pause
-  fixes known technical limitations of SB, \
+  #v(5mm)
+  Fixes known technical limitations of SB, \
   incl. 2-phase borrows, extern types, *pointer offsets*
 ]
 
@@ -414,7 +430,7 @@
     uncover("6,8,9", highlight-lines(5))
   }))
   #uncover("5-")[
-  Desired outcome: not UB
+    #text(fill: gray)[Desired outcome: not UB]
   ]
 ], self => [
   #align(center)[
@@ -523,7 +539,7 @@
     }
     uncover("6,7", highlight-lines(5))
   }))
-  Desired outcome: not UB
+  #text(fill: gray)[Desired outcome: not UB]
 ], self => [
   #align(center)[
     #cetz-canvas({
@@ -656,7 +672,7 @@
         content(line-col(6, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
       })
     }))
-    Desired outcome: UB
+    #text(fill: gray)[Desired outcome: UB]
 ], self => [
     #cetz-canvas({
       import cetz.draw: *
@@ -777,7 +793,7 @@
   Postdoc positions available \
   #text(size: 20pt)[
     \@ ETH Zurich #h(1cm) #raw("ralf.jung" + "@inf.ethz.ch") \
-    \@ MPI-SWS #h(1cm) #raw("dreyer" + "@mpi-sws.org")
+    \@ MPI-SWS #h(2.55cm) #raw("dreyer" + "@mpi-sws.org")
   ]
 
   #line(length: 100%, stroke: gray)
