@@ -254,8 +254,10 @@
   #full-slide-overlay[
     === Sounds familiar?
 
-    *Stacked Borrows* has the same purpose, \
-    Tree Borrows is its successor.
+    TB is the successor of *Stacked Borrows*,
+    which has the same purpose. \
+
+    #text(size: 23pt)[[Stacked Borrows; Jung et al., POPL'20]]
   ]
 ]
 
