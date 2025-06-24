@@ -24,7 +24,7 @@ You can clone this repository and compile from source to have the latest version
 Requires:
 - `typst` (0.12.0, tested 2025-05-19)
 
-From the root directory, execute `$ just compile`.
+From the root directory, execute `$ typst compile assets/main.typ build/main.pdf  --root=. --font-path=fonts/`.
 
 Source files will be fetched from `assets/` and compiled into `build/`.
 The resulting pdf is `build/main.pdf`.
