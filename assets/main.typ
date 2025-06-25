@@ -291,7 +291,7 @@
         content(line-col(6, 15))[#strong[#text(fill: red.transparentize(30%), size: 90pt)[UB!]]]
       })
     }))
-    Desired outcome: UB
+    #text(fill: gray)[Desired outcome: UB]
   ][
     #align(center)[
       #align(center)[
@@ -746,14 +746,22 @@
 
   #v(1cm)
 
-  - formalized in Rocq (+Simuliris)
-  - a selection of optimizations proven
+  Formalized in *Rocq* (+Simuliris), optimizations proven correct
     #list(marker: $checkmark$,
       [delete read through ```rs &mut``` or ```rs &```],
       [insert read through ```rs &``` in function],
       [move read down for ```rs &mut``` or ```rs &``` in function],
     )
     ...
+    /*
+  #place(bottom + right)[
+    #table(stroke: none, columns: 2)[
+      #image("available.png", width: 3cm)
+    ][
+      #image("reusable.png", width: 3cm)
+    ]
+  ]
+  */
 ]
 
 == It should be possible to write ```rs unsafe``` code free of UB

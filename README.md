@@ -1,41 +1,44 @@
 # Beamer for Tree Borrows
 
-by Neven Villani
-
 Slides and sources for presentations of Tree Borrows.
 
+Written by Neven Villani.
+
+With feedback from Johannes Hostert, Derek Dreyer, Ralf Jung, and various spectators.
+
+---
+
+**You are reading the most recent version**
+
 This branch is specific to the presentation of Tree Borrows
-to be given at PLDI in Seoul (June 2025).
+that was given at PLDI in Seoul (June 2025).
 Other branches may contain material not presented here.
 
-Related:
-- [Tree Borrows by Example](https://perso.crans.org/vanille/treebor/)
-- [Implementation](https://github.com/rust-lang/miri/tree/master/src/borrow_tracker/tree_borrows)
-- [The model in detail](https://github.com/Vanille-N/tree-borrows)
+You may also consult
+- the now published [paper](https://dl.acm.org/doi/10.1145/3735592),
+- the [livestream](https://www.youtube.com/live/YhXlZp45HLs?si=_ZMYNXK2WRwJRLuJ&t=21467)
+  of this presentation (around 5:57:00),
+- a written [explanation](https://perso.crans.org/vanille/treebor/) of Tree Borrows,
+- a [precompiled](https://perso.crans.org/vanille/share/satge/arpe/pldi.pdf)
+  version of this beamer.
 
-## Pre-rendered PDF
-
-A precompiled PDF for this branch can be found on
-[my homepage](TODO).
+---
 
 ## Building the beamer from source
 
 You can clone this repository and compile from source to have the latest version.
 Requires:
-- `typst` (0.12.0, tested 2025-05-19)
+- a recent version of `typst` (tested on 2025-06-18 with typst 0.13.1)
 
-From the root directory, execute `$ typst compile assets/main.typ build/main.pdf  --root=. --font-path=fonts/`.
+From the root directory, execute the following:
+```
+$ typst compile assets/main.typ build/main.pdf  --root=. --font-path=fonts/`.
+```
 
 Source files will be fetched from `assets/` and compiled into `build/`.
 The resulting pdf is `build/main.pdf`.
 
 If anything fails to compile, feel free to open an issue.
-
-## Related resources
-
-See `literature.bib` for complementary sources, and in particular
-- [An example-oriented introduction to Tree Borrows](https://perso.crans.org/vanille/treebor)
-- [An in-depth view of the Tree Borrows model](https://github.com/Vanille-N/tree-borrows)
 
 ## Licensing
 
@@ -44,5 +47,4 @@ Any distribution or modification of this work is allowed,
 in compiled (PDF, executable) form, source code (Rust, TeX, Markdown, Typst), or both.
 Cite original work, preserve attribution and license, and document changes.
 
-See LICENSE.txt or
-[creativecommons.org](https://creativecommons.org/licenses/by-sa/4.0/)
+See LICENSE.txt or [creativecommons.org](https://creativecommons.org/licenses/by-sa/4.0/)
