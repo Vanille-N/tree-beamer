@@ -1,5 +1,5 @@
 #import "@preview/touying:0.6.1": *
-#import "@preview/cetz:0.3.2"
+#import "@preview/cetz:0.4.2"
 #import "@preview/cades:0.3.0": qr-code
 #import "lib.typ": *
 #import "tb.typ"
@@ -15,13 +15,21 @@
   config-info(
     title: [Tree Borrows],
     author: [
-      #underline[Neven Villani], #footnote[Univ. Grenoble Alpes, Verimag] <ens>
-      Johannes Hostert, #footnote[ETH Zurich] <eth>
-      Derek Dreyer, #footnote[MPI-SWS] <mpi>
-      Ralf Jung @eth
+      #underline[Neven Villani],
+      Johannes Hostert,
+      Derek Dreyer,
+      Ralf Jung
     ],
-    date: datetime(year: 2025, month: 6, day: 19),
-    institution: [PLDI'25],
+    date: datetime(year: 2025, month: 11, day: 6),
+    institution: [
+      #place(bottom + right)[
+        #image("/assets/verimag.svg", width: 5cm)
+      ]
+      #place(bottom + left)[
+        #image("/assets/eth.png", width: 8cm)
+        #image("/assets/mpi-sws.svg", width: 8cm)
+      ]
+    ],
   ),
   footer-a: self => {
     [Neven Villani]
@@ -52,6 +60,20 @@
 #let split(a, b, fraction: 0.5) = table(columns: (fraction * 1fr, (1 - fraction) * 1fr), stroke: none, align: left)[#a][#b]
 
 #let tcolor(c, t) = text(fill: c)[#t]
+
+== What is Rust?
+
+#slide[
+  Rust is a *low-level* language, that aims to make no compromise
+  between safety and efficiency.
+
+  #show: columns.with(2)
+  #image("/assets/google-cve.png")
+  #text(size: 15pt)[Source: Google]
+  #colbreak()
+  #image("/assets/fastest-elapsed.svg")
+  #text(size: 15pt)[Source: Benchmarks Game]
+]
 
 == Rust's type system enables powerful optimizations
 
@@ -250,15 +272,6 @@
       content(rel("line.start", 0, 1))[#text(fill: red.darken(10%))[weak optimizations]]
       content(rel("line.end", 0, 1))[#text(fill: red.darken(10%))[hard to write correct code]]
     })
-  ]
-
-  #pause
-  #full-slide-overlay[
-    === Sounds familiar?
-
-    TB is the successor of *Stacked Borrows*,
-    which has the same purpose. \
-
   ]
 ]
 
@@ -801,13 +814,6 @@
   #image("playground.png", width: 11cm)
   #place(right + horizon)[#line(start: (100%, 0%), end: (100%, 100%), stroke: gray)]
 ][
-  Postdoc positions available \
-  #text(size: 20pt)[
-    \@ ETH Zurich #h(1cm) #raw("ralf.jung" + "@inf.ethz.ch") \
-    \@ MPI-SWS #h(2.55cm) #raw("dreyer" + "@mpi-sws.org")
-  ]
-
-  #line(length: 100%, stroke: gray)
   #let url = "plf.inf.ethz.ch/research/pldi25-tree-borrows.html"
   *Learn more:*
   #table(columns: (70%, auto), align: horizon, stroke: none)[

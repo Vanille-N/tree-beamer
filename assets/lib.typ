@@ -1,5 +1,5 @@
 #import "@preview/touying:0.6.1": *
-#import "@preview/cetz:0.3.2"
+#import "@preview/cetz:0.4.2"
 
 #show raw: text.with(font: "JetBrains Mono")
 
