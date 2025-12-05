@@ -1,6 +1,6 @@
 #import "@preview/touying:0.6.1": *
 #import "@preview/cetz:0.4.2"
-#import "@preview/cades:0.3.0": qr-code
+#import "@preview/tiaoma:0.3.0"
 #import "lib.typ": *
 #import "tb.typ"
 #import themes.university: *
@@ -20,7 +20,7 @@
       Derek Dreyer,
       Ralf Jung
     ],
-    date: datetime(year: 2025, month: 11, day: 6),
+    date: datetime(year: 2025, month: 12, day: 5),
     institution: [
       #place(bottom + right)[
         #image("/assets/verimag.svg", width: 5cm)
@@ -60,20 +60,6 @@
 #let split(a, b, fraction: 0.5) = table(columns: (fraction * 1fr, (1 - fraction) * 1fr), stroke: none, align: left)[#a][#b]
 
 #let tcolor(c, t) = text(fill: c)[#t]
-
-== What is Rust?
-
-#slide[
-  Rust is a *low-level* language, that aims to make no compromise
-  between safety and efficiency.
-
-  #show: columns.with(2)
-  #image("/assets/google-cve.png")
-  #text(size: 15pt)[Source: Google]
-  #colbreak()
-  #image("/assets/fastest-elapsed.svg")
-  #text(size: 15pt)[Source: Benchmarks Game]
-]
 
 == Rust's type system enables powerful optimizations
 
@@ -801,6 +787,85 @@
   ]
 ]
 
+#section-slide[Bonus: Protectors]
+
+== On `noalias` and `dereferenceable`
+
+#slide[
+  LLVM attributes get added to the generated code... \
+  is TB sufficient to enforce their requirements ?
+
+  - `dereferenceable`: this pointer is *readable* for the entire function,
+  - `noalias`: this pointer has *exclusive access* for the entire function.
+
+  Means something should happen on *loss of permissions*. \
+  Not part of the simplified model presented thus far.
+]
+
+== Preventing interruptions
+
+#slide(repeat: 5, self => [
+  #codebox(cetz-canvas({
+    import cetz.draw: *
+    let ctx = from-code(```rs
+      fn f(x: &mut u64) {
+        *x = 42;
+        opaque()
+        *x
+      }
+      ```, self: self)
+    let (block, uncover, highlight-lines, line-col, locate, start-of, patch-line) = ctx
+    block
+    uncover("2,3,5", patch-line(1)[```rs   opaque()```])
+    uncover("2,3,5", patch-line(2)[```rs   *x = 42```])
+    uncover("3", patch-line(3)[```rs   42```])
+  }))
+  #uncover("4,5")[
+    #codebox(```rs
+    fn opaque() {
+      let v = unsafe { X };
+      println!("{}", v);
+    }
+    ```)
+  ]
+], self => [
+  #uncover("4,5")[
+    #codebox(```rs
+    static mut X: u64 = 0;
+
+    fn main() {
+      let raw = &raw mut X;
+      let rmut = unsafe {
+        &mut *raw
+      };
+      f(rmut);
+    }
+    ```)
+  ]
+])
+
+== Where's the UB?
+
+#slide[
+  Add a *protector* to ```rs &``` and ```rs &mut``` function parameters.
+
+  Protector is valid until the function exits, and affects behavior:
+  - loss of permissions triggers UB,
+  - more sensitive to foreign accesses.
+]
+
+== Other simplifications
+
+#slide[
+  #box[I haven't talked about...
+  - interior mutability
+  - raw pointers
+  ]
+  #box[#image("/assets/unprotected.png", width: 65%)]
+  #align(right)[#image("/assets/protected.png", width: 65%)]
+  #text(size: 12pt)[Figures drawn by J. Hostert]
+]
+
 #section-slide[Conclusion]
 
 ==
@@ -819,7 +884,7 @@
   #table(columns: (70%, auto), align: horizon, stroke: none)[
     #text(size: 20pt)[#raw(url)]
   ][
-    #qr-code(url, width: 100%)
+    #tiaoma.qrcode(url, width: 100%)
   ]
   #text(fill: gray, size: 20pt)[
     Includes e.g. handling of raw pointers and interior mutability.
